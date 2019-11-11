@@ -1,64 +1,72 @@
 <template>
-    <view>
+    <view class="page" bindtap="hideTips">
         <view class="posting">
             <view class="user-info">
                 <image  src="{{posting.poster.avatar}}"/>
                 <view class="name-time">
-                    <view class=".name">{{posting.poster.name}}</view>
-                    <view class=".time">{{posting.poster.postTime}}</view>
+                    <view class="name" bindlongpress="longPress" >{{posting.poster.name}}</view>
+                    <view class="time">{{posting.poster.postTime}}</view>
+                </view>
+                <view class="like" catchtap="changePostLike()">             
+                    <view wx:if="{{posting.likeNum==0}}" class="text">抢首赞</view>
+                    <view wx:else class="text">{{posting.likeNum}}</view>
+                    <image wx:if="{{posting.iLike}}" src="../../images/icons/like-on.png"/>
+                    <image wx:else src="../../images/icons/like-off.png"/>
                 </view>
             </view>
             <view class="rich-text">
                 {{posting.content.text}}
             </view>
             <view >
-              <image wx:for="{{posting.content.imgList}}" mode="widthFix"  src="{{item}}"/>
+              <image wx:for="{{posting.content.imgList}}" 
+                catchtap="previewImage({{posting.content.imgList}},{{item}})"
+                mode="widthFix"  src="{{item}}"/>
             </view>
         </view>
         <view class="tabs">
             <view class="title">全部评论</view>
-            <view class="like">             
-                <view wx:if="{{posting.poster.likeNum==0}}" class="text">抢首赞</view>
-                <view wx:else class="text">{{posting.poster.likeNum}}</view>
-                <image wx:if="{{posting.poster.iLike}}" src="../../images/icons/like-on.png"/>
-                <image wx:else src="../../images/icons/like-off.png"/>
-            </view>
         </view>
-        <view class="floor-list">
-            <view class="floor" wx:for="{{posting.floorList}}" wx:for-item="floor">
+        <view class="comment-list">
+            <view class="comment" wx:for="{{commentList}}" wx:for-item="comment" wx:for-index="commentIndex">
                 <view class="commenter-info">
-                    <image src="{{floor.commenter.avatar}}"/>
+                    <image src="{{comment.commenter.avatar}}"/>
                     <view class="name-time">
-                        <view class="name">{{floor.commenter.name}}</view>
-                        <view class="time">{{floor.commenter.commentTime}}</view>
+                        <view class="name" bindlongpress="longPress">{{comment.commenter.name}}</view>
+                        <view class="time">{{comment.commentTime}}</view>
                     </view>
-                    <view class="like">                       
-                        <view wx:if="{{floor.commenter.likeNum==0}}" class="text">抢首赞</view>
-                        <view wx:else class="text">{{floor.commenter.likeNum}}</view>
-                        <image wx:if="{{floor.commenter.iLike}}" src="../../images/icons/like-on.png"/>
+                    <view class="like" catchtap="changeCommentLike({{comment}},{{commentIndex}})">                       
+                        <view wx:if="{{comment.likeNum==0}}" class="text">抢首赞</view>
+                        <view wx:else class="text">{{comment.likeNum}}</view>
+                        <image wx:if="{{comment.iLike}}" src="../../images/icons/like-on.png"/>
                         <image wx:else src="../../images/icons/like-off.png"/>
                     </view>
                 </view>
-                <view class="comment-cnt">{{floor.commenter.commentText}}</view>
-                <view class="reply-list" >
-                    <view class="reply-item" wx:for="{{floor.replyList}}" wx:for-item="reply">
-                        <view class="replyer">{{reply.replyer.name}}</view>
+                <view class="comment-cnt" catchtap="changeHoldText({{commentIndex}},{{comment.commenter.name}})">{{comment.commentText}}</view>
+                <view class="reply-list" wx:if="{{comment.replyList.length!=0}}">
+                    <view class="reply-item" wx:for="{{comment.replyList}}" wx:for-item="reply" >
+                        <view class="replyer" bindlongpress="longPress">{{reply.replyer.name}}</view>
                         <view wx:if="{{reply.beReplyer}}" class="split">回复</view>
-                        <view wx:if="{{reply.beReplyer}}" class="be-repler">{{reply.beReplyer.name}}</view>
+                        <view wx:if="{{reply.beReplyer}}" class="be-repler" bindlongpress="longPress">{{reply.beReplyer.name}}</view>
                         <view class="split">:</view>
-                        <view class="reply-cnt">{{reply.replyText}}</view>
+                        <view class="reply-cnt" catchtap="changeHoldText({{commentIndex}},{{reply.replyer.name}})">{{reply.replyText}}</view>
                     </view>
                 </view>
-                <view class="reply-input">
-                    <input class="input" placeholder="回复" placeholder-style="color:#bbb;" />
-                    <view class="send-off">发送</view>
+                <view class="reply-input" catchtap="changeCurReplyInput({{commentIndex}})">
+                    <input class="input" placeholder="回复{{replyInputList[commentIndex].holdText}}" 
+                    placeholder-style="color:#bbb;" bindinput="replyInputEvent"  value="{{replyInputList[commentIndex].inputText}}"
+                    bindfocus="replyInputFocus"/>
+                    <view class="{{replyInputList[commentIndex].inputText.length==0?'send-off':'send-on'}}"
+                        catchtap="sendRelpy({{commentIndex}})"
+                    >发送</view>
                 </view>
             </view>
         </view>
         <view class="reply-bottom">
-            <input class="input"  placeholder="评论帖子"  bindinput="getInput" />
-            <view class="send-off">评论</view>
+            <input class="input"  placeholder="评论帖子"  bindinput="commentInput" value="{{commentText}}"/>
+            <view catchtap="sendComment" class="{{commentText.length==0?'send-off':'send-on'}}" >评论</view>
         </view>
+        <view wx:if="{{tipsShow}}" class="tips" style="top:{{tipsY}}px;left:{{tipsX}}px;"
+            bindtap="goChat">{{tips}}</view>
     </view>
 </template>
 
@@ -72,14 +80,21 @@
     }
 
     data = {
-        
+        curReplyInput:0,//当前输入框
+        replyInputList:[],//回复输入框，提示字及内容缓存
+        commentText:"",//评论内容
+        tipsShow:false,
+        tips:'丢纸条',
+        tipsX:0,
+        tipsY:0,
         posting:{
+            likeNum:22,
+            iLike:1,
             poster:{
                 name:'waaaly',
                 avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
                 postTime:'发布于五分钟前',
-                likeNum:22,
-                iLike:1,
+                
             },
             content:{
                 text:`我之前在做微信小程序的时候遇到了一个问题，一些让用户输入的地方，
@@ -89,72 +104,189 @@
                 编码等，这些方法都不太好，也没有解决问题，后面找了比较久才找到合适的解
                 决的方法：表情符编码是十六进制的，需要把表情符转码成八进制的。`,
                 imgList:[
-                    'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
-                    'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
-                    'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
+                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
+                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
+                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
                 ]
-            },
-            floorList:[
+            }
+        },
+        commentList:[
                 {
+                    commentTime:'19:20',
+                    commentText:'你看那个人好像一条狗噢',
+                    likeNum:11,
+                    iLike:0,
                     commenter:{
-                        name:'1楼',
-                        avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
-                        commentTime:'19:20',
-                        commentText:'6666好好凑狗15字6666好好凑狗15字6666好好凑狗15字6666好好凑狗15字6666好好凑狗15字',
-                        likeNum:11,
-                        iLike:0,                       
+                        name:'紫霞仙子',
+                        avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',                       
                     },
                     replyList:[
                         {
                             replyer:{
-                                name:'bbb',
+                                name:'风清扬',
                             },
                             replyText:'我自己回复自己嘛，哈哈'                       
                         },
                         {
                             replyer:{
-                                name:'ccc',
+                                name:'杨过',
                             },
                             beReplyer:{
-                                name:'bbb',
+                                name:'小龙女',
                             },
                             replyText:'我觉得你这想法很危险'
                         }
                     ]
                 },
                 {
+                    commentTime:'19:20',
+                    commentText:'6666好好凑狗15字',
+                    likeNum:0,
+                    iLike:0,
                     commenter:{
-                        name:'2楼',
-                        avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
-                        commentTime:'19:20',
-                        commentText:'6666好好凑狗15字',
-                        likeNum:0,
-                        iLike:0,                       
+                        name:'至尊宝',
+                        avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',        
                     },
                     replyList:[
                         {
                             replyer:{
-                                name:'bbb',
+                                name:'阳顶天',
                             },
                             replyText:'我自己回复自己嘛，哈哈'                       
                         },
                         {
                             replyer:{
-                                name:'ccc',
+                                name:'灭绝师太',
                             },
                             beReplyer:{
-                                name:'bbb',
+                                name:'令狐冲',
                             },
                             replyText:'我觉得你这想法很危险我觉得你这想法很危险我觉得你这想法很危险我觉得你这想法很危险'
                         }
                     ]
                 }
             ]
-        }
+    
+    
+    
+    
+    
+    
     }
 
     onLoad(option) {
-
+        //初始话回复输入框内容
+        for(let index in this.commentList){
+            let relpyInput = new Object();
+            relpyInput['holdText'] = this.commentList[index].commenter.name;
+            relpyInput['inputText'] = "";
+            this.replyInputList.push(relpyInput);
+            relpyInput = null;
+        }
+    }
+    methods={
+        //预览图片
+        previewImage (imgList,curImg) {
+            wx.previewImage({
+                current: curImg, // 当前显示图片的http链接  
+                urls: imgList// 需要预览的图片http链接列表  
+            })
+        },
+        //改变帖子点赞
+        changePostLike(){
+            this.posting.likeNum = this.posting.iLike?
+            this.posting.likeNum-1:this.posting.likeNum+1;
+            this.posting.iLike = this.posting.iLike?0:1;
+            this.$apply();
+        },
+        //改变评论点赞
+        changeCommentLike(item,index){
+            this.commentList[index].likeNum = item.iLike?
+            this.commentList[index].likeNum - 1:
+            this.commentList[index].likeNum + 1;
+            this.commentList[index].iLike = item.iLike?0:1;
+            this.$apply();
+        },
+        //改变当前回复输入框
+        changeCurReplyInput(index){
+            this.curReplyInput = index;
+            this.$apply();
+        },
+        //改变当前输入框holdtext
+        changeHoldText(index,replyerName){
+            if(replyerName==wx.getStorageSync("userInfoInServer").name){return;}
+            this.replyInputList[index].holdText = replyerName;
+            this.$apply();
+        },
+        //回复输入框输入事件
+        replyInputEvent(e){
+            this.replyInputList[this.curReplyInput].inputText = e.detail.value;
+            this.$apply();
+        },
+        //回复输入框发送
+        sendRelpy(index){
+            if(this.replyInputList[index].inputText.length==0){return;}
+            var reply = new Object();
+            var repler = new Object();
+            repler['name'] = wx.getStorageSync('userInfoInServer').name;
+            reply['replyer'] = repler;
+            reply["replyText"] = this.replyInputList[index].inputText;
+            //回复楼主
+            if(this.replyInputList[index].holdText==this.commentList[index].commenter.name){}
+            else{
+                var beReplyer = new Object();
+                beReplyer['name'] = this.replyInputList[index].holdText;
+                reply['beReplyer'] = beReplyer;
+            }
+            console.log(reply)
+            this.commentList[index].replyList.push(reply);
+            this.replyInputList[index].inputText="";
+            this.$apply();
+            wx.showToast({title:'回复成功！'});
+        },
+        //评论输入框输入事件
+        commentInput(e){
+            this.commentText = e.detail.value;
+            this.$apply();
+        },
+        //发送评论事件
+        sendComment(){
+            if(this.commentText.length==0){return;}
+            var commenter = {
+                name:wx.getStorageSync("userInfoInServer").name,
+                avatar:wx.getStorageSync("userInfoInServer").avatar,
+            }
+            var comment = new Object();
+            comment['commentTime'] = '2019-12-12 10:11';
+            comment['commentText'] = this.commentText;
+            comment['commenter']   = commenter;
+            comment['replyList']   = [];
+            comment['likeNum']     = 0;
+            comment['likeNum']     = 0; 
+            console.log(comment)
+            this.commentList.push(comment);
+            this.$apply();
+            wx.showToast({title:'评论成功！'});
+        },
+        //长按用户名弹出操作框
+        longPress(e){
+            console.log(e)
+            this.tipsShow = true;
+            this.tipsX = e.currentTarget.offsetLeft;
+            this.tipsY = e.currentTarget.offsetTop + 20;
+            this.$apply();
+        },
+        //隐藏操作框
+        hideTips(){
+            this.tipsShow = false;
+            this.$apply();
+        },
+        //前往私聊
+        goChat(){
+            wx.navigateTo({
+                url: './chat',
+            })
+        }
     }
     computed = {}
     
@@ -179,6 +311,7 @@
         .name-time{
             display: flex;
             flex-direction: column;
+            flex: 1;
             .name{
                 font-size:28rpx;
             }
@@ -186,6 +319,20 @@
                 margin-top:10rpx;
                 font-size:25rpx;
                 color:#888;
+            }
+        }
+        .like{
+            float: right;
+            display: flex;
+            align-items:center;
+            image{
+                width: 40rpx;
+                height: 40rpx;
+            }
+            .text{
+                color:#888;
+                font-size: 24rpx;
+                margin-right:10rpx;
             }
         }
     }
@@ -212,24 +359,11 @@
         font-weight:bold;
         float: left;
     }
-    .like{
-        float: right;
-        display: flex;
-        align-items:center;
-        image{
-            width: 40rpx;
-            height: 40rpx;
-        }
-        .text{
-            color:#888;
-            font-size: 24rpx;
-            margin-right:10rpx;
-        }
-    }
+
 }
-.floor-list{
+.comment-list{
     margin-bottom: 80rpx;
-    .floor{
+    .comment{
         padding: 20rpx;
         display: flex;
         flex-direction: column;
@@ -287,6 +421,7 @@
                 display: flex;
                 font-size:26rpx;
                 align-items: center;
+                flex-wrap: wrap;
                 color:#333;
                 .replyer{
                 }
@@ -386,13 +521,30 @@
         background-color: #eaeaea;
         color:#bbb;
         border:1rpx solid #bbb;
+        text-align: center;
+        width: 10%;
     }
     .send-on{
         border-radius: 5rpx;
         padding:10rpx;
         background-color: #108ee9;
         color:#fff;
+        text-align: center;
+        width: 10%;
     }
         
+}
+.page{
+    position: relative;
+}
+.tips{
+    padding:20rpx 10rpx 20rpx;
+    box-shadow: 3rpx 3rpx 3rpx 3rpx #ddd ;
+    background-color: #fff;
+    border:1rpx solid #eee;
+    font-size:26rpx;
+    position: absolute;
+    height: 20px;
+    z-index:10;
 }
 </style>

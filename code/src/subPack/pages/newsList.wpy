@@ -109,9 +109,9 @@
             我把这四个小图标扣到一张大小为(0.72rem3.65rem)的背景图，宽度跟图标是一样的，
             高度则为四个图片+1倍的高度，主要是为了后面的高度百分比成正比`,
             imgList:[
-                'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
-                'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
-                'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
+                "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
+                "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
+                "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
             ]
           },
           can_see:'全部可见'

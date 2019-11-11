@@ -15,8 +15,21 @@
                 </swiper-item>
             </block>
         </swiper>
-        <block  wx:if="{{postingList.length!=0}}">
-            <view wx:for="{{postingList}}">
+        <view class="enable-view">
+            <view class="item-box" style="max-height: {{enableViewH}}vh;">
+                <block wx:for="{{enableViewList}}">
+                    <view class="{{enableViewId==item.id?'item-active':'item'}}"
+                          bindtap="changeId({{item.id}})"
+                    >{{item.value}}</view>
+                </block>
+            </view>
+            <view class="icon-box" bindtap="changeHight">
+                <image wx:if="{{enableViewH==30}}" class="icon-up" src="{{toRightIcon}}"/>
+                <image wx:else class="icon-down" src="{{toRightIcon}}"/>
+            </view>
+        </view>
+        <view class="posting-box"  wx:if="{{postingList.length!=0}}">
+            <block wx:for="{{postingList}}">
                 <view class="posting" bindtap="goDetail({{item}})" >
                     <view class="userInfo">
                         <image src="{{item.userInfo.avatar}}"/>
@@ -30,16 +43,17 @@
                         <view class="imageList">
                             <image  wx:for="{{item.content.imgList}}" 
                             wx:for-item='imgItem' 
+                            catchtap="previewImage({{item.content.imgList}},{{imgItem}})"
                             mode='widthFix' src="{{imgItem}}"/>
                         </view>
                     </view>
                     <view class="tabs">
                         <view class="item">
-                            <image src="../images/icons/comment.png"/>
+                            <image src="../images/icons/comment.png" style="margin-right:10rpx;"/>
                             <view wx:if="{{item.commentNum==0}}" class="num">评论</view>
                             <view wx:else class="num">{{item.commentNum}}</view>
                         </view>
-                        <view class="item">                           
+                        <view class="item" catchtap="changeLike({{item}},{{index}})">                           
                             <view wx:if="{{item.likeNum==0}}" class="num">抢首赞</view>
                             <view wx:else class="num">{{item.likeNum}}</view>
                             <image wx:if="{{item.iLike}}" src="../images/icons/like-on.png"/>
@@ -47,8 +61,8 @@
                         </view>
                     </view>
                 </view>
-            </view>
-        </block>
+            </block>
+        </view>
         <menu></menu> 
     </view>
 </template>
@@ -61,7 +75,8 @@ import api from '../utils/API';
 import menu from '../components/popupMenu';
 export default class find extends wepy.page {
     config = {
-        "navigationBarTitleText": "帖子中心"
+        "navigationBarTitleText": "社区中心",
+        "enablePullDownRefresh": true,
     }
     components = {
         menu:menu
@@ -69,15 +84,23 @@ export default class find extends wepy.page {
 
     data = {
         imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
+        toRightIcon:'http://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/xiangyou.png',
         swiperImg: [
             'images/24cb32843f404d7682e0830632fb2e7e.png',
             'images/bc2d7f9d6f0a39e315700e1b959b32c7.png',
             'images/4cf9526786add9b8e1b19d5c7042e649.png',
             'images/80c3f854526ee74e55121fe8af463684.jpg'
         ],
-        postingList:[],//帖子列表
-        test:{
-            commentNum:13,
+        enableViewH:14,//可见标签高度
+        enableViewId:0,//当前可见标签id
+        enableViewList:[
+            {id:0,value:'所有帖子'},{id:1,value:'上海大学'},{id:2,value:'广西大'},
+            {id:3,value:'文理工科技大学'},{id:4,value:'理工学院'},{id:5,value:'新疆大'},
+            {id:6,value:'北京科技大学'},{id:7,value:'西藏研究所'},{id:8,value:'医学院'}
+        ],//可见区域列表
+        postingList:[
+            {
+            commentNum:14,
             likeNum:99,
             iLike:1,
             userInfo:{
@@ -88,24 +111,71 @@ export default class find extends wepy.page {
             content:{
                 text:'这是一条测试数据这是一条测试数据这是一条测试数据这是一条测试数据这是一条测试数据这是一条测试数据',
                 imgList:[
-                    'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
-                    'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
-                    'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
+                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
+                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
+                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
+                ],
+            },
+        },
+        {
+            commentNum:14,
+            likeNum:99,
+            iLike:1,
+            userInfo:{
+                name:'waaaly',
+                avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
+                postTime:'发布与五分钟前',
+            },
+            content:{
+                text:'这是一条测试数据这是一条测试数据这是一条测试数据这是一条测试数据这是一条测试数据这是一条测试数据',
+                imgList:[
+                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
+                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
+                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
+                ],
+            },
+        },
+        ],//帖子列表
+        test1:{
+            commentNum:14,
+            likeNum:99,
+            iLike:0,
+            userInfo:{
+                name:'rocky',
+                avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
+                postTime:'2019-11-11 10:11',
+            },
+            content:{
+                text:'别爱我没结果别爱我没结果别爱我没结果别爱我没结果别爱我没结果',
+                imgList:[
+                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
+                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
+                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
                 ],
             },
         }
     }
 
     onLoad() {
-        for(let i=0;i<10;i++){
-            this.postingList.push(this.test);
-        }    
+  
     }
 
     onShow() {
 
     }
+    //上拉加载
+    onReachBottom(){
+        wx.showLoading();
+        setTimeout(()=>{
+             for(let i=0;i<3;i++){
+                this.postingList.push(this.test1);
+            } 
+            this.$apply();
+            wx.hideLoading (); 
+        },1000)
+    }
     methods = {
+        //前往详情页
         goDetail(posting){
             // data-item="{{item}}"
             // var posting = e.currentTarget.dataset.item;
@@ -113,6 +183,31 @@ export default class find extends wepy.page {
             wx.navigateTo({
                 url: '../subPack/pages/postingDetail',
             })
+        },
+        //改变可见便签高度
+        changeHight(){
+            this.enableViewH = this.enableViewH==14?30:14;
+            this.$apply();
+        },
+        //改变可见标签id
+        changeId(id){
+            this.enableViewId = id;
+            this.$apply();
+        },
+        //预览图片
+        previewImage (imgList,curImg) {
+            wx.previewImage({
+                current: curImg, // 当前显示图片的http链接  
+                urls: imgList// 需要预览的图片http链接列表  
+            })
+        },
+        //改变点赞
+        changeLike(posting,index){
+            console.log(index);
+            this.postingList[index].likeNum = posting.iLike?
+            this.postingList[index].likeNum-1: this.postingList[index].likeNum+1;
+            this.postingList[index].iLike = posting.iLike?0:1;
+            this.$apply();
         }
     }
     computed = {
@@ -126,16 +221,56 @@ export default class find extends wepy.page {
 page{
     background-color: #dfdfdf;
 }
-.posting:first-child{
-    margin: 10rpx 0rpx;
-    border-radius: 10rpx;
-    background-color: #fff;
-    padding:20rpx;
+.enable-view{
     display: flex;
     flex-direction: column;
+    padding: 10rpx;
+    background-color: #fff;
+    .item-box{
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        overflow: hidden;
+        .item{
+            padding:10rpx;
+            margin: 10rpx;
+            width:fit-content;
+            font-size:26rpx;
+            color:#666;
+            border:1rpx solid #bfbfbf;
+            border-radius:26rpx;
+        }
+        .item-active{
+            padding:10rpx;
+            margin: 10rpx;
+            width:fit-content;
+            font-size:26rpx;
+            color:#108ee9; 
+            border:1rpx solid #108ee9;
+            background-color: #fefefe;
+            border-radius:26rpx;
+        }
+    }
+    .icon-box{
+        margin-top:20rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        .icon-down{
+            width: 40rpx;
+            height: 40rpx;
+            transform: rotate(90deg);
+        }
+        .icon-up{
+            width: 40rpx;
+            height: 40rpx;
+            transform: rotate(-90deg);
+        }
+    }
 }
+
 .posting{
-    margin: 5rpx 0rpx;
+    margin: 10rpx 0rpx;
     border-radius: 10rpx;
     background-color: #fff;
     padding:20rpx;
@@ -177,8 +312,8 @@ page{
         .imageList{
             width: 70%;
             image{
-                width: 50%;
-                margin:3rpx;
+                width: 70%;
+                margin:5rpx;
                 border-radius: 10rpx;
             }
         }    
@@ -193,15 +328,25 @@ page{
                 align-items: center;
             image{
                 width: 40rpx;
-                height: 40rpx;
-                margin-right:10rpx;
+                height: 40rpx;      
             }
             .num{
                 color:#888;
                 font-size: 24rpx;
+                margin-right:10rpx;
             }
         }
     }
 }
-
+.posting-box{
+    display: block;
+}
+.posting-box:first-child{
+    margin: 0rpx;
+    border-radius: 10rpx;
+    background-color: #fff;
+    padding:20rpx;
+    display: flex;
+    flex-direction: column;
+}
 </style>
