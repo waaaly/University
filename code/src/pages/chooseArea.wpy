@@ -1,0 +1,399 @@
+<script>
+import wepy from 'wepy';
+import http from '../utils/Base';
+import api from '../utils/API';
+//引入sdk核心类
+var QQMapWX = require('../utils/qqmap-wx-jssdk.js');
+//实例化api核心类
+var qqmapsdk;
+ //引入TX地图SDK
+qqmapsdk = new QQMapWX({
+    key: "EJKBZ-W4HKQ-MYR5T-G4BHS-ATA47-QMFLY", // 必填
+});
+export default class chooseArea extends wepy.page{
+    data = {
+        init:false,
+        currentAddress:'',
+        district:'番禺区',
+        areaList:[],
+        tab_show:true,//显示标签页
+        tab_ani:'',//标签页动画
+        area_ani:'',//服务区域动画
+        tabList:[],//标签列表 校区
+        areaList:[],//服务区域列表
+        user_area:{},//用户选择的地区及校区，用于缓存
+        exit:false,//用户拒绝授权退出小程序
+    }
+    onLoad(e){            
+        var settingPromise, authPromise, mapPromise;
+        var that = this;
+        //初始化动画变量
+        that.tab_ani=wx.createAnimation({
+            duration: 1000,
+            timingFunction: 'ease',
+            delay: 100
+        });
+        that.area_ani=wx.createAnimation({
+            duration: 1000,
+            timingFunction: 'ease',
+            delay: 100
+        });
+       
+        //查看用户是否已经授权
+        settingPromise = new Promise((resolve,reject)=>{
+            wx.getSetting({
+                success:(res=>{
+                    //已经取得用户授权
+                    if(res.authSetting['scope.userLocation']){
+                        console.log("用户已经授权，直接跳转");
+                        resolve(true);
+                    }else{
+                        console.log("没有弹出授权框");
+                        reject(false);
+                    }
+                    }
+                )
+            })
+        })
+
+        //授权后直接跳转，重新拉取授权  一旦用户明确同意或拒绝过授权，其授权关系会记录在后台，直到用户主动删除小程序
+        settingPromise.then(res=>{     
+            wx.reLaunch({
+                url: '/pages/index?area=' + JSON.stringify(wx.getStorageSync('userChooseArea')),
+            })                    
+        }).catch(res=>{
+             //用户拒绝后再次进入
+            if(wx.getStorageSync('accessFail')){
+                console.log('用户拒绝后再进入')
+                this.exit = true;
+                this.$apply();
+            }else{
+                //用户没有授权过，弹出授权框
+                authPromise = new Promise((resolve,reject)=>{   
+                wx.authorize({
+                    scope:'scope.userLocation',
+                    success:(res=>{
+                        resolve('0');//用户允许授权
+                    }),
+                    fail:(res=>{
+                        console.log("用户拒绝授权，缓存记录");
+                        wx.setStorageSync('accessFail',true);
+                        resolve('1');//用户拒绝授权
+                    }),
+                })
+            }).then(res=>{
+                //已获得用户地址授权
+                    if(res==0){
+                        mapPromise = new Promise((resolve,reject)=>{
+                            qqmapsdk.reverseGeocoder({
+                                success:(res=>{
+                                    console.log(res);
+                                    that.currentAddress = res.result.address;
+                                    that.district = res.result.address_component.district;    
+                                    that.user_area['address_name'] = res.result.address_component.district;                    
+                                    that.$apply();                               
+                                    wx.setStorageSync('userArea',that.user_area);//缓存用户定位地区
+                                    resolve();
+                                }),
+                                fail:(res=>{
+                                    reject(res);
+                                })
+                            })
+                        })
+                        mapPromise.then(res=>{   
+                            //根据得到的区域信息，向后台索取区域标签 //
+                             http.get(api.ShopTabs,{district:that.district}).then(res=>{
+                                console.log(res);
+                                if(res.msg=="区域无代理点"){
+                                    that.tabList=[];
+                                    that.getDefalutArea().then(area=>{
+                                        wx.setStorageSync('userChooseArea', area[0]);
+                                    })
+                                }else{
+                                    that.tabList=res;
+                                }
+                                that.init = true;
+                                that.$apply();
+                            })
+                        })
+                    }
+                //用户拒绝地址授权    
+                    if(res == 1){
+                        this.exit = true;
+                        this.$apply();
+                    }           
+                })
+            }  
+        })      
+    }
+    async getDefalutArea(){
+       return new Promise((resolve,reject)=>{
+            resolve(http.get(api.GetShopArea,{district:'智趣社区'}));
+        })        
+    }
+    aera_ani_show(){
+        this.tab_show = false;
+        // this.aera_ani.translate(500, 0).step();
+        // this.aera_ani.export();
+        this.$apply();
+    }
+    tab_ani_show(){
+        this.tab_show = true;
+        // this.tab_ani.translate(500, 0).step();
+        // this.tab_ani.export();
+        this.$apply();
+    }
+    methods={  
+        //选择学校标签   
+        chooseTab(index){
+            if(this.tabList.length==0){
+                this.user_area['school_id'] =  null;
+                this.user_area['school_name'] = '暂无开通校区';
+                wx.setStorageSync('userArea',this.user_area);//缓存用户定位地区
+                wx.reLaunch({
+                    url: '/pages/index',
+                })
+                return;
+            }
+            this.user_area['school_id'] =  this.tabList[index].id;
+            this.user_area['school_name'] = this.tabList[index].name;
+            wx.setStorageSync('userArea',this.user_area);//缓存用户定位地区
+            //根据选择的学校标签，获取服务区域
+            http.get(api.ShopAreaTabs,{tabs_id:this.tabList[index].id}).then(res=>{
+                console.log(res)
+                this.areaList = res;
+                this.$apply();
+                this.aera_ani_show();
+            })
+            
+        },
+        //返回
+        back(){
+            this.tab_ani_show();
+        },
+        //选择服务区域
+        chooseArea(aera){
+            console.log(aera);
+            wx.setStorageSync('userChooseArea',aera);
+            wx.reLaunch({
+                url:'/pages/index',
+            })
+        },
+        //打开设置页
+        openSetting(){
+            this.exit = false;
+            this.$apply();
+            wx.openSetting({
+                success:(res=>{
+                    console.log(res);
+                    if(!res.authSetting['scope.userLocation']){
+                        this.exit = true;
+                        this.$apply();
+                    }else{//用户授权成功
+                        this.exit = false;
+                        this.$apply();
+                        qqmapsdk.reverseGeocoder({
+                            success:(res=>{
+                                console.log(res);
+                                this.currentAddress = res.result.address;
+                                this.district = res.result.address_component.district;    
+                                this.user_area['address_name'] = res.result.address_component.district;                    
+                                this.$apply();                               
+                                wx.setStorageSync('userArea',this.user_area);//缓存用户定位地区
+                                 //根据得到的区域信息，向后台索取区域标签 //
+                                http.get(api.ShopTabs,{district:this.district}).then(res=>{
+                                        console.log(res);
+                                        if(res.msg=="区域无代理点"){
+                                            this.tabList=[];
+                                            this.getDefalutArea().then(area=>{
+                                                wx.setStorageSync('userChooseArea', area[0]);
+                                            })
+                                        }else{
+                                            this.tabList=res;
+                                        }
+                                        this.init = true;
+                                        this.$apply();
+                                    })
+                            }),
+                            fail:(res=>{
+                                
+                            })
+                        })
+                    }
+                })
+            })
+        }
+    }
+}
+</script>
+
+<template>
+<view>
+    <view wx:if="{{init}}" class="box">
+        <view class="title">
+            <text style="margin:10px;color:#666">您当前所在位置：</text>
+            <text style="margin:10px 0 10px 45px;text-decoration: underline;">{{currentAddress}}</text>
+            <text wx:if="{{tabList.length==0}}" style="margin:10px;color:#666">您附近暂无开通服务的校区，请选择智趣社区跳转至首页：</text>
+            <text wx:else style="margin:10px;color:#666">您附近有以下具备服务的学校，请您选择其中之一：</text>
+        </view>
+        <view class="tab-view" wx:if="{{tab_show}}"  animation="{{tab_ani}}">
+            <block wx:if="{{tabList.length==0}}">
+                <view  class="item" bindtap="chooseTab()"  >智趣社区</view>
+            </block>
+            <block wx:else>
+                <view wx:for="{{tabList}}" class="item" bindtap="chooseTab({{index}})"  >{{item.name}}</view>
+            </block>
+        </view>
+        <view class="area-view" wx:else  animation="{{tab_ani}}">
+            <view @tap="back" class="back">          
+                <image style="transform: rotate(180deg);" src="http://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/xiangyou.png"/>
+                <text >返回</text>
+            </view>
+            <block wx:for="{{areaList}}">
+                <view class="item" bindtap="chooseArea({{item}})"  >{{item.area_name}}</view>
+            </block>
+        </view>
+    </view>
+    <view wx:if="{{exit}}"  class="exit-back">
+        <view class="exit-box">
+            <view class="title">授权失败</view>
+            <view class="content">您拒绝了小程序使用地址的请求，我们无法为您提供相应服务，请点击设置按钮重新授权，或直接退出小程序！</view>
+            <view class="btn">
+                <navigator class="cancle" open-type="exit" target="miniProgram">退出程序</navigator>
+                <button class="confirm" bindtap="openSetting">打开设置</button>  
+            </view> 
+        </view>
+    </view>
+
+</view>
+</template>
+
+<style lang='scss'>
+page{
+    color:#ff6b5d;  
+    background-color: #eee;
+}
+.box{
+    display:flex;flex-direction:column;margin-top:20px;align-items:center;
+    .title{
+        display:flex;flex-direction:column;margin-bottom:20rpx;
+    }
+    .tab-view{
+       display:flex;flex-direction:column;width:80%;margin-top: 70rpx;
+        .item{
+            padding:20px;margin-bottom:80rpx;display:flex;
+            justify-content: space-between;
+            border-radius:10rpx;
+            color:#fff;
+            background-color:#ff6b5d;
+            box-shadow: 1rpx 1rpx 10rpx 10rpx #ffbcb6;
+            image{
+                width:50rpx;height:50rpx;
+            }
+        }
+    }
+    .area-view{
+        display:flex;flex-direction:column;width:80%;margin-top: 70rpx;
+        .item{
+            padding:20px;margin-bottom:80rpx;display:flex;
+            justify-content: space-between;
+            border-radius:10rpx;
+            color:#fff;
+            background-color:#ff6b5d;
+            box-shadow: 1rpx 1rpx 10rpx 10rpx #ffbcb6;
+        }
+        .back{
+            position: absolute;
+            top: 330rpx;
+            left: 10rpx;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #666;
+            padding: 10rpx;
+            opacity: 0.8;
+            border-radius: 10rpx;
+            text{
+                color:#fff;
+            }
+            image{
+                width:40rpx;
+                height: 40rpx;
+            }
+        }
+    } 
+}
+.exit-back{
+    background-color: #5f5f5f;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+
+    .exit-box{
+        display: flex;
+        flex-direction: column;
+        border-radius: 10rpx;
+        background-color: #fff;
+        height: 35vh;
+        justify-content: space-between;
+        margin: 0 10vw;
+
+        .title{
+            color: #6c6c6c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 30rpx;
+
+        }
+        .content{
+            color: #b5b5b5;
+            padding: 0 20rpx;
+            display: flex;
+            text-align: center;
+        }
+        .btn{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 10px;
+            font-size: 18px;
+            padding:0 20rpx;
+            .cancle{
+                color: #b5b5b5;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .confirm{
+                color:#7a8aab;
+            }
+        }
+        .btn::after{
+            position: absolute;
+            content:'';
+            border:1rpx solid #eee;
+            left:0rpx;
+            right:0rpx;
+            top: -10rpx;
+        }
+    }
+}
+button{
+    background-color: #fff;
+}
+button::after{
+border: none;
+content:"";
+color:none;
+}
+
+.button-hover{
+color:none;
+background-color:#fff;
+}
+</style>

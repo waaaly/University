@@ -1,0 +1,367 @@
+<template>
+<view class="stv-container">
+  <view class="tab-bar">
+    <view wx:for="{{tabs}}" wx:key="unique" data-index=
+    "{{index}}" bindtap="handlerTabTap" class="tab {{activeTab==index?'tab-active':''}}" style="width: {{stv.windowWidth/tabs.length}}px">
+      <text>{{item}}</text>
+    </view>
+    <view style="width: {{stv.lineWidth}}px; left: {{stv.offset/tabs.length}}px" class="under-line {{!stv.tStart? 'withAnimate': ''}}"></view>
+  </view>
+  <view wx:if="{{init}}" class="scroll-view">
+    <view bindtouchstart="handlerStart" catchtouchmove="handlerMove" bindtouchcancel="handlerCancel" bindtouchend="handlerEnd"  class="scroll-view-wrapper {{!stv.tStart? 'withAnimate': ''}}" style="left: -{{stv.offset}}px">
+      <view style="width: {{stv.windowWidth}}px;" wx:for="{{tabs}}"  class="one-scene">
+        <scroll-view style="height:100%;position:relative;" scroll-y>
+            <view wx:if="{{OrderList==0}}" > 
+              <image style="width:100%;" mode='widthFix' src="{{imageUrl+'zq/noneOrder.png'}}"/>   
+              <navigator open-type="switchTab" 
+                          class='goindex' 
+                          url="/pages/index">去发现更多好货~
+              </navigator>       
+            </view>
+
+            <view wx:else>
+              <orderItem ></orderItem>
+            </view> 
+           
+        </scroll-view>
+      </view>
+    </view>
+
+     <Pagination wx:if="{{OrderList.length!=0}}"
+                 :curNum.sync="curNum" 
+                 :totalNum.sync="totalNum"></Pagination>
+  </view>
+</view>
+
+</template>
+
+<script>
+import wepy from "wepy";
+import http from '../utils/Base';
+import api from '../utils/API';
+import orderItem from '../components/orderItem';
+import Pagination from '../components/pagination';
+export default class myOrder extends wepy.page{
+  components = {
+    orderItem:orderItem,
+    Pagination:Pagination,
+  }
+  data = {
+    init:false,
+    imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
+    curNum:1,//当前页
+    totalNum:1,//总页数
+    activeTab: 0,
+    orderStatus:10,//订单状态码
+    tabs:['全部订单','待付款','待收货','已完成'],              //order_status 10-待支付 22-支付完成 32-代收货 40-订单完成) 空是全部
+                                                          //10 确认支付 取消订单 22：申请退款 32：确认收货 申请退款 40：前往评价
+    OrderList:[],
+    stv: {
+      windowWidth: 0,
+      lineWidth: 0,
+      offset: 0,
+      tStart: false
+    },
+  }
+  onLoad(e){
+    try {
+          var res = wx.getSystemInfoSync()
+          this.windowWidth = res.windowWidth;
+          this.data.stv.lineWidth = this.windowWidth / this.data.tabs.length;
+          this.data.stv.windowWidth = res.windowWidth;
+          this.$apply();
+    } catch (e) {
+    }
+    //切换顶部tabs
+    this._updateSelectedPage(e.id);
+    //修改页面标题
+    wx.setNavigationBarTitle({
+      title:'订单列表'
+    })  
+  }
+  onShow(e){
+    let getParam = {
+      user_id:wx.getStorageSync('userInfoInServer').id,
+    }
+    //全部订单
+    if(this.activeTab == 0){
+      this.orderStatus = 0;
+      getParam['statusTab'] = 0;
+      this.refresh(getParam);
+    }
+    //待付款
+    else if(this.activeTab == 1){
+      this.orderStatus = 10;
+      getParam['statusTab'] = 10;
+      this.refresh(getParam);
+    }
+    //待收获
+    else if(this.activeTab == 2){
+      this.orderStatus = 32;
+      getParam['statusTab'] = 32;
+      this.refresh(getParam);
+    }
+    //已完成
+    else if(this.activeTab == 3){
+      this.orderStatus = 40;
+      getParam['statusTab'] = 40;
+      this.refresh(getParam);
+    } 
+  }
+  //离开当前页面
+  onUnload(){
+
+  }
+  events = {
+    //订单组件 子组件渲染完成，在这里接收完成初始化
+    'myOrder':(recve)=>{
+      this.init = true;
+      this.$apply();
+    },
+    //翻页器组件
+    'changeCur':(value)=>{
+        //组件已经将页数加一
+        this.curNum = value;
+        let getParam = {
+          user_id:wx.getStorageSync('userInfoInServer').id,
+          statusTab:this.orderStatus,
+          page:value
+        }
+        this.refresh(getParam);
+        this.$apply();
+    }
+  }
+   watch = {
+     //订单列表
+     OrderList(newValue,old){
+        if(newValue==[]){
+            this.OrderList=[];
+            this.$apply();
+        }
+     },
+     //切换顶部标签组
+     activeTab(newValue, oldValue) {
+        this.OrderList = [];
+        this.pageList = [];
+        this.swiperCurrent = 0;
+        let getParam = {
+          user_id:wx.getStorageSync('userInfoInServer').id
+        }
+        //改变顶部订单标签
+        switch(newValue){
+            case 0://全部订单
+                {
+                  this.orderStatus = '';
+                  getParam['statusTab'] = '';
+                  this.refresh(getParam);
+                  break;
+                }
+              
+            case 1://带支付，待付款
+              {
+                this.orderStatus = 10;
+                getParam['statusTab'] = 10;
+                this.refresh(getParam);
+                break;
+              } 
+              
+            case 2:// 商家确认接单，用户等待收获
+            {
+              this.orderStatus = 32;
+              getParam['statusTab'] = 32;
+              this.refresh(getParam);
+              break;
+            }  
+              
+            case 3://订单完成，待评价
+            {
+              this.orderStatus = 40;
+              getParam['statusTab'] = 40;
+              this.refresh(getParam);
+              break;
+            } 
+          } 
+      }
+  }
+  methods = {
+ 
+    handlerTabTap(e) {
+          this.init = false;
+          this.$apply();
+          this._updateSelectedPage(e.currentTarget.dataset.index);
+    },
+
+  }
+  //想后台索取数据，参数2：true：翻页，false：切换订单状态
+  refresh(param,ifPageChange){
+    console.log(param);
+    http.get(api.OrderList,{...param}).then(res=>{ 
+        console.log(res);
+        if(res.data.length == 0){
+          this.init = true;
+          this.$apply();
+          return ;
+        }  
+        this.curNum   = res.curremt_page;
+        this.totalNum = res.last_page;
+
+        this.OrderList=res.data; 
+        this.$broadcast('orderList',this.OrderList);               
+        this.$apply();   
+    })         
+  }
+    
+  _updateSelectedPage(page) {
+      let {tabs, stv, activeTab} = this.data;
+      this.activeTab = page;
+      this.stv.offset = stv.windowWidth*page;
+      this.$apply();
+  }
+  
+}
+</script>
+<style>
+.stv-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 20rpx;
+}
+.withAnimate {
+  transition: all 100ms ease;
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
+  -ms-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  -ms-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  -moz-perspective: 1000;
+  -ms-perspective: 1000;
+  perspective: 1000;
+}
+.stv-container .tab-bar {
+  background-color: #fff;
+  position: relative;
+  display: flex;
+  font-size: 30rpx;
+  color: #666666;
+}
+.stv-container .tab-bar .tab-active {
+  color: #ff6b5d;
+  border-bottom: 6rpx solid #ff6b5d;
+}
+.stv-container .tab-bar .tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 16rpx;
+  padding-bottom: 20rpx;
+}
+.stv-container .tab-bar .under-line {
+  position: absolute;
+  bottom: 0;
+  height: 6rpx;
+  background-color: #ff6b5d;
+}
+.stv-container .scroll-view {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #f3f3f3;
+}
+.stv-container .scroll-view .scroll-view-wrapper {
+  position: absolute;
+  top: 0;
+  bottom: 80px;
+  display: flex;
+}
+.stv-container .scroll-view .scroll-view-wrapper .one-scene {
+  height: 100%;
+}
+.one-scene text {
+  display: flex;
+  justify-content: center;
+  /* padding-top: 200rpx; */
+}
+
+.goindex {
+  width:60%;
+  height:70rpx;
+  line-height:70rpx;
+  text-align:center;
+  background:#ff6b5d;
+  color:#fff;
+  margin:30rpx auto 0 auto;
+}
+
+.emptynone {
+  font-size:32rpx;
+  text-align:center;
+  color:#999;
+  margin-top:250rpx;
+  width:100%;
+  padding-top:250rpx;
+  background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQoAAAEKAgMAAACXpfNaAAAAA3NCSVQICAjb4U/gAAAADFBMVEX///8AAAAAAAAAAAD4jAJNAAAABHRSTlMAESIzthWI6wAAAAlwSFlzAAALEgAACxIB0t1+/AAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNui8sowAAAPiSURBVHic7ZxNdtQwDMdjeH5ddMEq5yFH6KI5B1fhRnAUjsCCBQvANJOmkw9Lf0nz75Ap8aLvdUb+WZY9/pTcNGpK/VN61GX0lPsphRH9LD2ECKlfpEiFVogQZI0IVGdhyxyCtKdMnfi/IW27hb+jVDIkZ21yrczkqk2qqy18XE+t0LmzXZEkitoVaUVJmV4RlL7LRkVarQltimhqWBXJek8yjUdACBRhkzEo0iKRDK2asKrQqhlrCkUMTYdUTZYu1OrlGKoChWwjlSplqgqoTLb9KpNWGeugq8ip/HlS9DVWRS2sNc8fsu3t04dYWrLPHqJodkyFkkFax7wuyXpWboLODnOIwh5zSEp7zCFJ+xayVa1d5hDEfeaoq+0zR13eu66v6O00RzWD1xw1xbPTHINB8CcobUv1by3SuvZuk1aybKCGtGb4Tbo1od+k23Iju7V1/QmMiEnXBUdMujYigxFplnXJsaOFpRUJjFizLItOIZM+mXHGiDXLsilizbIsuw2ZdGmD6KnRvC2CzTLPGG3aeQWiTTs3ZLRp5w2aw0do55xq9/hUPmuMbmIoTfuulJ/yt2dLat3jrpTfGmNqUa1p70v5I3/7klXtHh9KKRrjcWJ0YcZkSrV7IMbLaaAiBBiZyFBHD8CYbPnqDNA/JoY6egDGlJnA0EcgxBgNsReGPoohxph7Nwx1kkOMdGLoky1mdFdh3JkY+mSrj+tT9jfEAAsHyBia5G0xVBHIGH5uYBGEGf3NMN6X8us6DH2tDhlDu4I9g4HRHYzXYOj7H8hodsQAezl973FiPByMg3EwxpQ4jB8H4x8wwHhqYMAx+bYY+lwJGYb5lsFoSvn+XzHA2tLAwAefiGFYJ++G8aV8u5jxsXyFDLAXa+7V7f64Z4gfjI/JsK+8KUb8wmJMhnOH22JEL5LGZDmXuh4DDWSIMfyN3+Ccc++FcdkPxnKefD0G6OzqvZjtnB+t158zqx0VnCkx7z0Y9y97uY9i3K0x7vgYd42MO0/K3SvjDphxF824E2fczTN8BBi+CgyfCYrvBsOHhOHLwvCpYfj2MHyM9uIvRfH92osfG8Mnby/+hRRfSYbPJsN3lOHDyvClpfj0MnyLGT7ODF9rhs83xfec4QPP8MVnxARQYhMYMRKMWA1GzAgldoURQ8OI5WHEFFFimxgxVoxYL0bMGSX2jRGDx4gFpMQkMmIjGTGalFhRRswqI3aWEsPLiCWmxDQzYqsZMd6UWHNGzLsiKdNrope+AUB5i+CkyEba9yYC5W2GhvFGBOOtCsqbGZS3OxrGGyJrSPCY5bKKPCfC2y6NsVv8BU5kqDEIDlCOAAAAAElFTkSuQmCC) no-repeat 50% 0;
+  background-size:200rpx 200rpx;
+
+}
+
+.orderPage{
+  white-space: nowrap;  /*这个很重要， */
+  position:absolute;
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  padding:10rpx;
+  bottom:50px;
+  width: 26%;
+  left:37%;
+  z-index:1;
+  height:32px;
+  opacity: 0.7;
+  background-color:#f1f1f1;
+  border-radius:20rpx;
+}
+
+.frontPage{
+position: absolute;
+left:2%;
+font-size: 30rpx;
+bottom: 3px;
+border-radius: 50%;
+width: 25px;
+height: 25px;
+background-color: #999;
+display: flex;
+align-items:center;
+justify-content:center;
+}
+
+.currentPage{
+  font-size:40rpx;
+  width:30px;
+  height:30px;
+  color:#fff;
+  background-color:#ff6b5d;
+  text-align: center;
+  border-radius:50%;
+}
+
+.nextPage{
+position: absolute;
+left: 73%;
+font-size: 30rpx;
+bottom: 3px;
+border-radius: 50%;
+width: 25px;
+height: 25px;
+background-color: #999;
+display: flex;
+align-items:center;
+justify-content:center;
+}
+</style>

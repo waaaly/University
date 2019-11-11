@@ -1,0 +1,146 @@
+<template>
+    <view style="position:fixed;right:0rpx;bottom:0rpx;">
+        <!-- <image src="/images/icons/topic.png" class="img-style" animation="{{animCollect}}" bindtap="question"/> -->
+        <image src="/images/icons/posting.png" class="img-style" animation="{{animTranspond}}" bindtap="idea"/>
+        <image src="/images/icons/newsList.png" class="img-style" animation="{{animInput}}" bindtap="answer"/>
+        <image src="/images/icons/menu.png" class="img-plus-style" animation="{{animPlus}}" bindtap="plus"/>
+    </view>
+</template>
+
+<style>
+.img-plus-style {
+  height: 150rpx;
+  width: 150rpx;
+  position: absolute;
+  bottom: 30rpx;
+  right: 30rpx;
+  z-index: 100;
+}
+.img-style {
+  height: 150rpx;
+  width: 150rpx;
+  position: absolute;
+  bottom: 30rpx;
+  right: 30rpx;
+  opacity: 0;
+}
+</style>
+<script>
+import wepy from 'wepy';
+export default class popupMenu extends wepy.component{
+    data={
+        isPopping: false,//是否已经弹出
+        animPlus: {},//旋转动画
+        animCollect: {},//item位移,透明度
+        animTranspond: {},//item位移,透明度
+        animInput: {},//item位移,透明度
+    }
+    methods={
+        //提问
+        question(){
+            wx.showToast({
+                icon:'none',
+                title:'该功能正在开发中',
+            })
+            // wx.navigateTo({
+            //     url: '../subPack/pages/question',
+            // })
+        },
+        //发帖
+        idea(){
+            // wx.showToast({
+            //     icon:'none',
+            //     title:'该功能正在开发中',
+            // })
+            wx.navigateTo({
+                url: '../subPack/pages/postingEdit',
+            })
+        },
+        //消息中心
+        answer(){
+            // wx.showToast({
+            //     icon:'none',
+            //     title:'该功能正在开发中',
+            // })
+            wx.navigateTo({
+                url: '../subPack/pages/newsList',
+            })
+        },
+        //点击弹出
+        plus: function () {
+            if (this.data.isPopping) {
+                //缩回动画
+                this.takeback();
+                this.data.isPopping=false;
+                this.$apply();
+            } else  {
+                //弹出动画            
+                this.popp();
+                this.data.isPopping=true;
+                this.$apply();
+            }
+        },
+    }
+          //弹出动画
+    popp () {
+        //plus顺时针旋转
+        var animationPlus = wx.createAnimation({
+            duration: 500,
+            timingFunction: 'ease-out'
+        })
+        var animationcollect = wx.createAnimation({
+            duration: 500,
+            timingFunction: 'ease-out'
+        })
+        var animationTranspond = wx.createAnimation({
+            duration: 500,
+            timingFunction: 'ease-out'
+        })
+        var animationInput = wx.createAnimation({
+            duration: 500,
+            timingFunction: 'ease-out'
+        })
+        animationPlus.rotateZ(180).step();
+        // animationcollect.translate(10, -120).rotateZ(360).opacity(1).step();
+        animationTranspond.translate(-10, -80).rotateZ(360).opacity(1).step();
+        animationInput.translate(-80, -10).rotateZ(360).opacity(1).step();
+
+        this.animPlus = animationPlus.export();
+        this.animCollect = animationcollect.export();
+        this.animTranspond = animationTranspond.export();
+        this.animInput = animationInput.export();
+
+    }
+    //收回动画
+    takeback () {
+        //plus逆时针旋转
+        var animationPlus = wx.createAnimation({
+            duration: 500,
+            timingFunction: 'ease-out'
+        })
+        var animationcollect = wx.createAnimation({
+            duration: 500,
+            timingFunction: 'ease-out'
+        })
+        var animationTranspond = wx.createAnimation({
+            duration: 500,
+            timingFunction: 'ease-out'
+        })
+        var animationInput = wx.createAnimation({
+            duration: 500,
+            timingFunction: 'ease-out'
+        })
+        animationPlus.rotateZ(0).step();
+        animationcollect.translate(0, 0).rotateZ(0).opacity(0).step();
+        animationTranspond.translate(0, 0).rotateZ(0).opacity(0).step();
+        animationInput.translate(0, 0).rotateZ(0).opacity(0).step();
+
+        this.animPlus = animationPlus.export();
+        this.animCollect = animationcollect.export();
+        this.animTranspond = animationTranspond.export();
+        this.animInput = animationInput.export();
+    }
+}
+</script>
+
+

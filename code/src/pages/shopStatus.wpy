@@ -1,0 +1,299 @@
+<template>
+
+  <view class="_container">
+    <view style="margin-top:10rpx"/>
+    <view class="weui-cells-form">
+      
+  <view class="weui-cell">
+    <view class="weui-cell__bd">营业状态</view>
+    <view class="weui-cell__ft">
+      <text class="switch-describe">{{status.Text}}</text>
+      <switch checked="{{status.checked}}" bindchange="statusInput"/>
+    </view>
+  </view>
+
+    <view style="height:1px;background-color:#f5f5f5;margin:0 80rpx;"></view>
+      
+  <view class="weui-cell weui-cell_switch">
+    <view class="weui-cell__bd">营业时间</view>
+    <view class="weui-cell__ft">
+      <text class="switch-describe">{{time.Text}}</text>
+      <switch checked="{{time.checked}}"  bindchange="timeInput"/>
+    </view>
+  </view>
+
+    </view>
+
+    <view style="margin-top:10rpx"/>
+    <view class="weui-cells-form" wx:if="{{time.checked == false}}">
+      
+        <view class="weui-cell weui-cell_input">
+            <view class="weui-cell__hd">
+            <view class="weui-label">开业时间</view>
+            </view>
+            <view class="weui-cell__bd">
+            <picker mode="time" value="{{time.timeStart}}" bindchange="timeStart">
+                <view class="weui-input">{{time.timeStart}}</view>
+            </picker>
+            </view>
+        </view>
+        <view style="height:1px;background-color:#f5f5f5;margin:0 80rpx;"></view>
+        <view class="weui-cell weui-cell_input">
+            <view class="weui-cell__hd">
+            <view class="weui-label">歇业时间</view>
+            </view>
+            <view class="weui-cell__bd">
+            <picker mode="time" value="{{time.timeEnd}}" bindchange="timeEnd">
+                <view class="weui-input">{{time.timeEnd}}</view>
+            </picker>
+            </view>
+        </view>
+
+    </view>
+
+    <text class="tips">提示：{{time.checked == false ? '请点击设置开业、打烊时间': '全天营业无需设置开业、打烊时间'}}</text>
+
+    <!--操作栏-->
+    
+  <view class="action-bar-placeholder"/>
+  <view class="action-bar row-center fixed-bottom"  wx:if="{{$ActionBar$noCancel == 0}}">
+    <view class="action secondary-action row-center" bindtap="$ActionBar$back">
+      <text>{{$ActionBar$cancelText}}</text>
+    </view>
+    <view class="action {{$ActionBar$okType}}-acton row-center" bindtap="$ActionBar$tap">
+      <text>{{$ActionBar$okText}}</text>
+    </view>
+  </view>
+  <view class="action-bar"  >
+    <view class="action-cancel" style="width: 100%" bindtap="cancel">
+      <text>取消</text>
+    </view>
+    <view class="action-enter" style="width: 100%" bindtap="enter">
+      <text>确定</text>
+    </view>
+  </view>
+
+  </view>
+</template>
+
+<style >
+page{
+    background-color:#f5f5f5;
+}
+._container{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.weui-cells-form{
+    border-top: 1px solid #ededed;
+    border-bottom: 1px soild #ededed;
+    font-size:17px;
+    position: relative;
+    line-height: 1.41176471;
+    background-color:#fff;
+}
+
+.weui-cell{
+    padding:10px 15px;
+    display: flex;
+    align-items: center;
+}
+
+.weui-cell-input{
+    padding: 10px 15px;
+    position: relative;
+    display:flex;
+    align-items:center;
+    color:#262626
+}
+
+.weui-cell__hd{
+
+}
+
+.weui-label{
+    width:105px;
+    word-wrap:break-word;
+    word-break:break-all;    
+}
+
+.weui-cell__bd{
+    flex:1;
+}
+
+.weui-cell-ft{
+    color:#999;
+    text-align:right
+}
+
+.switch-describe{
+    font-size:26rpx;
+    color:#a3a3a3;
+    margin-right: 10rpx;
+}
+.tips{
+    font-size: 26rpx;
+    color: #a3a3a3;
+    margin: 20rpx;
+}
+.action-bar{
+    width:100%;
+    height: 100rpx;
+    z-index:100;
+    position:fixed;
+    bottom:0;
+    justify-content: center;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-size:32rpx;
+    color:#262626;
+}
+.action-cancel{
+     display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 50%;
+    height: 100%;
+    background-color: #fff;
+    border-top: 1px solid#ededed;
+}
+.action-enter{
+     display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 50%;
+    height: 100%;
+    justify-content: center;
+    
+    background-color: #ff6b5d;
+    border-top: 1px solid#ededed;
+}
+.action-enter text{
+color:#fff;
+}
+
+</style>
+
+<script>
+  import wepy from 'wepy';
+  import http from '../utils/Base';
+  import api from '../utils/API';
+  export default class shopStatus extends wepy.page {
+      config = {
+        "navigationBarTitleText": "营业设置"
+    };
+    data = {
+      shopId:0,
+        status:{
+            Text:'营业中',
+            checked:true,
+        },
+        time:{
+            Text:'全天营业',
+            checked:true,
+            timeStart:'00:00',
+            timeStartNum:0,
+            timeEnd:'23:59',
+            timeEndNum:0,
+        }
+        
+    };
+    async onLoad (e) {
+      this.shopId = e.shop_id;
+    };
+    methods = {
+        statusInput(e){
+            //如果正在营业
+            if(this.status.checked){
+                this.status.checked = false;
+                this.status.Text = '歇业中'
+            }else{
+                this.status.checked = true;
+                this.status.Text = '营业中'
+            }
+        },
+        timeInput(e){
+            //如果是全天营业
+            if(this.time.checked){
+                this.time.checked = false;
+                this.time.Text = '时段营业'
+            }else{
+                this.time.checked = true;
+                this.time.Text = '全天营业'
+            }
+        },
+        timeStart(e){
+            this.time.timeStart = e.detail.value;
+            let strArr = e.detail.value;
+             strArr = strArr.split(':');
+             let str = '';
+             for(let i = 0;i < strArr.length; i++){
+               str = str + strArr[i];
+             }
+            console.log(str)
+            this.time.timeStartNum = parseInt(str);
+            this.$apply();
+        },
+        timeEnd(e){ 
+             this.time.timeEnd = e.detail.value;
+             let strArr = e.detail.value;
+             strArr = strArr.split(':');
+             let str = '';
+             for(let i = 0;i < strArr.length; i++){
+               str = str + strArr[i];
+             }          
+            console.log(str)
+            this.time.timeEndNum = parseInt(str);
+            this.$apply();  
+        },
+        cancel(e){
+            wx.navigateBack({
+                delta: 1, // 回退前 delta(默认为1) 页面
+            })
+        },
+
+      enter() {
+        var that = this;
+         if(this.time.timeEndNum < this.time.timeStartNum){
+              wx.showModal({
+                showCancel:'fasle',
+                title:'提示',
+                content:'开业时间必须早于歇业时间！',
+            })
+          }else{
+            wx.showModal({
+              title:'修改提示',
+              cancelText:'算了',
+              confirmText:'确认修改',
+              confirmColor:'#ff6b5d',
+              content:'您确定要修改商铺的营业状态吗？',
+              success:function(res){
+                if(res.confirm){
+                  http.post(api.OpenSetting,{
+                    shop_id:that.shopId,
+                    state:that.status.checked,
+                    business_start_time:that.time.timeStart+':00',
+                    business_end_time:that.time.timeEnd+':00'})
+                }else{
+
+                }
+              }
+            })
+          }
+      }
+    };
+
+    events = {};
+    components = {
+
+    };
+
+    config = {
+      navigationBarTitleText: '店铺状态'
+    };
+  }
+</script>

@@ -1,0 +1,448 @@
+<template>
+<view>
+   <view wx:if="{{init}}">
+      <view class="area">
+        <view class="cur-area">您当前所在地区</view>
+        <view class="area-name">
+          <text>{{curAddressName}}</text>
+          <view class="picker" bindtap="chooseAddress">
+              <image  src="{{StaticImgUrl+'relocation.png'}}"/>
+              <text>重新选择位置</text>
+          </view>
+        </view>
+     </view>
+     <view class="area">
+        <view class="cur-area">当前所在校区</view>
+        <view class="area-name">
+          <text>{{curSchoolName}}</text>
+          <picker bindchange="schoolChange" range-key="name" range="{{schoolList}}">
+            <view class="picker">
+               <image  src="{{StaticImgUrl+'relocation.png'}}"/>
+               <text >重新选择校区</text>
+            </view>
+          </picker>
+        </view>
+     </view>
+     <view class="area">
+        <view class="cur-area">当前服务区域</view>
+        <view class="area-name">
+          <text>{{curAreaName}}</text>
+          <picker bindchange="areaChange" range-key="area_name" range="{{areaList}}">
+            <view class="picker">
+               <image  src="{{StaticImgUrl+'relocation.png'}}"/>
+               <text >选择服务区域</text>
+            </view>
+          </picker>
+        </view>
+     </view>
+     <view class='address'>
+        <view class='bodyTitle'> 
+          <view class='dizhiFont'>从收获地址选择</view>   
+        </view>
+        <scroll-view scroll-y="true" class="addressScroll" >
+          <block wx:if="{{userAddressInServer.length!=0}}">
+              <view wx:for="{{userAddressInServer}}" bindtap="click" data-id="{{index}}" class="item" >       
+              <view class="area-name">
+                <view>{{item.area_name}}</view>
+                <view wx:if='{{item.is_default}}'>[默认]</view>
+              </view>
+                <view >{{item.name}}
+                  <text style="margin-left:30rpx;font-size:30rpx;margin-right:10rpx;color:#666;">{{item.mobile}}</text> 
+                </view>
+                <view style="font-size:28rpx;color:#888;">{{item.tabs_name}}{{item.area_name}}{{item.address}}</view>           
+            </view>
+          </block>                       
+        </scroll-view>
+    </view>
+    <button bindtap="add" class='footButtom'>新增收货地址</button>   
+  </view>
+  <view wx:if="{{exit}}"  class="exit-back">
+        <view class="exit-box">
+            <view class="title">授权失败</view>
+            <view class="content">您拒绝了小程序使用地址的请求，我们无法为您提供相应服务，请点击下方设置按钮重新授权！</view>
+            <view class="btn">
+                <view class="cancle" bindtap="hideExit">下次再说</view>
+                <button class="confirm" bindtap="openSetting">打开设置</button>  
+            </view> 
+        </view>
+    </view>
+</view>
+</template>
+<script>
+import wepy from "wepy";
+import http from '../utils/Base';
+import api from '../utils/API';
+//引入sdk核心类
+var QQMapWX = require('../utils/qqmap-wx-jssdk.js');
+//实例化api核心类
+var qqmapsdk;
+ //引入TX地图SDK
+qqmapsdk = new QQMapWX({
+    key: "EJKBZ-W4HKQ-MYR5T-G4BHS-ATA47-QMFLY", // 必填
+});
+export default class addressChoose extends wepy.page {
+  config = {
+        "navigationBarTitleText": "选择服务区"
+    };
+    data = {
+        StaticImgUrl: "http://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/",
+        curSchoolName:'',//当前学校名
+        curAreaName:'',//当前服务区域名
+        curAddressName:'',//用户当前真实地址的地区名，如番禺区
+        userAddressInServer:[],
+        schoolList:[],//校区列表
+        areaList:[],//后台返回的服务区域列表
+        init:false,
+        location:{      //用户手动选择到
+            latitude: 0,//纬度
+            longitude: 0,//经度
+        },
+        exit:false,//授权失败弹窗
+        scope:true,//确认授权
+    }
+    onLoad(e){
+      this.curAddressName = wx.getStorageSync("userArea").address_name;
+      this.curSchoolName = wx.getStorageSync("userArea").school_name;    
+      this.curAreaName = wx.getStorageSync("userChooseArea").area_name;
+    }
+    onShow(e){
+     
+      //获取开通服务的校区
+      http.get(api.ShopTabs,{district:this.curAddressName}).then(res=>{
+          console.log(res);
+          if(res.msg=="区域无代理点"){
+              this.schoolList=[{name:'暂无开通服务校区'}];
+          }else{
+            this.schoolList = res;
+          }         
+          //获取后台服务区域列表
+        http.get(api.ShopAreaTabs,{tabs_id:wx.getStorageSync('userArea').school_id}).then(res=>{
+            console.log(res);
+            this.areaList = res;
+            //用户登录的话就读取后台的地址数据
+          if(wx.getStorageSync('userInfoInServer')){
+              http.get(api.AddressList,{user_id: wx.getStorageSync("userInfoInServer").id,}).then(res=>{
+                console.log(res);
+                this.userAddressInServer = res;
+                this.init = true;
+                this.$apply();
+              })
+          }else{
+              this.init = true;
+              this.$apply();
+          }
+        })
+      })    
+    }
+    watch={
+      curAddressName(addressName,old){
+          if(!this.init){return;}
+          //获取该地区开通的校区列表
+         http.get(api.ShopTabs,{district:addressName},true).then(res=>{
+            if(res.msg=="区域无代理点"){
+                this.schoolList=[{name:'暂无开通服务校区'}];
+            }else{
+              this.schoolList = res;
+            }
+            this.$apply(); 
+         })
+      },
+      curSchoolName(schoolName,old){
+          if(!this.init){return;}
+          if(this.schoolList[0].name=='暂无开通服务校区'){
+            //没有开通校区时，服务区域返回智趣社区
+            http.get(api.GetShopArea,{district:'智趣社区'},true).then(res=>{
+              this.areaList = res;
+              this.$apply();
+              return;
+            })
+          }
+          wx.showToast({
+            title:'校区修改成功',
+          })
+          //获取后台服务区域列表
+          http.get(api.ShopAreaTabs,{tabs_id:wx.getStorageSync('userArea').school_id},true).then(res=>{
+              console.log(res);
+              this.areaList = res;
+              this.$apply();
+          })
+      },
+      curAreaName(areaName,old){
+          if(!this.init){return;}
+          wx.showToast({
+            title:'服务区修改成功',
+          })
+          setTimeout(function () {
+              wx.navigateBack({});  
+            }, 1000) 
+          }
+    }
+    //隐藏exit框
+    hideExit(){
+      this.exit = false;
+      this.init = true;
+      this.$apply();
+    }
+    //弹出授权
+    showExit(){
+      this.exit = true;
+      this.init = false;
+      this.$apply();
+    }
+    //手动选择地址
+    chooseLocation(){
+      wx.chooseLocation({
+        success:(res=>{
+            qqmapsdk.reverseGeocoder({
+              location: {
+                latitude: res.latitude,
+                longitude: res.longitude,
+              },
+              success:(map=>{
+                this.curAddressName = map.result.address_component.district;  
+                var userArea = wx.getStorageSync('userArea');
+                userArea.address_name = map.result.address_component.district; 
+                wx.setStorageSync('userArea',userArea); 
+                this.$apply(); 
+              })
+            })
+        }),
+        fail:(err=>{
+          this.scope = false;
+          this.showExit();
+        })
+      })
+    }
+    
+    methods = {
+        //手动选择地址
+        chooseAddress(){
+          //没有授权，弹出窗口引导授权
+          if(!this.scope){this.showExit();}
+          this.chooseLocation();
+        },
+        //选择校区
+        schoolChange:function(e){
+            this.curSchoolName = this.schoolList[e.detail.value].name;
+            var userArea = wx.getStorageSync('userArea');
+            userArea.area_name = this.curAddressName;
+            userArea.school_id =  this.schoolList[e.detail.value].id;
+            userArea.school_name = this.schoolList[e.detail.value].name;
+            wx.setStorageSync('userArea',userArea);
+        },
+        //选择服务区
+        areaChange(e){
+          this.curAreaName = this.areaList[e.detail.value].area_name;
+          wx.setStorageSync('userChooseArea',this.areaList[e.detail.value]);
+        },
+        //新增地址
+        add:function(e){
+            wx.navigateTo({
+                url: '/pages/addressAdd',
+            })
+        },
+        //选择地址
+        click:function(e){
+            var clickAddressObj = this.data.userAddressInServer[e.currentTarget.dataset.id];
+            var curArea = {
+              id:clickAddressObj.area_id,
+              area_name:clickAddressObj.area_name
+            }     
+            wx.setStorageSync('userChooseArea',curArea);
+            this.curAreaName = curArea.area_name;
+            this.$apply();                        
+       },
+
+       //打开授权
+       openSetting(){
+         wx.openSetting({
+           success:(res=>{
+             if(res.authSetting['scope.userLocation']){
+                this.scope = true;
+                this.hideExit();
+                this.chooseLocation();
+              }else{
+                this.showExit();            
+              }
+           })
+         })                 
+       }
+    }
+}
+</script>
+
+<style lang="scss">
+/*隐藏滚动栏*/
+::-webkit-scrollbar{
+width: 0;
+height: 0;
+color: transparent;
+}
+page{
+  background: #FFF;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.area{
+  display: flex;
+  flex-direction: column;
+
+  .cur-area{
+    padding: 20rpx;
+    font-size:28rpx;
+    color:#999;
+    background-color:#eee;
+  }
+  .area-name{
+    margin-top:10rpx;
+    margin-left:20rpx;
+    font-size: 26rpx;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text{
+      color:#108ee9;
+    }
+    .picker{
+      padding: 20rpx;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      image{
+        width: 40rpx;
+        height: 40rpx;
+      }
+      text{
+        font-size:28rpx;
+        color:#108ee9;
+      }
+    }
+  }
+}
+.address{
+  margin-bottom: 18%;
+  .bodyTitle{
+    margin-top: 1%;
+    background-color:#eee;
+    display: flex;
+    flex-direction: row;
+    padding: 15rpx 20rpx;
+    .dizhiFont{
+      font-size: 28rpx;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 500rpx;
+      display: flex;
+      color: #999;
+    }
+  }
+  .addressScroll{
+    z-index: -1;
+    height:95%; 
+    display: flex;
+    flex-direction:column;
+    .item{
+      width: 80%; 
+      border-bottom: 1rpx solid #666;
+      padding-bottom: 10rpx;
+      margin: 20rpx 0 20rpx 70rpx;
+      .area-name{
+        display:flex;
+        align-items:center;
+        justify-content: space-between;
+        color:#108ee9;
+      }
+    }
+  }  
+}
+.footButtom{
+    height: 8%;
+    justify-content: center;
+    display: flex;
+    background: #108ee9;
+    color: #fff;
+    position: fixed;
+    bottom: 10rpx;
+    left: 0;
+    right: 0;
+    margin: 0 5rpx;
+  }
+.exit-back{
+    background-color: #5f5f5f;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    z-index:10;
+    top:0rpx;
+    left: 0rpx;
+    right: 0rpx;
+    bottom:0rpx;
+    .exit-box{
+        display: flex;
+        flex-direction: column;
+        border-radius: 10rpx;
+        background-color: #fff;
+        height: 35vh;
+        justify-content: space-between;
+        margin: 0 10vw;
+
+        .title{
+            color: #6c6c6c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 30rpx;
+
+        }
+        .content{
+            color: #b5b5b5;
+            padding: 0 20rpx;
+            display: flex;
+            text-align: center;
+        }
+        .btn{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 10px;
+            font-size: 18px;
+            padding:0 20rpx;
+            .cancle{
+                color: #b5b5b5;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .confirm{
+                color:#7a8aab;
+            }
+        }
+        .btn::after{
+            position: absolute;
+            content:'';
+            border:1rpx solid #eee;
+            left:0rpx;
+            right:0rpx;
+            top: -10rpx;
+        }
+    }
+}
+button{
+    background-color: #fff;
+}
+button::after{
+border: none;
+content:"";
+color:none;
+}
+
+.button-hover{
+color:none;
+background-color:#fff;
+}
+</style>

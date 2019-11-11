@@ -1,0 +1,472 @@
+<template>
+    <view>
+        <scroll-view  scroll-y="true" class="posts-his" 
+              style="height:{{screenH}}px;transform:translateX({{x0}}px);transition-duration:{{flash?'.5s':'0s'}};" 
+              >
+            <navigator  class="posts-record" wx:for="{{postList}}" wx:for-item="post" bindtap="goDetail({{post}})">
+              <view class="time-like">
+                <view class="time">{{post.postTime}}</view>
+                <view class="like">
+                  <view wx:if="{{post.likeNum==0}}" class="text">抢首赞</view>
+                  <view wx:else class="text">{{post.likeNum}}</view>
+                  <image class="icon" wx:if="{{post.iLike}}" src="../../images/icons/like-on.png"/>
+                  <image class="icon" wx:else src="../../images/icons/like-off.png"/>
+                </view>
+              </view>
+              <view class="content">
+                <view class="cnt">{{post.content.text}}</view>
+                <image class="image" wx:for="{{post.content.imgList}}" src="{{item}}"/>
+              </view>
+              <view class="can-see">{{post.can_see}}</view>
+            </navigator>
+        </scroll-view>
+        <scroll-view  scroll-y="true" class="reply" 
+              style="height:{{screenH}}px;transform:translateX({{x1}}px);transition-duration:{{flash?'.5s':'0s'}};"
+              >
+            <navigator class="reply-record" wx:for="{{replyList}}" wx:for-item="reply" bindtap="goDetail({{reply}})">
+              <view class="user-info">
+                  <image class="avatar" src="{{reply.userInfo.avatar}}"/>
+                  <view class="name-time">
+                    <view class="name">{{reply.userInfo.name}}</view>
+                    <view class="time">{{reply.reply_time}}</view>
+                  </view>
+              </view>
+              <view class="reply-cnt">回复到:{{reply.reply_cnt}}</view>
+              <view class="i-say">我:{{reply.i_say}}</view>
+            </navigator>
+        </scroll-view>
+        <scroll-view  scroll-y="true" class="chat" 
+              style="height:{{screenH}}px;transform:translateX({{x2}}px);transition-duration:{{flash?'.5s':'0s'}};" 
+              >
+            <navigator class="chat-record" wx:for="{{chatList}}" wx:for-item="chat" bindtap="goChat({{chat}})">
+              <image class="avatar" src="{{chat.userInfo.avatar}}"/>
+              <view class="name-cnt">
+                <view class="name">{{chat.userInfo.name}}</view>
+                <view class="chat-cnt">{{chat.chat_cnt}}</view>
+              </view>
+              <view class="chat-time">{{chat.chat_time}}</view>
+            </navigator>
+        </scroll-view>
+
+        <view class="bottom-tab">
+            <view class="item" bindtap='changeTab(0)'>
+              <image wx:if="{{curTab==0}}" class="icon" src="../../images/icons/lishi-on.png"/>
+              <image wx:else class="icon" src="../../images/icons/lishi-off.png"/>
+              <view class="{{curTab==0?'text-on':'text-off'}}">历史贴</view>
+            </view>
+            <view class="item" bindtap='changeTab(1)'>
+              <image wx:if="{{curTab==1}}" class="icon" src="../../images/icons/huifu-on.png"/>
+              <image wx:else class="icon" src="../../images/icons/huifu-off.png"/>
+              <view class="{{curTab==1?'text-on':'text-off'}}">回复我</view>
+            </view>
+            <view class="item" bindtap='changeTab(2)'>
+              <image wx:if="{{curTab==2}}" class="icon" src="../../images/icons/zhitiao-on.png"/>
+              <image wx:else class="icon" src="../../images/icons/zhitiao-off.png"/>
+              <view class="{{curTab==2?'text-on':'text-off'}}">丢纸条</view>
+            </view>
+        </view>
+    </view>
+</template>
+
+<script>
+  import wepy from 'wepy';
+  import http from '../../utils/Base';
+  import api from '../../utils/API';
+  export default class NewsList extends wepy.page {
+    config = {
+      navigationBarTitleText: '消息中心',
+      navigationBarBackgroundColor:'#ededed'
+    }
+
+    data = {
+      lastTab:1,
+      curTab:1,//当前页面
+      screenW:0,//屏幕宽度
+      screenH:0,//高度
+      x0:0,
+      x1:0,
+      x2:0,
+      flash:false,//切换动画
+      touch_x:0,
+      touch_y:0,
+      touch_end:{
+        x:0,
+        y:0,
+      },
+
+
+      //测试数据
+      postList:[
+        {
+          postTime:'2019-10-11 17:45:22',
+          likeNum:12341,
+          iLike:1,
+          content:{
+            text:`任何CSS属性值为百分比时，都需要根据某个参考值进行计算，搞明白这个参考值是什么，
+            理解就容易多了。标准规定：background-position:percent的参考值x为：百分比为
+            background-position-x的值 = (背景在雪碧中的左边宽度)/(容器宽度 - 背景图片宽度)*100%。
+            举个例子：百度分享中有四个图标（大小设置是0.72rem0.72rem），
+            我把这四个小图标扣到一张大小为(0.72rem3.65rem)的背景图，宽度跟图标是一样的，
+            高度则为四个图片+1倍的高度，主要是为了后面的高度百分比成正比`,
+            imgList:[
+                'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
+                'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
+                'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
+            ]
+          },
+          can_see:'全部可见'
+        }
+      ],
+      replyList:[
+        {
+          userInfo:{
+            name:'waaaly',
+            avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
+          },
+          reply_cnt:'好呀，明天6688房等你不见不散',
+          reply_time:'昨天',
+          i_say:'明天有空嘛，约否？明天有空嘛，约否？明天有空嘛，约否？明天有空嘛，约否？明天有空嘛，约否？明天有空嘛，约否？明天有空嘛，约否？明天有空嘛，约否？明天有空嘛，约否？明天有空嘛，约否？',
+        }
+      ],
+      chatList:[
+        {
+          userInfo:{
+            name:'waaaly',
+            avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
+          },
+          chat_cnt:'明天有空嘛，约否？',
+          chat_time:'昨天'
+        }
+  
+      ]
+    }
+
+    onLoad(option) {
+      wx.getSystemInfo({
+        success:(res=>{
+          console.log(res)
+          this.x0 = -(res.screenWidth+1);
+          this.x2 = res.screenWidth+1;
+          this.screenW = res.screenWidth+1;
+          this.screenH = res.screenHeight-0.18*res.screenHeight;
+        })
+      })
+      this.postList.push(this.postList[0])
+      this.postList.push(this.postList[0])
+      this.postList.push(this.postList[0])
+      this.postList.push(this.postList[0])
+      this.replyList.push(this.replyList[0])
+      this.replyList.push(this.replyList[0])
+      this.replyList.push(this.replyList[0])
+      this.replyList.push(this.replyList[0])
+      this.replyList.push(this.replyList[0])
+      this.replyList.push(this.replyList[0])
+      this.chatList.push(this.chatList[0])
+      this.chatList.push(this.chatList[0])
+      this.chatList.push(this.chatList[0])
+      this.chatList.push(this.chatList[0])
+      this.chatList.push(this.chatList[0])
+      this.chatList.push(this.chatList[0])
+      this.chatList.push(this.chatList[0])
+
+    }
+    //切换页面
+    changeView(){
+        this[`x${this.curTab}`] = 0;  
+        if(this.lastTab<this.curTab){
+          this[`x${this.lastTab}`] = -this.screenW;  
+        }else{
+           this[`x${this.lastTab}`] = this.screenW;  
+        }
+        this.$apply();
+    }
+    methods={
+      changeTab(tab){
+        if(this.curTab==tab){return;}
+        this.lastTab = this.curTab;
+        this.curTab = tab; 
+        this.flash = false;  
+        this.$apply();
+        this.changeView();
+      },
+      //帖子详情页
+      goDetail(posting){
+          console.log(posting);
+          wx.navigateTo({
+              url: './postingDetail',
+          })
+      },
+      //聊天页
+      goChat(chat){
+        console.log(chat);
+        wx.navigateTo({
+              url: './chat',
+          })
+      },
+      // touchStart(e) {
+      //   this.touch_x = e.changedTouches[0].clientX;
+      //   this.touch_y = e.changedTouches[0].clientY;
+      //   this.$apply();
+      // },
+      // touchEnd(e) {
+      //   this.touch_end.x = e.changedTouches[0].clientX;
+      //   this.touch_end.y = e.changedTouches[0].clientY;
+      //   this.flash = true;
+      //   this.$apply();
+      // }
+    }
+    watch={
+      //用户左右滑动
+      touch_end(endTouch,old){     
+        if (endTouch.x - this.touch_x > 50 && Math.abs(endTouch.y - this.touch_y) < 50) {              
+          if(this.curTab-1>=0){
+            console.log('rigth')
+            this.lastTab = Number(this.curTab);
+            this.curTab = Number(this.curTab)-1;
+            this.changeView();
+          }
+        } else if (endTouch.x - this.touch_x < -50 && Math.abs(endTouch.y - this.touch_y) < 50) {   
+          if(this.curTab+1<=2){
+            console.log('left')
+            this.lastTab = Number(this.curTab);
+            this.curTab = Number(this.curTab)+1;
+            this.changeView();
+          }
+        }
+        
+      },
+    }
+    
+  }
+</script>
+<style lang='scss'>
+// 历史贴
+.posts-his{
+  position: absolute;
+  width: 100%;
+  display: inline-block;
+  overflow: hidden;
+  .posts-record{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 20rpx;
+    margin: 10rpx;
+    border-radius: 10rpx;
+    border:1px solid #eee;
+    margin-bottom: 40rpx;
+    margin-left: 40rpx;
+    .time-like{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      .time{
+        color:#999;
+        font-size: 24rpx;
+      }   
+      .like{
+        display: flex;
+        align-items:center;
+        .icon{
+            width: 40rpx;
+            height: 40rpx;
+        }
+        .text{
+            color:#999;
+            font-size: 24rpx;
+            margin-right:10rpx;
+        }
+      }   
+    }
+    .content{
+      display: flex;
+      flex-direction: column;
+      margin: 10rpx 0rpx;
+      .cnt{
+        margin:20rpx 0;
+        font-size:28rpx;
+        color:#333;
+        line-height: 40rpx;
+        letter-spacing: 3rpx;
+      }
+      .image{
+        width: 100%;
+        margin-bottom:10rpx;
+        border-radius:20rpx;
+      }
+    }
+    .can-see{
+      background-color: #dedede;
+      color:#999;
+      padding:10rpx;
+      border-radius: 24rpx;
+      font-size: 24rpx;
+      width:fit-content;
+    }
+  }
+  .posts-record::before{
+    position: absolute;
+    content: "";
+    top: 30px;
+    left: -20px;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-left: 8px solid transparent;
+    border-right: 11px solid #eee;
+
+  }
+
+}
+//回复我
+.reply{
+  position: absolute;
+  width: 100%;
+  display: inline-block;
+  overflow: hidden;
+  .reply-record{
+    position: relative;
+    padding:20rpx;
+    display: flex;
+    flex-direction: column;
+    .user-info{
+      display: flex;
+      align-items: center;
+      .avatar{
+         width: 80rpx;
+        height: 80rpx;
+        border-radius: 50%;
+        margin-right: 30rpx;
+      }
+      .name-time{
+        flex:1;
+        display: flex;
+        align-items: baseline;
+        .name{
+          flex:1;
+          font-size: 28rpx;
+          color:#108ee9;
+        }
+        .time{
+          font-size: 23rpx;
+          color:#999;
+        }
+      }
+    }
+    .reply-cnt{
+      margin-left:90rpx;
+      position: relative;
+      margin-bottom:20rpx;
+      font-size: 28rpx;
+      color:#333;
+    }
+    .i-say{
+      margin-left:90rpx;
+      border-radius: 5rpx;
+      background-color: #ededed;
+      padding:15rpx 10rpx;
+      font-size: 26rpx;
+      color:#666;
+
+    }
+  }
+  .reply-record::after{
+     content: '';
+    right: 0rpx;
+    bottom: 0rpx;
+    border: 1px solid #eee;
+    position: absolute;
+    left: 130rpx;
+  }
+}
+//丢纸条
+.chat{
+  position: absolute;
+  width: 100%;
+  display: inline-block;
+  overflow: hidden;
+  .chat-record{
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding:10rpx 20rpx; 
+    height: 9vh;
+    .avatar{
+      width: 80rpx;
+      height: 80rpx;
+      border-radius: 50%;
+      margin-right: 30rpx;
+    }
+    .name-cnt{
+      display: flex;
+      flex-direction: column;
+      flex:1;
+      .name{
+        font-weight:bold;
+        color:#333;
+        font-size: 28rpx;
+      }
+      .chat-cnt{
+        margin-top:10rpx;
+        font-size: 23rpx;
+        color:#999;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 1;
+        text-align: justify;
+        overflow: hidden;
+      }
+    }
+    .chat-time{
+      font-size: 23rpx;
+      color:#999;
+    }
+  }
+  .chat-record::after{
+    content: '';
+    right: 0rpx;
+    bottom: 0rpx;
+    border: 1px solid #eee;
+    position: absolute;
+    left: 130rpx;
+  }
+}
+.bottom-tab{
+  height:8vh;
+  z-index:10;
+  position: fixed;
+  bottom: 0rpx;
+  left:0rpx;
+  right:0rpx;
+  background-color:#f8f8f8;
+  display: flex;
+  padding: 10rpx 40rpx;
+  border-top:1rpx solid #ddd;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 24rpx;
+  .item{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    .icon{
+      width: 50rpx;
+      height: 50rpx;
+      margin-bottom:10rpx;
+    }
+    .text-off{
+      color:#333;
+    }
+    .text-on{
+      color:#108ee9;
+    }
+  }
+}
+
+/*隐藏滚动条*/
+// ::-webkit-scrollbar {
+//   width: 0;
+//   height: 0;
+//   color: transparent;
+// }
+</style>

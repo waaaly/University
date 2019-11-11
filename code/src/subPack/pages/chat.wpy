@@ -1,0 +1,208 @@
+<template>
+<view>
+
+  <scroll-view scroll-y scroll-into-view='{{toView}}' style='height: {{scrollHeight}};'>
+    <block wx:key wx:for='{{msgList}}' wx:for-index="index">
+      <!-- 单个消息1 客服发出（左） -->
+      <view wx:if="{{item.speaker=='server'}}" id='msg-{{index}}' class='left-box'>
+        <view class='avatar'>
+          <image class='image' src='{{avatar}}'/>
+        </view>
+        <view class='leftMsg'>{{item.content}}</view>
+      </view>
+      <!-- 单个消息2 用户发出（右） -->
+      <view wx:else id='msg-{{index}}' class='right-box'>
+        <view class='rightMsg'>{{item.content}}</view>
+        <view class='avatar'>
+          <image class='image' src='{{avatar}}'/>
+        </view>
+      </view>
+    </block>
+    <!-- 占位 -->
+    <view style='width: 100%; height: 18vw;'></view>
+  </scroll-view>
+
+  <view class='inputRoom' style='bottom: {{inputBottom}}'>
+    <image style='width: 7vw; margin-left: 3.2vw;' src='../../images/pic_icon.png' mode='widthFix'/>
+    <input bindconfirm='sendClick' adjust-position='{{false}}' type='text'
+    value='{{inputVal}}' confirm-type='send' bindfocus='focus' 
+    bindblur='blur'/>
+  </view>
+</view>
+
+</template>
+
+<script>
+  import wepy from 'wepy';
+  import http from '../../utils/Base';
+  import api from '../../utils/API';
+
+
+  export default class Answer extends wepy.page {
+    config = {
+      navigationBarTitleText: '对话列表',
+    }
+
+    data = {
+      scrollHeight: '100vh',
+      inputBottom: 0,
+      msgList : [
+          {
+            speaker: 'server',
+            contentType: 'text',
+            content: '欢迎来到英雄联盟，敌军还有30秒到达战场，请做好准备！'
+          },
+          {
+            speaker: 'customer',
+            contentType: 'text',
+            content: '欢迎来到英雄联盟，敌军还有30秒到达战场，请做好准备！欢迎来到英雄联盟，敌军还有30秒到达战场，请做好准备！欢迎来到英雄联盟，敌军还有30秒到达战场，请做好准备！欢迎来到英雄联盟，敌军还有30秒到达战场，请做好准备！'
+          }
+
+        ],
+      inputVal : '',
+      windowWidth:null,
+      windowHeight:null,
+      keyHeight : 0,
+      toView:null,
+      avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
+    }
+
+    onLoad(option) {
+      this.windowWidth = wx.getSystemInfoSync().windowWidth;
+      this.windowHeight = wx.getSystemInfoSync().windowHeight;
+    }
+    methods = {
+      /*** 获取聚焦*/
+      focus: function(e) {
+        keyHeight = e.detail.height;
+        this.scrollHeight =  (this.windowHeight - keyHeight) + 'px';
+        this.toView = 'msg-' + (this.msgList.length - 1);
+        this.inputBottom = keyHeight + 'px';
+        this.$apply();
+      },
+      //失去聚焦(软键盘消失)
+      blur: function(e) {
+        this.scrollHeight = '100vh',
+        this.inputBottom = 0,
+        this. toView= 'msg-' + (msgList.length - 1);
+        this.$apply();
+      },
+      /*** 发送点击监听*/
+      sendClick: function(e) {
+        
+        this.msgList.push({
+          speaker: 'customer',
+          contentType: 'text',
+          content: e.detail.value
+        })
+        this.inputVal = '';
+      }
+    }
+
+  }
+</script>
+
+<style lang="scss">
+page {
+  background-color: #f1f1f1;
+}
+
+.inputRoom {
+  width: 100vw;
+  height: 16vw;
+  border-top: 1px solid #cdcdcd;
+  background-color: #f1f1f1;
+  position: fixed;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  z-index: 20;
+}
+
+input {
+  width: 76vw;
+  height: 9.33vw;
+  background-color: #fff;
+  border-radius: 40rpx;
+  margin-left: 2vw;
+  padding: 0 3vw;
+  font-size: 28rpx;
+  color: #444;
+}
+
+
+
+
+
+.left-box{
+  display: flex; padding: 2vw 20vw 2vw 2vw;
+  .avatar{
+    width: 11vw; height: 11vw;
+    .image{
+      width: 11vw; height: 11vw; border-radius: 10rpx;
+    }
+  }
+  .leftMsg {
+    font-size: 35rpx;
+    color: #444;
+    line-height: 7vw;
+    padding: 2vw;
+    background-color: #fff;
+    margin-left: 3vw;
+    border-radius: 10rpx;
+    z-index: 10;
+    position: relative;
+  }
+  .leftMsg::after{
+    position: absolute;
+    left: -4px;
+    top: 4px;
+    content: '';
+    width: 10px;
+    height: 20px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #fff;
+    border-radius: 10rpx;
+    background-color: #fff;
+    transform: rotate(45deg);
+    z-index: -1;
+  }
+}
+
+.right-box{
+  display: flex; justify-content: flex-end; padding: 2vw 2vw 2vw 20vw;
+  .avatar{
+    width: 11vw; height: 11vw;
+    .image{
+      width: 11vw; height: 11vw; border-radius: 10rpx;
+    }
+  }
+  .rightMsg {
+    font-size: 35rpx;
+    color: #444;
+    line-height: 7vw;
+    padding: 2vw;
+    background-color: #96EB6A;
+    margin-right: 3vw;
+    border-radius: 10rpx;
+    z-index: 10;
+    position: relative;
+  }
+  .rightMsg::after{
+    position: absolute;
+    right: -4px;
+    top: 4px;
+    content: '';
+    width: 10px;
+    height: 20px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #96EB6A;
+    border-radius: 10rpx;
+    background-color: #96EB6A;
+    transform: rotate(45deg);
+    z-index: -1;
+  }
+}
+</style>

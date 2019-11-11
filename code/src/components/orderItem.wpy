@@ -1,0 +1,282 @@
+<template>
+<view class="page">
+    <view wx:for="{{orderList}}" wx:for-item="item" wx:for-index="orderIndex" class='mainView'>
+        <navigator class='firsetCol' url="{{'../pages/shoper?shop_id=' + item.shopInfo.id}}">
+            <image class='shangjiaIcon'
+                    src="{{imageUrl + item.shopInfo.shop_icon}}"/>
+            <view class='shangpuming'>
+              <text>{{item.shopInfo.shop_name}}</text>
+              <image style='width:25rpx;height:25rpx'
+                      src="http://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/xiangyou.png"/>
+            </view>                       
+            <navigator class='dingtaizhuangtai' url="{{'/pages/orderUserDetail?orderId=' + item.id}}"> 
+              <text style="color:#ff6b5d;">{{item.order_status_text}}</text>          
+           </navigator>   
+        </navigator>
+        <view class='line'></view>
+        <navigator url="{{'/pages/orderUserDetail?orderId=' + item.id}}">      
+          <view wx:for="{{item.goodsList}}" wx:for-item="goodItem" 
+                      wx:for-index="goodIndex" class='secondCol' >
+              <image src='{{goodItem.list_pic_url}}'/> 
+              <view class="good-name">
+                <text>{{goodItem.goods_name}}</text>
+              </view>
+              <view class="good-num-price">
+                  <text >¥{{goodItem.actual_price}}</text>
+                  <text >x{{goodItem.number}}</text>
+              </view>
+          </view>
+          <view class='line'></view>   
+          <view class="order-info">
+            <view class="box">
+              <text >订单编号:{{item.order_sn}}</text> 
+              <text >下单时间:{{item.add_time}}</text>
+            </view> 
+            <view class="total">总计：{{item.goods_price}}元</view>
+          </view>
+        </navigator>
+
+        <view wx:if="{{item.order_status != 0}}" class="thirdCol ">
+            <block wx:if="{{item.order_status == 10}}" >
+              <view wx:for="{{['前往支付', '取消订单']}}" wx:for-item="actionItem" class='forItem' @tap.stop='action({{actionItem}},{{orderIndex}})'>{{actionItem}}</view>
+            </block>
+            <block wx:if="{{item.order_status == 22}}" >
+              <view wx:for="{{['申请退款']}}" wx:for-item="actionItem" class='forItem' @tap.stop='action({{actionItem}},{{orderIndex}})'>{{actionItem}}</view>
+            </block>
+            <block wx:if="{{item.order_status == 32}}" >
+              <view wx:for="{{['申请退款']}}" wx:for-item="actionItem" class='forItem' @tap.stop='action({{actionItem}},{{orderIndex}})'>{{actionItem}}</view>
+            </block>
+            <block wx:if="{{item.order_status == 40}}" >
+              <view wx:for="{{['前往评价']}}" wx:for-item="actionItem" class='forItem' @tap.stop='action({{actionItem}},{{orderIndex}})'>{{actionItem}}</view>
+            </block>
+        </view>
+    </view>
+</view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import http from '../utils/Base';
+import api from '../utils/API';
+export default class orderItem extends wepy.page{
+    props = {
+    }
+    data = {
+      orderList:[],
+      imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
+    }
+    events = {
+      'orderList':(orderList,$event)=>{
+        this.orderList = orderList;
+        console.log(orderList)
+        this.$apply();
+        this.$emit('myOrder', true);//通知父亲，接收到数据
+      }
+    }
+    watch = {
+      orderList(_new,old){
+        
+      }
+    }
+
+    methods = {
+      action(text,index){
+        if(text == '前往支付'){
+          http.get(api.WechatPay,{order_id:this.orderList[index].id,user_id:wx.getStorageSync('userInfoInServer').id}).then(res=>{
+                // console.log(res);
+                wx.requestPayment({ 
+                    timeStamp: res.timeStamp, 
+                    nonceStr: res.nonceStr, 
+                    package: res.package, 
+                    signType: res.signType, 
+                    paySign: res.paySign, 
+                    success: (res=>{
+                      this.methods.clearNoPayOrder(this.orderList[index].id);             
+                      wx.showToast({title:'支付完成！'})                
+                      this.orderList.splice(index,1);
+                      this.$apply();
+                    }) ,
+                    fail: function(res) { 
+                        wx.showToast({title:'支付未完成'})
+                    },
+                })
+            })
+        }
+        if(text == '取消订单'){
+          var order_id = this.orderList[index].id;
+          http.post(api.OrderCancel,{order_id:order_id}).then(res=>{
+            console.log(res);
+            if(res.msg){
+              wx.showToast({
+                title:res.msg,
+                icon:'none',
+              })      
+              this.methods.clearNoPayOrder(order_id);
+              this.orderList.splice(index,1);
+              this.$apply();
+            }
+          })
+        }
+        if(text == '申请退款'){
+          console.log(index);
+          console.log(this.orderList[index]);
+          http.post(api.UserRefund,{order_id:this.orderList[index].id,refund_desc:'买错了'}).then(res=>{
+             console.log(res);
+              wx.showToast({
+                title:'您已申请退款～',
+                icon:'none',
+              })
+              // this.orderList.splice(index,1);
+              this.$apply();
+          })
+        }
+
+        if(text == '前往评价'){
+          wx.navigateTo({
+            url: '/pages/orderComment?shop_id=' + this.orderList[index].shopInfo.id +'&order_id=' + this.orderList[index].id,
+          })
+        }
+      },
+        //清除团购订单记录
+        clearNoPayOrder(order_id){
+          var noPayOrder = wx.getStorageSync('noPayOrder');
+          for(let index in noPayOrder){
+                if(noPayOrder[index] == order_id){
+                    noPayOrder[index] = null;
+                }
+            }
+            wx.setStorageSync('noPayOrder',noPayOrder)
+        }
+    }
+    watch = {
+      
+    }
+}
+</script>
+
+<style lang="scss">
+.page{
+  display: flex;
+  flex-direction: column;
+}
+
+.mainView{
+  margin: 10rpx;
+  border-width: 1rpx;
+  border-color: #fff;
+  border-radius: 15rpx;
+  border:1px solid #ffb65d;
+  background: #fff;
+}
+
+.firsetCol{
+  margin: 10rpx;
+  display: flex;
+  align-items: center;
+  padding-left: 45rpx;
+  padding-right: 10rpx;
+  flex-direction: row;
+}
+.shangjiaIcon{
+  width:60rpx;
+  height:60rpx;
+  border-radius: 50%;
+}
+.shangpuming{
+  margin: 10rpx;
+  font-size: 25rpx;
+  color: #666;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  flex:2;
+}
+
+.dingtaizhuangtai{
+  white-space: nowrap;
+  color: #666;
+  display: flex;
+  flex-direction: column;
+  text-align:right;
+  font-size:30rpx;
+  padding-right:30rpx;
+}
+
+.line{
+  background: #eee;
+  height: 3rpx;
+  margin: 10rpx;
+}
+
+.secondCol{
+  padding:10rpx 45rpx;
+  margin: 10rpx;
+  display: flex;
+  flex-direction: row;
+  /* align-items: center; */
+  justify-content:space-between;
+  image{
+    width:60px;height:60px;border-radius:5px;
+  }
+  .good-name{
+    font-size:26rpx;
+    color:#666;
+    flex:2;
+    margin-left:20rpx;
+    display: flex;
+    align-items: center;
+   text{
+      word-break: break-all;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+   }
+  }
+  .good-num-price{
+    display:flex;flex-direction:column;margin-top:20rpx;
+    text{
+      display:flex;justify-content:flex-end;color:#999;font-size:25rpx;
+    }
+  }
+}
+
+.thirdCol {
+  height: 60rpx;
+  margin: 10rpx;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.forItem{
+  font-size: 30rpx;
+  color:#fff;
+  padding:10rpx;
+  margin:20px;
+  background-color:#ff6b5d;
+  border:1rpx soild #fff;
+  border-radius: 5px;
+}
+
+.order-info{
+  display:flex;justify-content:space-between;
+  margin-top:20rpx;padding-right:45rpx;
+  padding-left:45rpx;
+  .box{
+    display:flex;
+    flex-direction:column;
+    padding-bottom:10px;
+    align-items: start;
+    text{
+      font-size:25rpx;color:#999;
+    }
+  }
+  .total{
+    text-align:right;color:#ff6b5d;padding-top:25rpx;font-size:30rpx;
+  }
+}
+</style>
+

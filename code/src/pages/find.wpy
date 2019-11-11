@@ -1,0 +1,207 @@
+
+
+<template>
+    <view>
+        <swiper style="height:220px;background-color:#fff;" 
+              indicator-dots="{{true}}" 
+              autoplay="{{true}}" 
+              interval="{{3000}}"  
+              circular="{{true}}"  
+              indicator-active-color='#108ee9'
+              >
+            <block wx:for="{{swiperImg}}" wx:key="key">
+                <swiper-item>
+                    <image src="{{imageUrl+item}}" style="width:100%;" mode="widthFix"  />
+                </swiper-item>
+            </block>
+        </swiper>
+        <block  wx:if="{{postingList.length!=0}}">
+            <view wx:for="{{postingList}}">
+                <view class="posting" bindtap="goDetail({{item}})" >
+                    <view class="userInfo">
+                        <image src="{{item.userInfo.avatar}}"/>
+                        <view class="name-time">
+                            <view class="name">{{item.userInfo.name}}</view>
+                            <view class="time">{{item.userInfo.postTime}}</view>
+                        </view>
+                    </view>
+                    <view class="content">
+                        <view class="cnt-text">{{item.content.text}}</view>
+                        <view class="imageList">
+                            <image  wx:for="{{item.content.imgList}}" 
+                            wx:for-item='imgItem' 
+                            mode='widthFix' src="{{imgItem}}"/>
+                        </view>
+                    </view>
+                    <view class="tabs">
+                        <view class="item">
+                            <image src="../images/icons/comment.png"/>
+                            <view wx:if="{{item.commentNum==0}}" class="num">评论</view>
+                            <view wx:else class="num">{{item.commentNum}}</view>
+                        </view>
+                        <view class="item">                           
+                            <view wx:if="{{item.likeNum==0}}" class="num">抢首赞</view>
+                            <view wx:else class="num">{{item.likeNum}}</view>
+                            <image wx:if="{{item.iLike}}" src="../images/icons/like-on.png"/>
+                            <image wx:else src="../images/icons/like-off.png"/>
+                        </view>
+                    </view>
+                </view>
+            </view>
+        </block>
+        <menu></menu> 
+    </view>
+</template>
+
+
+<script>
+import wepy from 'wepy';
+import http from '../utils/Base';
+import api from '../utils/API';
+import menu from '../components/popupMenu';
+export default class find extends wepy.page {
+    config = {
+        "navigationBarTitleText": "帖子中心"
+    }
+    components = {
+        menu:menu
+    }
+
+    data = {
+        imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
+        swiperImg: [
+            'images/24cb32843f404d7682e0830632fb2e7e.png',
+            'images/bc2d7f9d6f0a39e315700e1b959b32c7.png',
+            'images/4cf9526786add9b8e1b19d5c7042e649.png',
+            'images/80c3f854526ee74e55121fe8af463684.jpg'
+        ],
+        postingList:[],//帖子列表
+        test:{
+            commentNum:13,
+            likeNum:99,
+            iLike:1,
+            userInfo:{
+                name:'waaaly',
+                avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
+                postTime:'发布与五分钟前',
+            },
+            content:{
+                text:'这是一条测试数据这是一条测试数据这是一条测试数据这是一条测试数据这是一条测试数据这是一条测试数据',
+                imgList:[
+                    'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
+                    'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
+                    'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
+                ],
+            },
+        }
+    }
+
+    onLoad() {
+        for(let i=0;i<10;i++){
+            this.postingList.push(this.test);
+        }    
+    }
+
+    onShow() {
+
+    }
+    methods = {
+        goDetail(posting){
+            // data-item="{{item}}"
+            // var posting = e.currentTarget.dataset.item;
+            console.log(posting);
+            wx.navigateTo({
+                url: '../subPack/pages/postingDetail',
+            })
+        }
+    }
+    computed = {
+
+    }
+    
+}
+
+</script>
+<style lang="less">
+page{
+    background-color: #dfdfdf;
+}
+.posting:first-child{
+    margin: 10rpx 0rpx;
+    border-radius: 10rpx;
+    background-color: #fff;
+    padding:20rpx;
+    display: flex;
+    flex-direction: column;
+}
+.posting{
+    margin: 5rpx 0rpx;
+    border-radius: 10rpx;
+    background-color: #fff;
+    padding:20rpx;
+    display: flex;
+    flex-direction: column;
+    .userInfo{
+        display: flex;
+        image{
+            width: 70rpx;
+            height: 70rpx;
+            border-radius: 50%;
+            margin-right:20rpx;
+        }
+        .name-time{
+            display: flex;
+            flex-direction: column;
+            .name{
+                font-size:28rpx;
+            }
+            .time{
+                font-size:25rpx;
+                color:#888;
+            }
+        }
+    }
+    .content{
+        margin:28rpx 0;
+        .cnt-text{
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 5;
+            text-align: justify;
+            overflow: hidden;
+            color:#333;
+            font-size: 28rpx;
+            line-height: 50rpx;
+            margin-bottom:20rpx;
+        }
+        .imageList{
+            width: 70%;
+            image{
+                width: 50%;
+                margin:3rpx;
+                border-radius: 10rpx;
+            }
+        }    
+    }
+    .tabs{
+        display: flex;
+        padding:0 15%;
+        align-items: center;
+        justify-content: space-between;
+        .item{
+                display: flex;
+                align-items: center;
+            image{
+                width: 40rpx;
+                height: 40rpx;
+                margin-right:10rpx;
+            }
+            .num{
+                color:#888;
+                font-size: 24rpx;
+            }
+        }
+    }
+}
+
+</style>

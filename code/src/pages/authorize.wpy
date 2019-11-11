@@ -1,0 +1,117 @@
+<style lang="less">
+page {
+  height: 100%;
+}
+
+.authorize-contianer {
+  height: 100%;
+  background: #fff;
+  text-align: center;
+  padding-top: 100rpx;
+  .authorize-icon {
+    width: 128rpx;
+    height: 128rpx;
+    display: block;
+    margin: 0 auto;
+    padding-bottom: 10rpx;
+  }
+  .auth-item {
+    padding: 5rpx 0;
+  }
+  .btn-authorize {
+    margin: 100rpx 50rpx;
+  }
+}
+</style>
+
+<template>
+  <view class="authorize-contianer">
+    <image class="authorize-icon" src="/images/icons/authorize.png"></image>
+    <view class="auth-item">智趣申请获取以下权限：</view>
+    <view class="auth-item">获取你的公开信息（头像、昵称等）</view>
+    <view class="btn-authorize">
+      <button style="background-color:#ff6b5d;color:#fff;" open-type="getUserInfo"  lang="zh_CN" bindgetuserinfo="onGotUserInfo"> 确认授权</button>
+      <button style="margin-top:50px;" @tap="back" lang="zh_CN" bindgetuserinfo="onGotUserInfo"> 下次再说</button>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy';
+import http from '../utils/Base';
+import api from '../utils/API';
+
+export default class Authorize extends wepy.page {
+  data = {
+    init :false,
+  }
+  config = {
+    navigationBarTitleText: '授权登录',
+  }
+  async onLoad() { 
+
+  }
+  async onGotUserInfo(e) { 
+    //获取用户code
+    wx.login({
+      success: function(res) {
+        wx.setStorageSync('userCode',res.code);
+      },
+      fail:(res)=>{
+        wx.showToast({
+          title:'获取Code失败！'
+        })
+      }
+    })
+
+    //弹出授权按钮
+    wx.getSetting({
+      success:(res)=>{
+        if(res.authSetting['scope.userInfo']){
+            wx.getUserInfo({
+                  success:(res)=>{
+                      wx.setStorageSync('userInfo', res.rawData);
+                      http.get(api.AuthLoginByWeixin,{}).then(result =>{
+                          console.log(result);
+                          if(result.userInfo&&result.token){
+                            wx.setStorageSync('userToken', result.token);
+                            wx.setStorageSync('userInfoInServer', result.userInfo);
+                            if(result.defaultAddress){
+                                wx.setStorageSync('userDefaultAddress', result.defaultAddress);
+                            }
+                            wx.showToast({
+                              title: '登陆成功',
+                              duration:800,
+                              complete:(res)=>{
+                                setTimeout(() =>{
+                                    wx.navigateBack({
+                                       // 回退前 delta(默认为1) 页面 url: '/pages/my',
+                                    })
+                                },850)                              
+                              }
+                            })
+                          }else{
+                            reject(result);
+                          }
+                      })
+                  },
+                  fail: (res)=> {
+                    console.log(res)
+                      // Tips.showComfire('获取用户信息失败,请重试!')
+                  },
+              })
+          }
+      }
+    })
+  }
+  methods = {
+    back(e){
+      wx.navigateBack({
+        delta: 1, // 回退前 delta(默认为1) 页面
+      })
+    }
+  }
+  events = {
+
+  }
+}
+</script>

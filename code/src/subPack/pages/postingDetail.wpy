@@ -1,0 +1,398 @@
+<template>
+    <view>
+        <view class="posting">
+            <view class="user-info">
+                <image  src="{{posting.poster.avatar}}"/>
+                <view class="name-time">
+                    <view class=".name">{{posting.poster.name}}</view>
+                    <view class=".time">{{posting.poster.postTime}}</view>
+                </view>
+            </view>
+            <view class="rich-text">
+                {{posting.content.text}}
+            </view>
+            <view >
+              <image wx:for="{{posting.content.imgList}}" mode="widthFix"  src="{{item}}"/>
+            </view>
+        </view>
+        <view class="tabs">
+            <view class="title">全部评论</view>
+            <view class="like">             
+                <view wx:if="{{posting.poster.likeNum==0}}" class="text">抢首赞</view>
+                <view wx:else class="text">{{posting.poster.likeNum}}</view>
+                <image wx:if="{{posting.poster.iLike}}" src="../../images/icons/like-on.png"/>
+                <image wx:else src="../../images/icons/like-off.png"/>
+            </view>
+        </view>
+        <view class="floor-list">
+            <view class="floor" wx:for="{{posting.floorList}}" wx:for-item="floor">
+                <view class="commenter-info">
+                    <image src="{{floor.commenter.avatar}}"/>
+                    <view class="name-time">
+                        <view class="name">{{floor.commenter.name}}</view>
+                        <view class="time">{{floor.commenter.commentTime}}</view>
+                    </view>
+                    <view class="like">                       
+                        <view wx:if="{{floor.commenter.likeNum==0}}" class="text">抢首赞</view>
+                        <view wx:else class="text">{{floor.commenter.likeNum}}</view>
+                        <image wx:if="{{floor.commenter.iLike}}" src="../../images/icons/like-on.png"/>
+                        <image wx:else src="../../images/icons/like-off.png"/>
+                    </view>
+                </view>
+                <view class="comment-cnt">{{floor.commenter.commentText}}</view>
+                <view class="reply-list" >
+                    <view class="reply-item" wx:for="{{floor.replyList}}" wx:for-item="reply">
+                        <view class="replyer">{{reply.replyer.name}}</view>
+                        <view wx:if="{{reply.beReplyer}}" class="split">回复</view>
+                        <view wx:if="{{reply.beReplyer}}" class="be-repler">{{reply.beReplyer.name}}</view>
+                        <view class="split">:</view>
+                        <view class="reply-cnt">{{reply.replyText}}</view>
+                    </view>
+                </view>
+                <view class="reply-input">
+                    <input class="input" placeholder="回复" placeholder-style="color:#bbb;" />
+                    <view class="send-off">发送</view>
+                </view>
+            </view>
+        </view>
+        <view class="reply-bottom">
+            <input class="input"  placeholder="评论帖子"  bindinput="getInput" />
+            <view class="send-off">评论</view>
+        </view>
+    </view>
+</template>
+
+<script>
+  import wepy from 'wepy';
+  import http from '../../utils/Base';
+  import api from '../../utils/API';
+  export default class postingDetail extends wepy.page {
+    config = {
+      navigationBarTitleText: '帖子详情',
+    }
+
+    data = {
+        
+        posting:{
+            poster:{
+                name:'waaaly',
+                avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
+                postTime:'发布于五分钟前',
+                likeNum:22,
+                iLike:1,
+            },
+            content:{
+                text:`我之前在做微信小程序的时候遇到了一个问题，一些让用户输入的地方，
+                还有用户的微信昵称都有可能输入键盘自带的emoji表情符，在服务端接收的时
+                候会有异常，在前端进行MD5加密后的签名和后端接收到数据后再进行MD5后的签
+                名不一样。网上有给出一些解决方法，比如加载表情符图片，修改数据库的字符
+                编码等，这些方法都不太好，也没有解决问题，后面找了比较久才找到合适的解
+                决的方法：表情符编码是十六进制的，需要把表情符转码成八进制的。`,
+                imgList:[
+                    'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
+                    'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
+                    'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/24cb32843f404d7682e0830632fb2e7e.png',
+                ]
+            },
+            floorList:[
+                {
+                    commenter:{
+                        name:'1楼',
+                        avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
+                        commentTime:'19:20',
+                        commentText:'6666好好凑狗15字6666好好凑狗15字6666好好凑狗15字6666好好凑狗15字6666好好凑狗15字',
+                        likeNum:11,
+                        iLike:0,                       
+                    },
+                    replyList:[
+                        {
+                            replyer:{
+                                name:'bbb',
+                            },
+                            replyText:'我自己回复自己嘛，哈哈'                       
+                        },
+                        {
+                            replyer:{
+                                name:'ccc',
+                            },
+                            beReplyer:{
+                                name:'bbb',
+                            },
+                            replyText:'我觉得你这想法很危险'
+                        }
+                    ]
+                },
+                {
+                    commenter:{
+                        name:'2楼',
+                        avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
+                        commentTime:'19:20',
+                        commentText:'6666好好凑狗15字',
+                        likeNum:0,
+                        iLike:0,                       
+                    },
+                    replyList:[
+                        {
+                            replyer:{
+                                name:'bbb',
+                            },
+                            replyText:'我自己回复自己嘛，哈哈'                       
+                        },
+                        {
+                            replyer:{
+                                name:'ccc',
+                            },
+                            beReplyer:{
+                                name:'bbb',
+                            },
+                            replyText:'我觉得你这想法很危险我觉得你这想法很危险我觉得你这想法很危险我觉得你这想法很危险'
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+
+    onLoad(option) {
+
+    }
+    computed = {}
+    
+  }
+</script>
+
+<style lang='scss'>
+.posting{
+    display: flex;
+    flex-direction: column;
+    padding:20rpx;
+    display: flex;
+    .user-info{
+        display: flex;
+        align-items: center;
+        image{
+            width: 70rpx;
+            height: 70rpx;
+            border-radius: 50%;
+            margin-right:20rpx;
+        }
+        .name-time{
+            display: flex;
+            flex-direction: column;
+            .name{
+                font-size:28rpx;
+            }
+            .time{
+                margin-top:10rpx;
+                font-size:25rpx;
+                color:#888;
+            }
+        }
+    }
+    .rich-text{
+        margin:20rpx 0;
+        font-size:30rpx;
+        color:#333;
+        line-height: 45rpx;
+        letter-spacing: 3rpx;
+    }
+    image{
+        width: 100%;
+        border-radius:20rpx;
+    }
+}
+.tabs{
+    border-bottom: 1px solid #eee;
+    border-top: 1px solid #eee;
+    border-left: 5px solid #108ee9;
+    padding:20rpx;
+    height: 40rpx;
+    .title{
+        font-size:30rpx;
+        font-weight:bold;
+        float: left;
+    }
+    .like{
+        float: right;
+        display: flex;
+        align-items:center;
+        image{
+            width: 40rpx;
+            height: 40rpx;
+        }
+        .text{
+            color:#888;
+            font-size: 24rpx;
+            margin-right:10rpx;
+        }
+    }
+}
+.floor-list{
+    margin-bottom: 80rpx;
+    .floor{
+        padding: 20rpx;
+        display: flex;
+        flex-direction: column;
+        .commenter-info{
+            display: flex;
+            align-items: center;
+            image{
+                width: 70rpx;
+                height: 70rpx;
+                border-radius: 50%;
+                margin-right:20rpx;
+            }
+            .name-time{
+                display: flex;
+                flex-direction: column;
+                flex:1;
+                .name{
+                    font-size:28rpx;
+                }
+                .time{
+                    font-size:25rpx;
+                    color:#888;
+                }
+            }
+            .like{
+                display: flex;
+                align-items:center;
+                image{
+                    width: 40rpx;
+                    height: 40rpx;
+                    margin:0;
+                }
+                .text{
+                    color:#888;
+                    font-size: 24rpx;
+                    margin-right:10rpx;
+                }
+            }
+        }
+        .comment-cnt{
+            display: flex;
+            flex-direction: column;
+            padding:10rpx;
+            margin-left: 80rpx;
+            margin-top: 10rpx;
+        }
+        .reply-list{
+            background-color:#eaeaea;
+            display: flex;
+            flex-direction: column;
+            padding:10rpx;
+            margin-left: 80rpx;
+            margin-top: 10rpx;
+            .reply-item{
+                display: flex;
+                font-size:26rpx;
+                align-items: center;
+                color:#333;
+                .replyer{
+                }
+                .split{
+                    color:#108ee9;
+                    margin:8rpx;
+                    word-break: keep-all;
+                }
+                .be-replyer{
+                }
+                .reply-cnt{
+
+                }
+            }
+            .open-tips {
+                display :inline-block;
+                position: relative;
+                width: 40rpx;
+                height: 30rpx;
+                margin-right: 20rpx;
+            }
+            .open-tips::after {
+                display: inline-block;
+                content: " ";
+                height: 18rpx;
+                width: 18rpx;
+                border-width: 0 2rpx 2rpx 0;
+                border-color: #999;
+                border-style: solid;
+                transform: matrix(0.71, 0.71, -0.71, 0.71, 0, 0);
+                transform-origin: center;
+                transition: transform .3s;
+                position: absolute;
+                top: 50%;
+                right: 10rpx;
+                margin-top: -10rpx;
+            }
+            
+        }
+        .reply-input{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding:10rpx;
+            margin-left: 80rpx;
+            margin-top: 20rpx;
+            background-color:#eaeaea;
+            .input{
+                padding: 10rpx;
+                display: flex;
+                align-items: center;
+                border-radius: 5rpx;
+                background-color: #fff;
+                flex:1;
+                margin-right:10rpx;
+            }
+            .send-off{
+                border-radius: 5rpx;
+                padding:10rpx;
+                background-color: #eaeaea;
+                color:#bbb;
+                border:1rpx solid #bbb;
+            }
+            .send-on{
+                border-radius: 5rpx;
+                padding:10rpx;
+                background-color: #108ee9;
+                color:#fff;
+            }
+        }
+    }
+}
+
+.reply-bottom{
+    position:fixed;
+    z-index:10;
+    left: 0rpx;
+    bottom: 0rpx;
+    right:0rpx;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding:10rpx;
+    background-color:#eaeaea;
+    .input{
+        padding: 10rpx;
+        display: flex;
+        align-items: center;
+        border-radius: 5rpx;
+        background-color: #fff;
+        flex:1;
+        margin-right:10rpx;
+    }
+    .send-off{
+        border-radius: 5rpx;
+        padding:10rpx;
+        background-color: #eaeaea;
+        color:#bbb;
+        border:1rpx solid #bbb;
+    }
+    .send-on{
+        border-radius: 5rpx;
+        padding:10rpx;
+        background-color: #108ee9;
+        color:#fff;
+    }
+        
+}
+</style>

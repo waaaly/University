@@ -1,0 +1,456 @@
+<template>
+<view>
+  <view class="index-top">
+    <view class="news">
+      <image src="../images/icons/laba.png"/>
+      <swiper class="swiper" indicator-dots="{{false}}" vertical="{{true}}" autoplay="{{true}}" circular="{{true}}" interval="3000" >
+          <swiper-item class="swiper-item"  wx:for="{{imgUrls}}" wx:key="{{index}}" >
+            <view class="swiper-text">{{item.title}}</view>
+          </swiper-item>
+      </swiper>
+    </view>
+    <view class="address" bindtap="goChooseAddress">
+        <image  src='../images/icons/dingwei.png'/>
+        <text >{{area.area_name}}</text>
+        <image  src="../images/icons/toRight.png"/>
+    </view>
+  </view>
+
+  <view class='index-swiper'>
+      <swiper style="height:220px" 
+              indicator-dots="{{true}}" 
+              autoplay="{{true}}" 
+              interval="{{3000}}"  
+              circular="{{true}}"  
+              indicator-active-color='#108ee9'
+              bindchange="swiperChange">
+        <block wx:for="{{imgUrls}}" wx:key="key">
+      <swiper-item>
+        <image src="{{imageUrl+item.pic_url}}" style="width:100%;" mode="widthFix"  />
+      </swiper-item>
+        </block>
+      </swiper>
+  </view>
+
+
+  <view class='index-title'>
+    <text class="text1">ACTIVITY AREA</text>
+    <text class="text2">- 推荐商品 -</text>
+    <text class="text3">智趣之中，总有你喜欢的一物，我们会展示越来越贴切的商品</text>
+  </view> 
+                  <!-- 活动专区 热门商品 -->
+    <block wx:if="{{goodInit}}">
+      <view wx:if="{{hotGoodList.length==0}}" style="text-align:center;">
+        <image src="{{imageUrl+'zq/noneServer.png'}}"/>
+      </view>
+      <view wx:else class="good-list">
+        <block wx:for="{{hotGoodList}}">
+          <view class="{{item.class}}" bindtap="goHotGood" data-goodid="{{item.goodsInfo.id}}"  data-shopid="{{item.shopInfo.id}}">
+          <image  mode="widthFix" src='{{imageUrl + item.goodsInfo.hot_pic_url}}'/>
+          <view class="info">
+            <view class="name">{{item.goodsInfo.goods_name}}</view>
+            <view class="desc">{{item.goodsInfo.goods_desc}}</view>
+          </view>
+        </view>
+        </block> 
+      </view>
+    </block>
+
+
+  <view class='index-title'>
+    <text class="text1">NICE SHOP</text>
+    <text class="text2">- 推荐商家 -</text>
+    <text class="text3">您附近的热门商家，他们都在买哟～</text>
+  </view>
+  
+                  <!-- 推荐商家 -->
+  <block wx:if="{{shopInit}}">
+      <view wx:if="{{shopList.length==0}}" style="text-align:center;">
+        <image src="{{imageUrl+'zq/noneServer.png'}}"/>
+      </view>
+      <view wx:else class='shop-list'>
+        <view class="shop"  wx:for="{{shopList}}" @tap="goShoper({{item.id}})">
+          <image src='{{imageUrl+item.shop_icon}}' mode="widthFix"/>
+          <view class="content">
+            <view class="name">{{item.shop_name}}</view>
+            <view class="info">
+              <view class="sale">月售{{item.monthly_sale}}</view>
+              <view class="time">配送时间:{{item.delivery_time}}分钟</view>
+            </view>
+            <view class="summary">“{{item.shop_summary}}”</view>
+          </view>
+        </view>
+      </view>
+  </block>
+
+</view>
+</template>
+
+  
+<script>
+import wepy from "wepy";
+import http from '../utils/Base';
+import api from '../utils/API';
+import shopSort from '../components/shopSort';
+import shopIndex from '../components/shopIndex';
+
+export default class Index extends wepy.page{
+  config = {
+      "navigationBarTitleText": "首页"
+  };
+
+  data = {
+    imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
+    goodInit:false,
+    shopInit:false,
+    area:{
+          area_id:0,
+          area_name:''
+        },//服务区域
+
+    imgUrls: [],//siwepr
+    siweprCur:0,//当前页
+
+    hotGoodList:[],//首页活动热门商品
+
+    shopList:[],// 首页推荐商家表
+
+  }
+
+  onLoad(e){
+    var that = this; 
+
+    //显示转发按钮
+    wx.showShareMenu({
+      withShareTicket: true
+    })
+
+    //轮播图
+    new Promise((resolve,reject)=>{
+       http.get(api.Swiper,{}).then(res=>{
+        // console.log(res);
+        this.imgUrls = res;
+      })
+    })  
+
+  }  
+  onShow(e){
+    //从缓存中读取服务区域
+    wx.getStorage({
+      key:'userChooseArea',
+      success:(res=>{
+        this.area = res.data;
+        this.$apply();
+      }),
+      //用户没有使用过小程序，扫码进入
+      fail:(err=>{
+        http.get(api.GetShopArea,{district:'智趣社区'}).then(res=>{
+              this.area = res[0];
+              wx.setStorageSync('userChooseArea',res[0]);
+              var userArea = {address_name:"未知",school_id:null,school_name:"未知"}
+              wx.setStorageSync('userArea',userArea);
+              this.$apply();
+            })
+      })
+    })
+  }
+  watch = {
+    //监听服务区域变动，刷新商品和商家列表
+    area(area,old){
+      console.log(area)
+      this.hotGoodList = [];
+      this.shopList = [];
+      this.goodInit = false;
+      this.shopInit = false;
+        //活动商品
+        http.get(api.HotGood,{area_id:area.id},true).then(res=>{
+          console.log(res)
+          if(res.msg == '当前无商家'){           
+            return; 
+          }else{
+            this.hotGoodList = res;
+          }
+          this.$apply();
+          this.hanldeGoodList();
+        })
+        //推荐商家 
+        http.get(api.ShopList,{area_id:area.id}).then(res =>{
+          console.log(res);
+          if(res.status){
+            wx.showToast({
+              iamge:'../images/icons/error.png',
+              title:'当前无商家',
+              icon:'none',
+            })
+          }else{
+            this.shopList = res;
+          }
+          this.shopInit = true;
+          this.$apply();
+        })
+    }
+  }
+      //处理首页商品列表,获取商品样式
+    hanldeGoodList(){
+      for(let index in this.hotGoodList){
+        let good = this.hotGoodList[index];
+        switch(index%4){
+          case 0:{
+            good['class'] =".class-0";
+            break;
+          }
+          case 1:{
+            good['class'] =".class-1";
+            break;
+          }
+          case 2:{
+            good['class'] =".class-2";
+            break;
+          }
+          case 3:{
+            good['class'] =".class-3";
+            break;
+          }
+        }
+        this.goodInit = true;
+        this.$apply();
+      }
+    }
+  //监听页面滚动
+  onPageScroll(e){
+
+      
+    }
+  methods ={
+      //swiperChange
+    swiperChange(e){
+     this.siweprCur = e.detail.current;
+     this.$apply();
+    },
+
+    //修改校区和服务区域
+    goChooseAddress(e){
+        wx.navigateTo({
+          url: `/pages/addressChoose`, 
+        })
+    },
+    //前往商品
+    goHotGood(e){
+          wx.navigateTo({
+              url: `/pages/goodDetail?goodId=${e.currentTarget.dataset.goodid}&shopId=${e.currentTarget.dataset.shopid}`,
+        })
+      },
+    //前往商家
+    goShoper(id){  
+        wx.navigateTo({
+            url: `/pages/shoper?shop_id=${id}`,
+        })  
+    }
+  }
+}
+</script>
+<style lang="scss">
+page{
+  background-color:#fff;
+}
+
+.index-top{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding:20rpx;
+  position: fixed;
+  top:0;
+  width: 100%;
+  background-color: #108ee9;
+  z-index:1;
+  .news{
+    width: 49%;
+    display: flex;
+    align-items: center;
+    image{
+      height:40rpx;
+      width:40rpx;
+    }
+    .swiper{
+      width: 98%;
+      margin-left:20rpx;
+      padding-top: 7px;
+      height:28px;
+      .swiper-item{
+        height:28px;
+        .swiper-text{
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow:hidden;
+          word-break: break-all;
+          color:#fff;
+          font-size:30rpx;
+        }
+      }
+    }
+  }
+  .address{
+    width: 49%;
+    display: flex;
+    align-items: center;
+    text{
+      font-size:30rpx;
+      color:#fff;
+      text-overflow:ellipsis;
+      overflow:hidden;
+      margin:0rpx 20rpx;
+    }
+    image{
+      height:40rpx;
+      width:40rpx;
+    }
+  }
+}
+
+.index-swiper{
+  margin-top:55px;
+}
+
+.index-title{
+  margin-top:30rpx;
+  align-items: center; 
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  .text1{
+    font-size:50rpx;color:#ffb65d;font-weight:bold;font-size:50rpx
+  }
+  .text2{
+   color:block;font-size:50rpx;margin:20rpx;color:#108ee9;
+  }
+  .text3{
+    color:#ba9b9b;font-size:20rpx;margin-bottom:30rpx;
+  }
+
+}
+
+.good-list{
+   display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  .class-0{
+    width:47%;padding:10rpx;margin-left:3%;
+    image{
+      width:100%;height:50%;margin-top:20rpx;
+    }
+    .info{
+      display:flex;flex-direction:column;
+      .name{
+        font-size:28rpx;
+      }
+      .desc{
+        font-size:20rpx;color:#666;line-height: 1.5;
+      }
+    }
+  }
+  .class-1{
+    width:40%;padding:10rpx;margin-right:3%;
+     display:flex;flex-direction:column-reverse;justify-content: flex-end;
+    image{
+      width:100%;height:50%;margin-bottom:20rpx;
+    }
+    .info{
+      display:flex;flex-direction:column;
+      .name{
+        font-size:28rpx;text-align:left;
+      }
+      .desc{
+        font-size:20rpx;color:#666;text-align:left;
+      }
+    }
+  }
+  .class-2{
+    width:47%;padding:10rpx;margin-left:3%;
+    image{
+      width:100%;height:50%;margin-top:20rpx;
+    }
+    .info{
+      display:flex;flex-direction:column;
+      .name{
+        font-size:28rpx;
+      }
+      .desc{
+        font-size:20rpx;color:#666;line-height: 1.5;
+      }
+    }
+  }
+  .class-3{
+    width:40%;padding:10rpx;margin-right:3%;
+    display:flex;flex-direction:column;justify-content: flex-start;
+    image{
+      width:100%;height:50%;margin-bottom:20rpx;
+    }
+    .info{
+      display:flex;flex-direction:column;
+      .name{
+        font-size:28rpx;text-align:left;
+      }
+      .desc{
+        font-size:20rpx;color:#666;text-align:left;
+      }
+    }
+  }
+}
+
+.shop-list{
+  width: 95%;
+  padding: 0 2.5% 2.5% 2.5%;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  .shop{
+    width: 47%;
+    border-radius: 20rpx;
+    background-color: #fff;
+    padding:8rpx;
+    margin: 20rpx 0 15rpx 0;
+    box-shadow: 0rpx 5rpx 25rpx rgba(0, 0, 0, 0.1);
+    image{
+      width: 100%;
+      border-radius: 20rpx 20rpx 0 0;
+    }
+    .content{
+      display: flex;
+      flex-direction: column;
+      .name{
+        color:#ffb65d;
+      }
+      .info{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size:23rpx;
+        color:#108ee9;
+        margin: 10rpx 0;
+        .sale{
+
+        }
+        .time{
+
+        }
+      }
+      .summary{
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        text-align: justify;
+        overflow: hidden;
+        color:#333;
+        font-size: 24rpx;
+      }
+    }
+  }		
+}
+
+
+</style>
+
+
