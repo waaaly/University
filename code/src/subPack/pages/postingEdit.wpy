@@ -95,7 +95,7 @@
 					texts: " "
 			})
 			
-			//最多字数限制
+			//最多字数限
 			if(len > this.data.max) return;
 				this.setData({
 					currentWordNumber: len //当前字数
