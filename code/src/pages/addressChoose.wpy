@@ -37,7 +37,7 @@
      </view>
      <view class='address'>
         <view class='bodyTitle'> 
-          <view class='dizhiFont'>从收获地址选择</view>   
+          <view class='dizhiFont'>从收货地址选择</view>   
         </view>
         <scroll-view scroll-y="true" class="addressScroll" >
           <block wx:if="{{userAddressInServer.length!=0}}">

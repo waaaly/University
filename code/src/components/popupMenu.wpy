@@ -1,5 +1,5 @@
 <template>
-    <view style="position:fixed;right:0rpx;bottom:0rpx;">
+    <view style="position:fixed;right:-10px;bottom:-10px;">
         <!-- <image src="/images/icons/topic.png" class="img-style" animation="{{animCollect}}" bindtap="question"/> -->
         <image src="/images/icons/posting.png" class="img-style" animation="{{animTranspond}}" bindtap="idea"/>
         <image src="/images/icons/newsList.png" class="img-style" animation="{{animInput}}" bindtap="answer"/>

@@ -76,4 +76,13 @@ module.exports = {
     /**大学若邻新增接口 **/
     ShopTabs: ApiRootUrl + 'shop-tabs', //根据用户定位的区，获取区域标签
     ShopAreaTabs: ApiRootUrl + 'shop-area-by-tabs', //根据用户选择的标签，获取代理点
+
+    /**大学若邻发现功能接口 **/
+    ArticleList: ApiRootUrl + 'article-list', //帖子列表
+    ArticleDetail: ApiRootUrl + 'article-details', //帖子详情
+    ArticleAdd: ApiRootUrl + 'article-add', //发布帖子
+    ArticleDelete: ApiRootUrl + 'article-delete', //删除帖子
+    ArticleComment: ApiRootUrl + 'article-comment', //评论帖子
+    ArticleLike: ApiRootUrl + 'article-like', //点赞帖子
+    ArticleTab: ApiRootUrl + 'article-tabs', //可见标签
 }

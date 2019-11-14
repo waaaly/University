@@ -1,7 +1,7 @@
 
 
 <template>
-    <view>
+    <view wx:if="{{init}}">
         <swiper style="height:220px;background-color:#fff;" 
               indicator-dots="{{true}}" 
               autoplay="{{true}}" 
@@ -35,17 +35,25 @@
                         <image src="{{item.userInfo.avatar}}"/>
                         <view class="name-time">
                             <view class="name">{{item.userInfo.name}}</view>
-                            <view class="time">{{item.userInfo.postTime}}</view>
+                            <view class="time">{{item.postTime}}</view>
                         </view>
                     </view>
                     <view class="content">
                         <view class="cnt-text">{{item.content.text}}</view>
-                        <view class="imageList">
-                            <image  wx:for="{{item.content.imgList}}" 
-                            wx:for-item='imgItem' 
-                            catchtap="previewImage({{item.content.imgList}},{{imgItem}})"
-                            mode='widthFix' src="{{imgItem}}"/>
-                        </view>
+                        <block wx:if="{{item.content.imgList.length!=0}}">
+                            <view wx:if="{{item.content.imgList.length==1}}" class="singleImg">
+                                <image  wx:for="{{item.content.imgList}}" 
+                                    wx:for-item='imgItem' lazy-load='true' 
+                                    catchtap="previewImage({{item.content.imgList}},{{imgItem}})"
+                                    mode='aspectFit' src="{{imgItem}}"/>
+                            </view>
+                            <view wx:else class="imageList">
+                                <image  wx:for="{{item.content.imgList}}" 
+                                    wx:for-item='imgItem' lazy-load='true' 
+                                    catchtap="previewImage({{item.content.imgList}},{{imgItem}})"
+                                    mode='center' src="{{imgItem}}"/>
+                            </view>
+                        </block>         
                     </view>
                     <view class="tabs">
                         <view class="item">
@@ -83,6 +91,7 @@ export default class find extends wepy.page {
     }
 
     data = {
+        init:false,
         imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
         toRightIcon:'http://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/xiangyou.png',
         swiperImg: [
@@ -91,89 +100,52 @@ export default class find extends wepy.page {
             'images/4cf9526786add9b8e1b19d5c7042e649.png',
             'images/80c3f854526ee74e55121fe8af463684.jpg'
         ],
+        imgHeight:0,//帖子详情图片高度
         enableViewH:14,//可见标签高度
         enableViewId:0,//当前可见标签id
-        enableViewList:[
-            {id:0,value:'所有帖子'},{id:1,value:'上海大学'},{id:2,value:'广西大'},
-            {id:3,value:'文理工科技大学'},{id:4,value:'理工学院'},{id:5,value:'新疆大'},
-            {id:6,value:'北京科技大学'},{id:7,value:'西藏研究所'},{id:8,value:'医学院'}
-        ],//可见区域列表
-        postingList:[
-            {
-            commentNum:14,
-            likeNum:99,
-            iLike:1,
-            userInfo:{
-                name:'waaaly',
-                avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
-                postTime:'发布与五分钟前',
-            },
-            content:{
-                text:'这是一条测试数据这是一条测试数据这是一条测试数据这是一条测试数据这是一条测试数据这是一条测试数据',
-                imgList:[
-                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
-                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
-                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
-                ],
-            },
-        },
-        {
-            commentNum:14,
-            likeNum:99,
-            iLike:1,
-            userInfo:{
-                name:'waaaly',
-                avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
-                postTime:'发布与五分钟前',
-            },
-            content:{
-                text:'这是一条测试数据这是一条测试数据这是一条测试数据这是一条测试数据这是一条测试数据这是一条测试数据',
-                imgList:[
-                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
-                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
-                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
-                ],
-            },
-        },
-        ],//帖子列表
-        test1:{
-            commentNum:14,
-            likeNum:99,
-            iLike:0,
-            userInfo:{
-                name:'rocky',
-                avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
-                postTime:'2019-11-11 10:11',
-            },
-            content:{
-                text:'别爱我没结果别爱我没结果别爱我没结果别爱我没结果别爱我没结果',
-                imgList:[
-                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
-                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
-                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
-                ],
-            },
-        }
+        enableViewList:[],//可见区域列表
+        postingList:[],//帖子列表
     }
 
     onLoad() {
-  
+        //获取可见标签组
+        http.get(api.ArticleTab,{
+            user_id:wx.getStorageSync('userInfoInServer')?
+            wx.getStorageSync('userInfoInServer').id:'',
+        }).then(res=>{
+           console.log(res)
+           this.enableViewList = res.enableViewList;
+           this.$apply();
+        })
+        
     }
 
     onShow() {
-
+        //获取帖子
+        http.get(api.ArticleList,{
+            user_id:wx.getStorageSync('userInfoInServer')?
+            wx.getStorageSync('userInfoInServer').id:'',
+        }).then(res=>{
+            this.postingList = res;
+            this.init = true;
+            this.$apply();
+        })
     }
     //上拉加载
     onReachBottom(){
-        wx.showLoading();
-        setTimeout(()=>{
-             for(let i=0;i<3;i++){
-                this.postingList.push(this.test1);
-            } 
+        //获取帖子
+        http.get(api.ArticleList,{},true).then(res=>{
+            if(res.length==this.postingList.length){
+                wx.showToast({title:'没有更多啦～',icon:'none'})
+                setTimeout(()=>{
+                    return;
+                },500)           
+            }
+            this.postingList = res;
             this.$apply();
-            wx.hideLoading (); 
-        },1000)
+        })
     }
+
     methods = {
         //前往详情页
         goDetail(posting){
@@ -181,7 +153,7 @@ export default class find extends wepy.page {
             // var posting = e.currentTarget.dataset.item;
             console.log(posting);
             wx.navigateTo({
-                url: '../subPack/pages/postingDetail',
+                url: `../subPack/pages/postingDetail?posting_id=${posting.articleId}`,
             })
         },
         //改变可见便签高度
@@ -219,7 +191,7 @@ export default class find extends wepy.page {
 </script>
 <style lang="less">
 page{
-    background-color: #dfdfdf;
+    background-color: #e0e0e0;
 }
 .enable-view{
     display: flex;
@@ -228,7 +200,7 @@ page{
     background-color: #fff;
     .item-box{
         display: flex;
-        justify-content: space-around;
+        // justify-content: space-around;
         flex-wrap: wrap;
         overflow: hidden;
         .item{
@@ -310,9 +282,12 @@ page{
             margin-bottom:20rpx;
         }
         .imageList{
-            width: 70%;
+            display: flex;
+            flex-direction: row;  // 横向布局
+            flex-wrap: wrap; // 超出自动换行
             image{
-                width: 70%;
+                width: 32%;
+                height: 32vw;
                 margin:5rpx;
                 border-radius: 10rpx;
             }
@@ -320,7 +295,7 @@ page{
     }
     .tabs{
         display: flex;
-        padding:0 15%;
+        padding:0 20%;
         align-items: center;
         justify-content: space-between;
         .item{

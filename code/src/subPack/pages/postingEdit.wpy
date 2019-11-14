@@ -15,14 +15,13 @@
 </view>
 <button bindtap="send" class="btn">发布</button>
 <view class="section">
-    <picker class="section_pic" bindchange="bindPickerChange" data-selecthx="{{array[index].name}}" value="{{array[index].id}}" range="{{array}}">
+    <picker class="section_pic" bindchange="bindPickerChange" 
+			range="{{enableViewList}}" range-key="value"> 
 			<image src="../../images/icons/lxr.png" class="lxrimg"/>
       <view class="picker_text">
         谁可以见：
       </view>
-			<view class="picker">
-				{{array[index].name}}
-			</view>
+			<view class="picker">{{curEnable}}</view>
     </picker>
   </view>
 	
@@ -32,52 +31,63 @@
 <script>
   import wepy from 'wepy';
   import http from '../../utils/Base';
-  import api from '../../utils/API';
-  export default class Idea extends wepy.page {
+	import api from '../../utils/API';
+	const uploadFile = require("../../utils/Upload.js");
+  export default class postingEdit extends wepy.page {
     config = {
       navigationBarTitleText: '发布新帖',
     }
 
-    data = {
-		current: 0,
-		min: 5, //最少字数
-		max: 100, //最多字数
-		content:"" ,//文章内容
-		img_url: [] ,//图片
-		index: 0, //默认显示位置
-		
-		userInfo: {} ,//个人信息
-		array: [
-			{
-				id: 0,
-				name: '所有区域可见'
-			},
-			{
-				id: 1,
-				name: '仅广工东区6栋可见'
-			},
-			{
-				id: 2,
-				name: '仅广工东区7栋可见'
-			}
-		], //选择属性
+  data = {
+			current: 0,
+			min: 5, //最少字数
+			max: 100, //最多字数
+			content:"" ,//文章内容
+			img_url: [] ,//图片本地url
+			img_oss_url:[],//oss服务器url
+			userInfo: {} ,//个人信息
+			index: 0, //默认显示位置
+			enableViewList:[],//可见标签数组
+			curEnable:'全部可见',
 	}
 	onLoad(e){
-		//console.log(e)
-		//this.userInfo = e.userInfo;
-		wx.setNavigationBarTitle({
-			title: '发布帖子'
+		//获取可见标签组
+		http.get(api.ArticleTab,{
+				user_id:wx.getStorageSync('userInfoInServer')?
+				wx.getStorageSync('userInfoInServer').id:'',
+		}).then(res=>{
+				console.log(res)
+				this.enableViewList = res.enableViewList;
+				this.$apply();
+		})
+	}
+	//发布前线把用户选择的图片保存到oss
+	//参数为图片路径数组
+	uploadImage(imgPathList){
+		return new Promise((resolve,reject)=>{
+			var perfix = 'front/' + userId +'/';
+			var fileName = "";
+			for(let imgPath of imgPathList){
+				if(imgPath.indexOf('http://tmp')!=-1){
+					fileName = imgPath.replace('http://tmp/', perfix);//模拟器
+				}else{
+					fileName = imgPath.replace('wxfile://tmp_', perfix);//真机
+				}
+				console.log(fileName);
+				//保存地址到数组
+				this.img_oss_url.push(fileName);
+				//上传图片到oss服务器
+				uploadFile(imgPath,wx.getStorageSync('userInfoInServer').id);
+			}
+			resolve();
 		})
 	}
 	methods = {
 		
 		//picker选择器
 		bindPickerChange: function(e){
-			console.log(e)
-			var index = this.data.index
-			this.setData({
-				index: e.detail.value
-			})
+			this.curEnable =  e.detail.value;
+			this.$apply();
 		},
 		//帖子内容
 		//字数限制
@@ -106,36 +116,19 @@
 		chooseimage: function(){
 			var that = this;
 			wx.chooseImage({
-				count: 9, //默认照片为九
+				count: 9-this.img_url.length, 
 				sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
-		        sourceType: ['album', 'camera'], // 可以指定来源是相册还是相机，默认二者都有
+		    sourceType: ['album', 'camera'], // 可以指定来源是相册还是相机，默认二者都有
 				success: function(res){
-					if(res.tempFilePaths.length > 0){
-						//图片如果满九张，不显示加图
-						if(res.tempFilePaths.length == 9){
-							that.setData({
-								hideAdd: 1
-							})
-						}else{
-							that.setData({
-								hideAdd: 0
-							})
-						}
-					}
 					//把每次选择的图片放进数组
-					let img_url = that.data.img_url;
-					for(let i=0; i<res.tempFilePaths.length; i++){
-						img_url.push(res.tempFilePaths[i])
-					}
-					that.setData({
-						img_url: img_url
-					})
+					that.img_url = that.img_url.concat(res.tempFilePaths);//连接两个或多个数组 
+					that.img_url.length==9?that.hideAdd=1:that.hideAdd=0;
+					that.$apply();
 				}
 			})
 		},
 		//删除图片
 		delete: function(e){
-			var img_url = this.data.img_url;
 			var index = e.currentTarget.dataset.index;
 			this.img_url.splice(index,1);
 			this.$apply();
@@ -155,12 +148,22 @@
 		},
 		//发布()
 		send: function(){
-			var that = this;
-			var user_id = wx.getStorageSync('userid')
-			wx.showLoading({
-				title:'上传',
+			this.uploadImage(this.img_url).then(res=>{
+				http.get(api.ArticleTab,{
+						user_id:wx.getStorageSync('userInfoInServer').id,
+						tabs_id:'',
+						tabs_lable:'',
+						article_content:'',
+						article_author:wx.getStorageSync('userInfoInServer').name,		
+						article_img:this.img_oss_url,
+				},true).then(res=>{
+						console.log(res)
+				})
+			}).catch(err=>{
+
 			})
 		}
+		
 	}
 }
     

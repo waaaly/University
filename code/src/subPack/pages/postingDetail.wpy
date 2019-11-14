@@ -1,11 +1,11 @@
 <template>
-    <view class="page" bindtap="hideTips">
+    <view class="page" bindtap="hideTips" wx:if="{{init}}" id='page'>
         <view class="posting">
             <view class="user-info">
-                <image  src="{{posting.poster.avatar}}"/>
+                <image  src="{{posting.userInfo.avatar}}"/>
                 <view class="name-time">
-                    <view class="name" bindlongpress="longPress" >{{posting.poster.name}}</view>
-                    <view class="time">{{posting.poster.postTime}}</view>
+                    <view class="name" bindlongpress="longPress" >{{posting.userInfo.name}}</view>
+                    <view class="time">{{posting.postTime}}</view>
                 </view>
                 <view class="like" catchtap="changePostLike()">             
                     <view wx:if="{{posting.likeNum==0}}" class="text">抢首赞</view>
@@ -15,11 +15,11 @@
                 </view>
             </view>
             <view class="rich-text">
-                {{posting.content.text}}
+                {{content.text}}
             </view>
             <view >
-              <image wx:for="{{posting.content.imgList}}" 
-                catchtap="previewImage({{posting.content.imgList}},{{item}})"
+              <image wx:for="{{content.imgList}}" 
+                catchtap="previewImage({{content.imgList}},{{item}})"
                 mode="widthFix"  src="{{item}}"/>
             </view>
         </view>
@@ -30,9 +30,12 @@
             <view class="comment" wx:for="{{commentList}}" wx:for-item="comment" wx:for-index="commentIndex">
                 <view class="commenter-info">
                     <image src="{{comment.commenter.avatar}}"/>
-                    <view class="name-time">
+                    <view class="commenter">
                         <view class="name" bindlongpress="longPress">{{comment.commenter.name}}</view>
-                        <view class="time">{{comment.commentTime}}</view>
+                        <view class="floor-time">
+                            <view class="floor">{{comment.floor}}楼</view>
+                            <view class="time">{{comment.commentTime}}</view>
+                        </view>
                     </view>
                     <view class="like" catchtap="changeCommentLike({{comment}},{{commentIndex}})">                       
                         <view wx:if="{{comment.likeNum==0}}" class="text">抢首赞</view>
@@ -41,18 +44,18 @@
                         <image wx:else src="../../images/icons/like-off.png"/>
                     </view>
                 </view>
-                <view class="comment-cnt" catchtap="changeHoldText({{commentIndex}},{{comment.commenter.name}})">{{comment.commentText}}</view>
+                <view class="comment-cnt" catchtap="changeHoldText({{commentIndex}},{{comment.commenter.name}},{{null}})">{{comment.commentText}}</view>
                 <view class="reply-list" wx:if="{{comment.replyList.length!=0}}">
                     <view class="reply-item" wx:for="{{comment.replyList}}" wx:for-item="reply" >
                         <view class="replyer" bindlongpress="longPress">{{reply.replyer.name}}</view>
                         <view wx:if="{{reply.beReplyer}}" class="split">回复</view>
-                        <view wx:if="{{reply.beReplyer}}" class="be-repler" bindlongpress="longPress">{{reply.beReplyer.name}}</view>
+                        <view wx:if="{{reply.beReplyer}}" class="be-replyer" bindlongpress="longPress">{{reply.beReplyer.name}}</view>
                         <view class="split">:</view>
-                        <view class="reply-cnt" catchtap="changeHoldText({{commentIndex}},{{reply.replyer.name}})">{{reply.replyText}}</view>
+                        <view class="reply-cnt" catchtap="changeHoldText({{commentIndex}},{{reply.replyer.name}},{{reply.replyer.user_id}})">{{reply.replyText}}</view>
                     </view>
                 </view>
                 <view class="reply-input" catchtap="changeCurReplyInput({{commentIndex}})">
-                    <input class="input" placeholder="回复{{replyInputList[commentIndex].holdText}}" 
+                    <input class="input" placeholder="回复{{replyInputList[commentIndex].beReplyerName}}" 
                     placeholder-style="color:#bbb;" bindinput="replyInputEvent"  value="{{replyInputList[commentIndex].inputText}}"
                     bindfocus="replyInputFocus"/>
                     <view class="{{replyInputList[commentIndex].inputText.length==0?'send-off':'send-on'}}"
@@ -80,109 +83,46 @@
     }
 
     data = {
+        init:false,
+        article_id:null,//帖子id
         curReplyInput:0,//当前输入框
-        replyInputList:[],//回复输入框，提示字及内容缓存
+        replyInputList:[],//回复输入框，提示字及内容缓存,长度与commentList一致
         commentText:"",//评论内容
         tipsShow:false,
         tips:'丢纸条',
         tipsX:0,
         tipsY:0,
-        posting:{
-            likeNum:22,
-            iLike:1,
-            poster:{
-                name:'waaaly',
-                avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
-                postTime:'发布于五分钟前',
-                
-            },
-            content:{
-                text:`我之前在做微信小程序的时候遇到了一个问题，一些让用户输入的地方，
-                还有用户的微信昵称都有可能输入键盘自带的emoji表情符，在服务端接收的时
-                候会有异常，在前端进行MD5加密后的签名和后端接收到数据后再进行MD5后的签
-                名不一样。网上有给出一些解决方法，比如加载表情符图片，修改数据库的字符
-                编码等，这些方法都不太好，也没有解决问题，后面找了比较久才找到合适的解
-                决的方法：表情符编码是十六进制的，需要把表情符转码成八进制的。`,
-                imgList:[
-                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
-                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
-                    "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
-                ]
-            }
-        },
-        commentList:[
-                {
-                    commentTime:'19:20',
-                    commentText:'你看那个人好像一条狗噢',
-                    likeNum:11,
-                    iLike:0,
-                    commenter:{
-                        name:'紫霞仙子',
-                        avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',                       
-                    },
-                    replyList:[
-                        {
-                            replyer:{
-                                name:'风清扬',
-                            },
-                            replyText:'我自己回复自己嘛，哈哈'                       
-                        },
-                        {
-                            replyer:{
-                                name:'杨过',
-                            },
-                            beReplyer:{
-                                name:'小龙女',
-                            },
-                            replyText:'我觉得你这想法很危险'
-                        }
-                    ]
-                },
-                {
-                    commentTime:'19:20',
-                    commentText:'6666好好凑狗15字',
-                    likeNum:0,
-                    iLike:0,
-                    commenter:{
-                        name:'至尊宝',
-                        avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',        
-                    },
-                    replyList:[
-                        {
-                            replyer:{
-                                name:'阳顶天',
-                            },
-                            replyText:'我自己回复自己嘛，哈哈'                       
-                        },
-                        {
-                            replyer:{
-                                name:'灭绝师太',
-                            },
-                            beReplyer:{
-                                name:'令狐冲',
-                            },
-                            replyText:'我觉得你这想法很危险我觉得你这想法很危险我觉得你这想法很危险我觉得你这想法很危险'
-                        }
-                    ]
-                }
-            ]
-    
-    
-    
-    
-    
-    
+        content:{},
+        posting:{},
+        commentList:[]    
     }
 
     onLoad(option) {
-        //初始话回复输入框内容
+        this.article_id = option.posting_id;
+        http.get(api.ArticleDetail,{
+                id:option.posting_id,
+                user_id:wx.getStorageSync('userInfoInServer')?
+                wx.getStorageSync('userInfoInServer').id:'',},true).then(res=>{
+            console.log(res)
+            this.content = res.content;
+            this.posting = res.posting;
+            this.commentList = res.commentList;
+            this.$apply();
+            this.initRelpyInputList();        
+       })
+    }
+    //初始话回复输入框内容
+    initRelpyInputList(){
         for(let index in this.commentList){
             let relpyInput = new Object();
-            relpyInput['holdText'] = this.commentList[index].commenter.name;
+            relpyInput['beReplyerName'] = "";
+            relpyInput['beReplyerId'] = "";
             relpyInput['inputText'] = "";
             this.replyInputList.push(relpyInput);
-            relpyInput = null;
+            relpyInput = null;           
         }
+        this.init = true;
+        this.$apply();
     }
     methods={
         //预览图片
@@ -213,10 +153,28 @@
             this.$apply();
         },
         //改变当前输入框holdtext
-        changeHoldText(index,replyerName){
-            if(replyerName==wx.getStorageSync("userInfoInServer").name){return;}
-            this.replyInputList[index].holdText = replyerName;
-            this.$apply();
+        changeHoldText(index,beReplyerName,bereplyerId){  
+            //回复楼主不需要显示
+            if(bereplyerId==null){
+                this.replyInputList[index].beReplyerName = "";
+                this.replyInputList[index].beReplyerId = "";
+                console.log(this.replyInputList[index]);
+                this.$apply();
+                return; 
+            }else{
+                //不能自己回复自己
+                if(beReplyerName==wx.getStorageSync("userInfoInServer").name){
+                    this.replyInputList[index].beReplyerName = "";
+                    this.replyInputList[index].beReplyerId = ""; 
+                    this.$apply();
+                    return; 
+                }
+                this.replyInputList[index].beReplyerName = beReplyerName;
+                this.replyInputList[index].beReplyerId = bereplyerId; 
+                console.log(this.replyInputList[index]);                   
+                this.$apply();
+            }
+            
         },
         //回复输入框输入事件
         replyInputEvent(e){
@@ -225,24 +183,44 @@
         },
         //回复输入框发送
         sendRelpy(index){
-            if(this.replyInputList[index].inputText.length==0){return;}
+            if(this.replyInputList[index].inputText.length==0){return;}    
+            //回复者  
+            var replyer = new Object();
+            replyer['name'] = wx.getStorageSync('userInfoInServer').name;
+            replyer['user_id'] = wx.getStorageSync('userInfoInServer').id;
             var reply = new Object();
-            var repler = new Object();
-            repler['name'] = wx.getStorageSync('userInfoInServer').name;
-            reply['replyer'] = repler;
+            reply['replyer'] = replyer;
             reply["replyText"] = this.replyInputList[index].inputText;
-            //回复楼主
-            if(this.replyInputList[index].holdText==this.commentList[index].commenter.name){}
-            else{
+            //不是回复楼主 添加被回复者
+            if(this.replyInputList[index].beReplyerName!=""){
                 var beReplyer = new Object();
-                beReplyer['name'] = this.replyInputList[index].holdText;
+                beReplyer['name'] = this.replyInputList[index].beReplyerName;
+                beReplyer['user_id'] = this.replyInputList[index].beReplyerId;
                 reply['beReplyer'] = beReplyer;
             }
             console.log(reply)
-            this.commentList[index].replyList.push(reply);
-            this.replyInputList[index].inputText="";
-            this.$apply();
-            wx.showToast({title:'回复成功！'});
+            http.post(api.ArticleComment,{
+                parent_id:              this.commentList[index].commentId,//回复
+                be_reply_comment_id:    this.commentList[index].commentId,
+                article_id:             this.article_id,//帖子id
+                article_author_uid:     this.posting.userInfo.user_id,//帖子作者id
+                replyer_user_id:        replyer.user_id,//回复者id
+                replyer_user_name:      replyer.name,//回复者名字
+                be_replyer_user_id:     reply.beReplyer?reply.beReplyer.user_id:'',//被回复者id
+                be_replyer_user_name:   reply.beReplyer?reply.beReplyer.name:'',  //被回复者名字                    
+                reply_to:               reply.beReplyer?reply.beReplyer.name:'',//被回复者名字 
+                content:                reply.replyText,
+            },true,false).then(res=>{
+                console.log(res)
+                if(res.code==200){
+                    this.commentList[index].replyList.push(reply);
+                    this.replyInputList[index].inputText="";
+                    this.$apply();
+                    wx.showToast({title:'回复成功！'});
+                }else{
+                    wx.showToast({title:res.msg});
+                }
+            }) 
         },
         //评论输入框输入事件
         commentInput(e){
@@ -255,22 +233,54 @@
             var commenter = {
                 name:wx.getStorageSync("userInfoInServer").name,
                 avatar:wx.getStorageSync("userInfoInServer").avatar,
+                user_id:wx.getStorageSync("userInfoInServer").id,
             }
             var comment = new Object();
-            comment['commentTime'] = '2019-12-12 10:11';
+            comment['commentTime'] = '刚刚';
             comment['commentText'] = this.commentText;
             comment['commenter']   = commenter;
             comment['replyList']   = [];
             comment['likeNum']     = 0;
-            comment['likeNum']     = 0; 
+            comment['iLike']       = 0; 
+            comment['floor']       = this.commentList.length+1;
             console.log(comment)
-            this.commentList.push(comment);
-            this.$apply();
-            wx.showToast({title:'评论成功！'});
+            http.post(api.ArticleComment,{
+                parent_id:              0,//回复
+                be_reply_comment_id:    0,
+                article_id:             this.article_id,//帖子id
+                article_author_uid:     this.posting.userInfo.user_id,//帖子作者id
+                replyer_user_id:        comment.commenter.user_id,//评论者id
+                replyer_user_name:      comment.commenter.name,//评论者名字
+                be_replyer_user_id:     this.posting.userInfo.user_id,//被评论者id
+                be_replyer_user_name:   this.posting.userInfo.name,  //被评论者者名字                    
+                reply_to:               this.posting.userInfo.name,//被评论者名字 
+                content:                comment.commentText,//评论内容
+            },true,false).then(res=>{
+                console.log(res)
+                if(res.code==200){
+                    this.commentList.push(comment);
+                    let relpyInput = new Object();
+                    relpyInput['beReplyerName'] = "";
+                    relpyInput['beReplyerId'] = "";
+                    relpyInput['inputText'] = "";
+                    this.replyInputList.push(relpyInput);
+                    this.commentText = "";
+                    this.$apply();
+                    wx.showToast({title:'评论成功！'});
+                    // 使页面滚动到底部
+                    wx.createSelectorQuery().select('#page').boundingClientRect(rect=> {                    
+                        wx.pageScrollTo({
+                            scrollTop: rect.bottom
+                        })
+                    }).exec();
+                }else{
+                    wx.showToast({title:res.msg});
+                }
+            })
+
         },
         //长按用户名弹出操作框
         longPress(e){
-            console.log(e)
             this.tipsShow = true;
             this.tipsX = e.currentTarget.offsetLeft;
             this.tipsY = e.currentTarget.offsetTop + 20;
@@ -311,12 +321,11 @@
         .name-time{
             display: flex;
             flex-direction: column;
-            flex: 1;
+            flex:1;
             .name{
                 font-size:28rpx;
             }
             .time{
-                margin-top:10rpx;
                 font-size:25rpx;
                 color:#888;
             }
@@ -375,17 +384,26 @@
                 height: 70rpx;
                 border-radius: 50%;
                 margin-right:20rpx;
-            }
-            .name-time{
+            }        
+            .commenter{
                 display: flex;
                 flex-direction: column;
-                flex:1;
+                flex: 1;
                 .name{
                     font-size:28rpx;
                 }
-                .time{
-                    font-size:25rpx;
-                    color:#888;
+                .floor-time{
+                    margin-top:13rpx;
+                    display: flex;
+                    .floor{
+                        font-size:25rpx;
+                        color:#888;
+                    }
+                    .time{
+                        margin-left:10rpx;
+                        font-size:25rpx;
+                        color:#888;
+                    }
                 }
             }
             .like{
