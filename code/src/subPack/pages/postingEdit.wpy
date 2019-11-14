@@ -15,16 +15,17 @@
 </view>
 <button bindtap="send" class="btn">发布</button>
 <view class="section">
-    <picker class="section_pic" bindchange="bindPickerChange" value="{{index}}" range="{{array}}">
+    <picker class="section_pic" bindchange="bindPickerChange" data-selecthx="{{array[index].name}}" value="{{array[index].id}}" range="{{array}}">
 			<image src="../../images/icons/lxr.png" class="lxrimg"/>
       <view class="picker_text">
         谁可以见：
       </view>
 			<view class="picker">
-				{{array[index]}}
+				{{array[index].name}}
 			</view>
     </picker>
   </view>
+	
 </view>
 </template>
 
@@ -43,10 +44,10 @@
 		max: 100, //最多字数
 		content:"" ,//文章内容
 		img_url: [] ,//图片
-		userInfo: {} ,//个人信息
 		index: 0, //默认显示位置
-		array: ['所有区域可见', '仅广工东区6栋可见', '仅广工东区7栋可见'], //选择属性
-		objectArray:[
+		
+		userInfo: {} ,//个人信息
+		array: [
 			{
 				id: 0,
 				name: '所有区域可见'
@@ -59,7 +60,7 @@
 				id: 2,
 				name: '仅广工东区7栋可见'
 			}
-		]
+		], //选择属性
 	}
 	onLoad(e){
 		//console.log(e)
@@ -69,6 +70,7 @@
 		})
 	}
 	methods = {
+		
 		//picker选择器
 		bindPickerChange: function(e){
 			console.log(e)
@@ -135,7 +137,7 @@
 		delete: function(e){
 			var img_url = this.data.img_url;
 			var index = e.currentTarget.dataset.index;
-			this.pics.splice(index,1);
+			this.img_url.splice(index,1);
 			this.$apply();
 		},
 		//预览图片
@@ -253,4 +255,5 @@
 	margin: 0 20rpx;
 	color: black;
 }
+
 </style>
