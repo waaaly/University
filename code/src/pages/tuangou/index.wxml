@@ -42,7 +42,7 @@
     <view class='split'></view>
     <view catchtap="xiala" class="xiala-father">
       <text style="{{currentClassify==moreText?'color:#ff6b5d':''}}">{{moreText}}</text>
-      <image style="margin-left:10rpx;width: 30rpx;height:30rpx;" src="/images/2-off.png"/>
+      <image style="margin-left:10rpx;width: 30rpx;height:30rpx;" src="/images/tanIcon/2-off.png"/>
       <view  class="{{xialaShow?'xiala-show':'xiala'}}">
         <view catchtap="changeMore" wx:for="{{moreClass}}" data-item="{{item}}" class="xiala-item">{{item}}</view>
       </view>
@@ -92,7 +92,7 @@
   <!--暂无团购-->
 <view wx:if="{{noInfo}}">
   <view class='shadow'>
-    <image src='../../images/icons/noTuan.png' mode='FixWidth'/>
+    <image src='https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/noTuan.png' mode='FixWidth'/>
     <view class="tips" wx:if='{{!isShoper}}'>
       <text>当前没有任何团购信息呢~</text>
     </view>

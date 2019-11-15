@@ -1,55 +1,79 @@
 <template>
-    <view>
+    <view style="position:relative;">
         <scroll-view  scroll-y="true" class="posts-his" 
-              style="height:{{screenH}}px;transform:translateX({{x0}}px);transition-duration:{{flash?'.5s':'0s'}};" 
+              style="height:{{screenH}}px;transform:translateX({{x0}}px);"  catchtap="changeCurPost({{null}})"
               >
-            <navigator  class="posts-record" wx:for="{{postList}}" wx:for-item="post" bindtap="goDetail({{post}})">
+            <view  class="posts-record" wx:for="{{postList}}" wx:for-item="post" wx:for-index="postIndex" bindtap="goDetail({{post}})">
               <view class="time-like">
                 <view class="time">{{post.postTime}}</view>
                 <view class="like">
                   <view wx:if="{{post.likeNum==0}}" class="text">抢首赞</view>
                   <view wx:else class="text">{{post.likeNum}}</view>
-                  <image class="icon" wx:if="{{post.iLike}}" src="../../images/icons/like-on.png"/>
-                  <image class="icon" wx:else src="../../images/icons/like-off.png"/>
+                  <image class="icon" wx:if="{{post.iLike}}" src="{{ossUrl+'like-on.png'}}"/>
+                  <image class="icon" wx:else src="{{ossUrl+'like-off.png'}}"/>
                 </view>
               </view>
               <view class="content">
                 <view class="cnt">{{post.content.text}}</view>
-                <image class="image" wx:for="{{post.content.imgList}}" src="{{item}}"/>
+                <block wx:if="{{post.content.imgList.length!=0}}">
+                    <view wx:if="{{post.content.imgList.length==1}}" class="singleImg">
+                        <image  wx:for="{{post.content.imgList}}" 
+                            wx:for-item='imgItem' lazy-load='true' 
+                            catchtap="previewImage({{post.content.imgList}},{{imgItem}})"
+                            mode='aspectFit' src="{{imgItem}}"/>
+                    </view>
+                    <view wx:else class="imageList">
+                        <image  wx:for="{{post.content.imgList}}" 
+                            wx:for-item='imgItem' lazy-load='true' 
+                            catchtap="previewImage({{post.content.imgList}},{{imgItem}})"
+                            mode='center' src="{{imgItem}}"/>
+                    </view>
+                </block>
               </view>
-              <view class="can-see">{{post.can_see}}</view>
-              <view class="biao" bindtap="bindCaoZuo" data-isShow="{{isShow}}">
-                  <image class="baseimg" src="../../images/icons/tanchu.png"></image>
+              <view class="can-see-box">
+                <view class="can-see">{{post.enableView}}</view>
+                <view class="dot-box" catchtap="changeCurPost({{postIndex}})">
+                  <view class="dot" >
+                    <view wx:if="{{curPostIndex == postIndex}}" class="tips">
+                      <picker bindchange="changeEnableView" range-key="value" range="{{enableViewList}}" >
+                        <text class="tips-item" >可见权限</text>
+                      </picker>         
+                      <view class="tips-item" catchtap="delePost({{postIndex}})">删除</view>
+                    </view>
+                  </view>
+                </view>             
               </view>
-              <view class="caozuo" style="top:{{cz_top}}px;right:{{cz_right}}px;" animation="{{animationData}}">
-                  <text class="kejian">可见</text> <text class="delete">删除</text>
-              </view>
-              <view class="can-see">{{post.enableView}}</view>
-            </navigator>
+            </view>
         </scroll-view>
-        <scroll-view  scroll-y="true" class="reply" 
-              style="height:{{screenH}}px;transform:translateX({{x1}}px);transition-duration:{{flash?'.5s':'0s'}};"
+        <scroll-view  scroll-y="true" class="reply" bindtap="isShowInput({{false}},{{null}})"
+              style="height:{{screenH}}px;transform:translateX({{x1}}px);"
               >
-            <navigator class="reply-record" wx:for="{{replyList}}" wx:for-item="reply" bindtap="goDetail({{reply}})">
+            <view class="reply-record" wx:for="{{replyList}}" wx:for-item="reply" 
+                  wx:for-index="replyIndex"  bindtap="goDetail({{reply}})">
               <view class="user-info">
                   <image class="avatar" src="{{reply.userInfo.avatar}}"/>
                   <view class="name-time">
                     <view class="name">{{reply.userInfo.name}}</view>
-                    <text  bindtap="focusButn" class="huifu">点击回复</text>
-                    <!-- <view class="commentInputView" style="bottom:{{height == ''?0:height}}px;" hidden="{{!isInput}}">
-                      <view  class="commentInput">
-                        <input class="input" maxlength="-1" value="{{value}}" bindfocus="inputFocus" focus="{{focusInput}}" bindblur="inputBlur"></input>
-                      </view>
-                      <button class="send">回复</button>
-                    </view> -->
-                    <view class="time">{{reply.reply_time}}</view>
+                    <view class="time">{{reply.replyTime}}</view>
                   </view>
               </view>
-              <view class="reply-cnt">回复到:{{reply.reply_cnt}}</view>
-              <view class="i-say">我:{{reply.i_say}}</view> 
-            </navigator>
+              <view class="reply-box">
+                <view class="reply-cnt">
+                  <text class="cnt">回复到：{{reply.replyCnt}}</text>
+                </view>
+                <view class="reply-btn" catchtap="isShowInput({{true}},{{replyIndex}})" >
+                  <text class="btn">点击回复</text>
+                </view>
+              </view>
+              <view class="i-say">我：{{reply.iSay}}</view> 
+            </view>
+            <view wx:if="{{replyInputShow}}" class="reply-bottom">
+                <input class="input"  placeholder="回复{{replyTo}}"  bindinput="replyInput" value="{{replyText}}"
+                  focus="true"  bindfocus="replyInputFocus"/>
+                <view catchtap="sendComment" class="{{commentText.length==0?'send-off':'send-on'}}" >评论</view>
+            </view>
         </scroll-view>
-        <scroll-view  scroll-y="true" class="chat" style="height:{{screenH}}px;transform:translateX({{x2}}px);transition-duration:{{flash?'.5s':'0s'}};" >
+        <scroll-view  scroll-y="true" class="chat" style="height:{{screenH}}px;transform:translateX({{x2}}px);" >
             <navigator class="chat-record" wx:for="{{chatList}}" wx:for-item="chat" bindtap="goChat({{chat}})" bindlongpress="delete" >
               <image class="avatar" src="{{chat.userInfo.avatar}}"/>
               <view class="name-cnt">
@@ -64,18 +88,18 @@
 
         <view class="bottom-tab">
             <view class="item" bindtap='changeTab(0)'>
-              <image wx:if="{{curTab==0}}" class="icon" src="../../images/icons/lishi-on.png"/>
-              <image wx:else class="icon" src="../../images/icons/lishi-off.png"/>
+              <image wx:if="{{curTab==0}}" class="icon" src="{{ossUrl+'lishi-on.png'}}"/>
+              <image wx:else class="icon" src="{{ossUrl+'lishi-off.png'}}"/>
               <view class="{{curTab==0?'text-on':'text-off'}}">历史贴</view>
             </view>
             <view class="item" bindtap='changeTab(1)'>
-              <image wx:if="{{curTab==1}}" class="icon" src="../../images/icons/huifu-on.png"/>
-              <image wx:else class="icon" src="../../images/icons/huifu-off.png"/>
+              <image wx:if="{{curTab==1}}" class="icon" src="{{ossUrl+'huifu-on.png'}}"/>
+              <image wx:else class="icon" src="{{ossUrl+'huifu-off.png'}}"/>
               <view class="{{curTab==1?'text-on':'text-off'}}">回复我</view>
             </view>
             <view class="item" bindtap='changeTab(2)'>
-              <image wx:if="{{curTab==2}}" class="icon" src="../../images/icons/zhitiao-on.png"/>
-              <image wx:else class="icon" src="../../images/icons/zhitiao-off.png"/>
+              <image wx:if="{{curTab==2}}" class="icon" src="{{ossUrl+'zhitiao-on.png'}}"/>
+              <image wx:else class="icon" src="{{ossUrl+'zhitiao-off.png'}}"/>
               <view class="{{curTab==2?'text-on':'text-off'}}">丢纸条</view>
             </view>
         </view>
@@ -93,12 +117,14 @@
     }
 
     data = {
+      ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
       isShow:true, // 判断是否弹窗
     	cz_right:35, 
     	cz_top:950,
       focusInput:false, //控制键盘
       height: '',
       isInput: false,
+
       lastTab:1,
       curTab:1,//当前页面
       screenW:0,//屏幕宽度
@@ -106,48 +132,18 @@
       x0:0,
       x1:0,
       x2:0,
-      flash:false,//切换动画
-      touch_x:0,
-      touch_y:0,
-      touch_end:{
-        x:0,
-        y:0,
-      },
+
+      postList:[],//历史贴
+      curPostIndex:null,//当前操作的帖子
+      enableViewList:[],//可见标签数组，用于picker
+      
+      replyList:[],//回复列表
+      replyInputShow:false,//回复输入框
+      replyTo:"",//输入框的占位符，回复谁
+      curReplyIndex:null,//当前操作的回复
+      replyText:'',//回复内容
 
 
-      //测试数据
-      postList:[
-        {
-          postTime:'2019-10-11 17:45:22',
-          likeNum:12341,
-          iLike:1,
-          content:{
-            text:`任何CSS属性值为百分比时，都需要根据某个参考值进行计算，搞明白这个参考值是什么，
-            理解就容易多了。标准规定：background-position:percent的参考值x为：百分比为
-            background-position-x的值 = (背景在雪碧中的左边宽度)/(容器宽度 - 背景图片宽度)*100%。
-            举个例子：百度分享中有四个图标（大小设置是0.72rem0.72rem），
-            我把这四个小图标扣到一张大小为(0.72rem3.65rem)的背景图，宽度跟图标是一样的，
-            高度则为四个图片+1倍的高度，主要是为了后面的高度百分比成正比`,
-            imgList:[
-                "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
-                "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
-                "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/images/3b6f34540d584956770530e1eb81c9d1.png",
-            ]
-          },
-          enableView:'全部可见'
-        }
-      ],
-      replyList:[
-        {
-          userInfo:{
-            name:'waaaly',
-            avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
-          },
-          replyCnt:'好呀，明天6688房等你不见不散',
-          replyTime:'昨天',
-          iSay:'明天有空嘛，约否？明天有空嘛，约否？明天有空嘛，约否？明天有空嘛，约否？明天有空嘛，约否？明天有空嘛，约否？明天有空嘛，约否？明天有空嘛，约否？明天有空嘛，约否？明天有空嘛，约否？',
-        }
-      ],
       chatList:[
         {
           userInfo:{
@@ -157,7 +153,6 @@
           chatCnt:'明天有空嘛，约否？',
           chatTime:'昨天'
         }
-  
       ]
     }
 
@@ -172,25 +167,43 @@
           this.screenH = res.screenHeight-0.18*res.screenHeight;
         })
       })
-      this.postList.push(this.postList[0])
-      this.postList.push(this.postList[0])
-      this.postList.push(this.postList[0])
-      this.postList.push(this.postList[0])
-      this.replyList.push(this.replyList[0])
-      this.replyList.push(this.replyList[0])
-      this.replyList.push(this.replyList[0])
-      this.replyList.push(this.replyList[0])
-      this.replyList.push(this.replyList[0])
-      this.replyList.push(this.replyList[0])
-      this.chatList.push(this.chatList[0])
-      this.chatList.push(this.chatList[0])
-      this.chatList.push(this.chatList[0])
+
       this.chatList.push(this.chatList[0])
       this.chatList.push(this.chatList[0])
       this.chatList.push(this.chatList[0])
       this.chatList.push(this.chatList[0])
 
-      this.replyList()  //调用渲染方法
+      //获取可见标签数组
+      http.get(api.ArticleTab,{
+				user_id:wx.getStorageSync('userInfoInServer')?
+				wx.getStorageSync('userInfoInServer').id:'',
+		  }).then(res=>{
+        this.enableViewList = res.enableViewList;
+        this.enableViewList[0].value = '全部可见';
+      })
+
+       //获取回复列表
+      http.get(api.ReplyList,{
+				user_id:80,
+				//wx.getStorageSync('userInfoInServer').id:'',
+		  }).then(res=>{
+        console.log(res);
+        for(let item of res){
+          this.replyList.push(item.replyList);
+        }
+        this.$apply();
+      })
+
+      //获取历史贴
+      http.get(api.ArticleHis,{
+				user_id:79,
+				//wx.getStorageSync('userInfoInServer').id:'',
+		  }).then(res=>{
+        console.log(res);
+        for(let item of res){
+          this.postList.push(item.postList);
+        }
+      })
     }
     //切换页面
     changeView(){
@@ -203,11 +216,11 @@
         this.$apply();
     }
     methods={
+      //切换底部tab
       changeTab(tab){
         if(this.curTab==tab){return;}
         this.lastTab = this.curTab;
         this.curTab = tab; 
-        this.flash = false;  
         this.$apply();
         this.changeView();
       },
@@ -218,25 +231,64 @@
               url: './postingDetail',
           })
       },
-      //聊天页
+      //预览图片
+      previewImage (imgList,curImg) {
+          wx.previewImage({
+              current: curImg, // 当前显示图片的http链接  
+              urls: imgList// 需要预览的图片http链接列表  
+          })
+      },
+      //切换当前操作的帖子
+      changeCurPost(postIndex){
+        this.curPostIndex = postIndex;
+      },
+      //删除帖子
+      delePost(postIndex){
+        wx.showModal({
+          title:'删除帖子',
+          content:'您确定将当前帖子删除吗？',
+          success:(res=>{
+            if(res.confirm){
+              this.postList.splice(postIndex,1);
+              wx.showToast({title:"删除成功！"});
+              this.curPostIndex = null;
+              this.$apply();
+            }else{
+              this.curPostIndex = null;
+              this.$apply();
+            }
+          })
+        })
+      },
+      //修改帖子可见 ,e.detail.value为下标值
+      changeEnableView(e){
+        this.postList[this.curPostIndex].enableView = this.enableViewList[e.detail.value].value;
+        this.curPostIndex = null;
+        this.$apply();
+      },
+      //回复框显示/隐藏
+      isShowInput(status,index){
+        this.replyInputShow = status;  
+        this.curReplyIndex = index; 
+        index?this.replyTo = this.replyList[index].userInfo.name:this.replyTo = "";
+        this.$apply();  
+      },
+      //回复框取得焦点
+      replyInputFocus(e){
+        console.log(e);
+      },
+      //回复框输入事件
+      replyInput(e){
+        this.replyText = e.detail.value;
+      },
+
+      //前往聊天页
       goChat(chat){
         console.log(chat);
         wx.navigateTo({
               url: './chat',
           })
       },
-      // touchStart(e) {
-      //   this.touch_x = e.changedTouches[0].clientX;
-      //   this.touch_y = e.changedTouches[0].clientY;
-      //   this.$apply();
-      // },
-      // touchEnd(e) {
-      //   this.touch_end.x = e.changedTouches[0].clientX;
-      //   this.touch_end.y = e.changedTouches[0].clientY;
-      //   this.flash = true;
-      //   this.$apply();
-      // }
-
       //删除聊天
       delete: function(e){
         var that = this;
@@ -258,85 +310,11 @@
         });
         
       },
-      //点击回复
-      inputFocus(e){
-        console.log('键盘弹起')
-        this.setData({
-          height: e.detail.height,
-          isInput: true
-        })
-      },
-      inputBlur(){
-        console.log('键盘收起')
-        this.setData({
-          isInput: false
-        })
-      },
-      // focusButn: function(){
-      //   this.setData({
-      //     focusInput: true,
-      //     isInput: true
-      //   })
-      // }
-      //可见删除
-		bindCaoZuo:function(e){
-			var that = this
-			// 获取当前节点的偏移TOP值计算当前点赞操作的位置
-			var offsetTop = Math.floor(e.currentTarget.offsetTop) 
-			// 动画
-			var animation = wx.createAnimation({
-				duration: 500,
-				timingFunction: 'linear',
-				delay:0,
-			})
-			if(that.data.isShow == false){
-				that.setData({
-					cz_top:offsetTop,
-					isShow:true
-				})
-				setTimeout(function(){
-					animation.right(0).opacity(1).step()
-						that.setData({
-						animationData:animation.export(),
-						})
-				},100)
-			}else{
-				setTimeout(function(){
-					animation.right(40).opacity(1).step()
-						that.setData({
-						animationData: animation.export(),
-						})
-				},100)
-				that.setData({
-					cz_top:offsetTop,
-					isShow:false
-				})
-			}
-    },
+
+    }
     watch={
-      //用户左右滑动
-      touch_end(endTouch,old){     
-        if (endTouch.x - this.touch_x > 50 && Math.abs(endTouch.y - this.touch_y) < 50) {              
-          if(this.curTab-1>=0){
-            console.log('rigth')
-            this.lastTab = Number(this.curTab);
-            this.curTab = Number(this.curTab)-1;
-            this.changeView();
-          }
-        } else if (endTouch.x - this.touch_x < -50 && Math.abs(endTouch.y - this.touch_y) < 50) {   
-          if(this.curTab+1<=2){
-            console.log('left')
-            this.lastTab = Number(this.curTab);
-            this.curTab = Number(this.curTab)+1;
-            this.changeView();
-          }
-        }
-        
-      },
-    }
-    
-    }
-  }
+    } 
+}
 </script>
 <style lang='scss'>
 // 历史贴
@@ -388,19 +366,83 @@
         line-height: 40rpx;
         letter-spacing: 3rpx;
       }
-      .image{
-        width: 100%;
-        margin-bottom:10rpx;
-        border-radius:20rpx;
+      .imageList{
+          display: flex;
+          flex-direction: row;  // 横向布局
+          flex-wrap: wrap; // 超出自动换行
+          image{
+              width: 32%;
+              height: 32vw;
+              margin:5rpx;
+              border-radius: 10rpx;
+          }
       }
     }
-    .can-see{
-      background-color: #dedede;
-      color:#999;
-      padding:10rpx;
-      border-radius: 24rpx;
-      font-size: 24rpx;
-      width:fit-content;
+    .can-see-box{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      .can-see{
+        background-color: #dedede;
+        color:#999;
+        padding:10rpx;
+        border-radius: 24rpx;
+        font-size: 24rpx;
+        width:fit-content;
+      }
+      .dot-box{
+        width: 50rpx;
+        height: 50rpx;
+        margin-right: 6rpx;
+        position: relative;
+        .dot{
+          position: absolute;
+          width: 5px;
+          height: 5px;
+          background: #999;
+          border-radius: 50%;
+          right: 0;
+          bottom: 18rpx;
+
+          .tips{
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            padding: 10rpx;
+            z-index: 10;
+            position: absolute;
+            left: -101px;
+            width: 80px;
+            height: 50px;
+            align-items: center;
+            justify-content: space-between;
+            top: -10px;
+            border:1px solid #eee;
+            .tips-item{
+              color:#999;
+              font-size:26rpx;
+            }
+          }
+        }
+        .dot::before {
+            content: '';
+            position: absolute;
+            top: -7px;
+            background: #999;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+        }
+        .dot::after {
+            content: '';
+            position: absolute;
+            bottom: -7px;
+            background:  #999;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+        }
+      } 
     }
   }
   .posts-record::before{
@@ -491,15 +533,36 @@
         }
       }
     }
-    .reply-cnt{
-      margin-left:90rpx;
+    .reply-box{
+      margin-left:110rpx;
       position: relative;
       margin-bottom:20rpx;
-      font-size: 28rpx;
-      color:#333;
+      display: flex;
+      flex-direction: column;
+      .reply-cnt{
+        margin-bottom:10rpx;
+        .cnt{
+          font-size: 28rpx;
+          color:#333;
+          float: left;
+        }
+      }
+      .reply-btn{
+        display: flex;
+        justify-content: flex-end;
+        .btn{
+          float: right;
+          background-color: #dedede;
+          color:#999;
+          padding:10rpx;
+          border-radius: 10rpx;
+          font-size: 22rpx;
+          width:fit-content;
+        }
+      }    
     }
     .i-say{
-      margin-left:90rpx;
+      margin-left:110rpx;
       border-radius: 5rpx;
       background-color: #ededed;
       padding:15rpx 10rpx;
@@ -512,57 +575,51 @@
      content: '';
     right: 0rpx;
     bottom: 0rpx;
-    border: 1px solid #eee;
+    border: 1rpx solid #eee;
     position: absolute;
     left: 130rpx;
   }
-//   .commentInputView{
-//   width: 100%;
-//   height: 100rpx;
-//   background-color: rgba(204, 204, 204, 0.61);
-//   padding: 4%;
-//   position: fixed;
-//   display: flex;
-//   justify-content: space-between;
-// }
-// .commentInput{
-//   width:70%;
-//   background-color:#fff;
-//   font-size:28rpx;
-//   border-radius:15rpx;
-//   display: flex;
-//   align-items: center;
-// }
- 
-// .input{
-//   width:100%;
-//   padding: 15rpx;
-//   font-size: 30rpx;
-//   margin: 0 auto;
-//   overflow: hidden;
-//   line-height-step:20rpx;
-//   border: 0;
-// }
-// .send{
-//   width: 20%;
-//   height: 80rpx;
-//   color: #fff;
-//   font-size: 34rpx;
-//   background-color: green;
-//   border: 0;
-//   margin-top: 5px;
-// }
+  .reply-bottom{
+    position:fixed;
+    display: flex;
+    z-index:10;
+    left: 0rpx;
+    bottom: 0rpx;
+    right:0rpx;
+    align-items: center;
+    justify-content: space-between;
+    padding:10rpx;
+    background-color:#eaeaea;
+    .input{
+        padding: 10rpx;
+        display: flex;
+        align-items: center;
+        border-radius: 5rpx;
+        background-color: #fff;
+        flex:1;
+        margin-right:10rpx;
+    }
+    .send-off{
+        border-radius: 5rpx;
+        padding:10rpx;
+        background-color: #eaeaea;
+        color:#bbb;
+        border:1rpx solid #bbb;
+        text-align: center;
+        width: 10%;
+    }
+    .send-on{
+        border-radius: 5rpx;
+        padding:10rpx;
+        background-color: #108ee9;
+        color:#fff;
+        text-align: center;
+        width: 10%;
+    }
+        
+  }
+}
 
-}
-.huifu{
-	background-color: #dedede;
-      color:#999;
-      padding:5rpx;
-      border-radius: 24rpx;
-      font-size: 22rpx;
-      width:fit-content;
-      margin-right: 15rpx;
-}
 //丢纸条
 .chat{
   position: absolute;

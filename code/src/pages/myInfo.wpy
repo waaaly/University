@@ -6,7 +6,7 @@
             </view>
             <view class='item-right'>
                 <image src='{{avatar}}' style='width:100rpx;height:100rpx;border-radius:50%;' mode='aspectFit'></image>
-                <image src='../images/icons/toRight.png' class='icon-right' mode='aspectFit'></image>
+                <image src="{{ossUrl+'toRight.png'}}" class='icon-right' mode='aspectFit'></image>
             </view>
         </view>
         
@@ -16,7 +16,7 @@
             </view>
             <view class='item-right'>
                 <text class='text'>{{name}}</text>
-                <image src='../images/icons/toRight.png' class='icon-right' mode='aspectFit'></image>
+                <image src="{{ossUrl+'toRight.png'}}" class='icon-right' mode='aspectFit'></image>
             </view>
         </view>
         
@@ -26,7 +26,7 @@
             </view>
             <view class='item-right '>
             <text class='text'>{{role}}</text>
-            <image src='../images/icons/toRight.png' class='icon-right' mode='aspectFit'></image>
+            <image src="{{ossUrl+'toRight.png'}}" class='icon-right' mode='aspectFit'></image>
             </view>
         </view>
         
@@ -36,7 +36,7 @@
             </view>
             <view class='item-right '>
             <text class='text'>{{defaultAddress}}</text>
-            <image src='../images/icons/toRight.png' class='icon-right' mode='aspectFit'></image>
+            <image src="{{ossUrl+'toRight.png'}}" class='icon-right' mode='aspectFit'></image>
             </view>
         </view>
         
@@ -48,7 +48,7 @@
                 <text wx:if="{{phone==''}}" class='tips' >Tips:绑定手机后可申请成为商家或团长</text>
                 <text wx:if="{{phone==''}}" class='text' @tap="goBindPhone">暂未绑定手机</text>
                 <text wx:else class='text'>{{phone}}</text>
-                <image src='../images/icons/toRight.png' class='icon-right' mode='aspectFit'></image>
+                <image src="{{ossUrl+'toRight.png'}}" class='icon-right' mode='aspectFit'></image>
             </view>
         </view>
         <!--还没提交过申请-->
@@ -61,7 +61,7 @@
                     </view>
                     <view class='item-right'>
                     <text class='text'>前往申请</text>
-                    <image src='../images/icons/toRight.png' class='icon-right' mode='aspectFit'></image>
+                    <image src="{{ossUrl+'toRight.png'}}" class='icon-right' mode='aspectFit'></image>
                     </view>
                 </view>
                 <view @tap="toSubmitInfo(团长)" class='flex-wrp-row item'>
@@ -70,7 +70,7 @@
                     </view>
                     <view class='item-right'>
                     <text class='text'>前往申请</text>
-                    <image src='../images/icons/toRight.png' class='icon-right' mode='aspectFit'></image>
+                    <image src="{{ossUrl+'toRight.png'}}" class='icon-right' mode='aspectFit'></image>
                     </view>
                 </view>
             </block>
@@ -86,7 +86,7 @@
                     <text  wx:if="{{reviewStatus==0}}" class='text'>审核中</text>
                     <text  wx:if="{{reviewStatus==2}}"  @tap="toSubmitInfo({{reviewType==1?'商家':'团长'}})"
                      class='text'>驳回</text>
-                    <image src='../images/icons/toRight.png' class='icon-right' mode='aspectFit'></image>
+                    <image src="{{ossUrl+'toRight.png'}}" class='icon-right' mode='aspectFit'></image>
                 </view>
             </view>
         </block>
@@ -99,7 +99,7 @@
                     </view>
                     <view class='item-right'>
                         <text class='text'>{{shopName}}</text>
-                        <image src='../images/icons/toRight.png' class='icon-right' mode='aspectFit'></image>
+                        <image src="{{ossUrl+'toRight.png'}}" class='icon-right' mode='aspectFit'></image>
                     </view>
                 </view>
             </block>
@@ -113,6 +113,7 @@ import http from '../utils/Base';
 import api from '../utils/API';
 export default class myInfo extends wepy.page {
     data={
+        ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
         avatar:'',//用户头像
         name:'',//用户昵称
         role:'',//用户身份

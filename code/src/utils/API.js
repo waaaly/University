@@ -84,5 +84,7 @@ module.exports = {
     ArticleDelete: ApiRootUrl + 'article-delete', //删除帖子
     ArticleComment: ApiRootUrl + 'article-comment', //评论帖子
     ArticleLike: ApiRootUrl + 'article-like', //点赞帖子
-    ArticleTab: ApiRootUrl + 'article-tabs', //可见标签
+    ArticleTab: ApiRootUrl + 'article-tabs', //可见标签  
+    ArticleHis: ApiRootUrl + 'article-history', //历史贴reply-list
+    ReplyList: ApiRootUrl + 'reply-list', //历史贴
 }

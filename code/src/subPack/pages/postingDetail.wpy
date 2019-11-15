@@ -10,8 +10,8 @@
                 <view class="like" catchtap="changePostLike()">             
                     <view wx:if="{{posting.likeNum==0}}" class="text">抢首赞</view>
                     <view wx:else class="text">{{posting.likeNum}}</view>
-                    <image wx:if="{{posting.iLike}}" src="../../images/icons/like-on.png"/>
-                    <image wx:else src="../../images/icons/like-off.png"/>
+                    <image wx:if="{{posting.iLike}}" src="{{ossUrl+'like-on.png'}}"/>
+                    <image wx:else src="{{ossUrl+'like-off.png'}}"/>
                 </view>
             </view>
             <view class="rich-text">
@@ -40,8 +40,8 @@
                     <view class="like" catchtap="changeCommentLike({{comment}},{{commentIndex}})">                       
                         <view wx:if="{{comment.likeNum==0}}" class="text">抢首赞</view>
                         <view wx:else class="text">{{comment.likeNum}}</view>
-                        <image wx:if="{{comment.iLike}}" src="../../images/icons/like-on.png"/>
-                        <image wx:else src="../../images/icons/like-off.png"/>
+                        <image wx:if="{{comment.iLike}}" src="{{ossUrl+'like-on.png'}}"/>
+                        <image wx:else src="{{ossUrl+'like-off.png'}}"/>
                     </view>
                 </view>
                 <view class="comment-cnt" catchtap="changeHoldText({{commentIndex}},{{comment.commenter.name}},{{null}})">{{comment.commentText}}</view>
@@ -84,6 +84,7 @@
 
     data = {
         init:false,
+        ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
         article_id:null,//帖子id
         curReplyInput:0,//当前输入框
         replyInputList:[],//回复输入框，提示字及内容缓存,长度与commentList一致

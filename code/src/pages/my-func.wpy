@@ -11,7 +11,7 @@ export default class myFunc extends wepy.page {
   }
   data = {
     init:false,
-    StaticImgUrl: "http://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/",
+    ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
     stv: {
       windowWidth: 0,
       lineWidth: 0,
@@ -35,6 +35,7 @@ export default class myFunc extends wepy.page {
     chooseViewShow: true,//是否可以添加图片
   }
   onLoad(e){
+    this.ossUrl=this.$parent.globalData.ossUrl;
     try {
         var res = wx.getSystemInfoSync();
         this.windowWidth = res.windowWidth;
@@ -196,109 +197,6 @@ export default class myFunc extends wepy.page {
   } 
 }
 </script>
-
-<template>
-<view class="stv-container">
-  <view class="tab-bar">
-    <view wx:for="{{tabs}}" wx:key="unique" data-index=
-    "{{index}}" bindtap="handlerTabTap" class="tab {{activeTab==index?'tab-active':''}}" style="width: {{stv.windowWidth/tabs.length}}px">
-      <text>{{item}}</text>
-    </view>
-    <view style="width: {{stv.lineWidth}}px; left: {{stv.offset/tabs.length}}px" class="under-line {{!stv.tStart? 'withAnimate': ''}}"></view>
-  </view>
-  <view class="scroll-view">
-    <view bindtouchstart="handlerStart" catchtouchmove="handlerMove" bindtouchcancel="handlerCancel" bindtouchend="handlerEnd"  class="scroll-view-wrapper {{!stv.tStart? 'withAnimate': ''}}" style="left: -{{stv.offset}}px">
-      <view style="width: {{stv.windowWidth}}px;" wx:for="{{tabs}}" wx:for-item="item" class="one-scene">
-        <scroll-view style="height:100%" scroll-y>
-          <view wx:if="{{item=='我的收藏'}}">
-            <view wx:if="{{CollectList==null&&init}}" >
-                <image style="width:100%;"  mode="widthFix" src="{{StaticImgUrl+'noneCollect.png'}}"/>
-                <navigator open-type="switchTab" 
-                          class='goindex' 
-                          url="/pages/index">去发现更多好货~
-                </navigator>
-            </view>
-            <view wx:else>
-                <classifyGood></classifyGood>
-            </view>
-          </view>
-          <view wx:if="{{item=='意见反馈'}}"  style='position:relative; height:100%;'>
-            <view style="color:#666;font-size:28rpx">（必选）请选择您想反馈的问题点</view>
-            <view style='background:#fff;padding:10rpx;font-size:35rpx'>
-                <checkbox-group bindchange="checkboxChange">
-                <label style='margin-bottom:15rpx;' wx:for="{{yijianList}}">
-                  <view style='margin-bottom:15rpx;'>
-                  <checkbox value="{{item.value}}" 
-                            checked="{{item.checked}}"/>{{item.value}}</view>
-                </label>
-                </checkbox-group>
-            </view>
-            <view style='padding:20rpx;font-size:30rpx;'>请补充详细问题和意见（{{textareaNum}}/250）
-            </view>
-              <view style='height:200rpx;background:#fff;font-size:30rpx;padding-left:15rpx;padding-top:10rpx;color:#000;'>
-              <textarea style='height:200rpx' maxlength="250" placeholder="请用不少于15个字描述您的意见吧，程序员小哥会努力去修复哦～" value="{{fankuixiangqing}}" bindinput="getInput"/>
-              </view>
-            <view style="color:#666;font-size:28rpx">（可选）请提供相关问题的截图或照片（{{imgArr.length}}/4）</view>
-            <view style='position:relative;padding: 20rpx 20rpx;background-color: #fff;display: flex;flex-wrap: wrap;align-items: center;'>
-           
-              <!--显示已经选择的图片-->
-              <view wx:for="{{imgArr}}" wx:key="key">
-                <view class="upFile" bindtap="showImage" style="border-radius: 5px" data-id="{{index}}">
-                    <image class="itemImv" src="{{item}}"></image>
-                    <image class="closeImv" src="https://raw.githubusercontent.com/dt8888/moreImgaes/master/pages/images/delect.png" mode="scaleToFill" catchtap="deleteImv"  data-id="{{index}}"></image>
-                </view>
-              </view>
-               <!--添加图片按钮-->
-              <view class="chooseView" bindtap="chooseImage" style="border-radius: 5px" wx:if="{{chooseViewShow}}">
-                <image class="chooseImv" style="width:50rpx;height:50rpx;" 
-                        src="https://raw.githubusercontent.com/dt8888/moreImgaes/master/pages/images/add.png"/>
-              </view>
-            </view>
-            <button bindtap="submit" type="primary" style='width:80%;position:absulote;bottom:-50rpx;margin-top:80rpx;background-color:#ff6b5d;'>提交</button>
-          </view>
-
-          <view wx:if="{{item=='我的地址'}}">
-            <view wx:if="{{userAddress.length==0}}" style='align-items: center;margin:30rpx 20rpx;display:flex;flex-direction:colunm;justify-content:center;color:#666;' >
-              <text >当前没有任何地址信息呢～</text>
-            </view>
-            <scroll-view  scroll-y wx:else style="display:flex;flex-direction:column;height:90%">      
-                <view  wx:for="{{userAddress}}">
-                  <view class='addressCard'>
-                    <view style="margin-left:12rpx;color:blue;font-size:28rpx;color:#ff6b5d" wx:if="{{item.is_default}}">[默认地址]</view>
-                    <view style='margin-left:15rpx;display:flex;flex-direction:row'>
-                      <view style='display: flex;flex-direction: column;width:75%;border-right: 2rpx solid #eee;'>
-                        <view style="display:flex;justify-content:space-between;padding-right:10rpx;">
-                          <text>{{item.name}}</text>
-                          <text style='color:#ff6b5d;font-size:30rpx;'>{{item.area_name}}</text>
-                        </view>
-                        <view style="margin-left:50rpx;font-size:30rpx;margin-right:10rpx;">{{item.mobile}}</view>
-                        <view style="margin-left:50rpx;font-size:30rpx;margin-right:10rpx;">{{item.tabs_name}} {{item.area_name}} {{item.address}}</view>   
-                      </view>
-                    <view class="addressDel">
-                      <view data-item="{{item}}" 
-                            bindtap='delAddress'
-                            style='color:red;'>删除</view>
-                      <view data-item="{{item}}" 
-                            bindtap='editAddress'>修改</view>
-                      <view data-item="{{item}}" 
-                            bindtap='setDefaultAddress'>设为默认</view>
-                      </view> 
-                    </view>                                 
-                  </view>
-                </view>
-            </scroll-view>  
-            <!-- <view class="add_wrap">
-              <view class="button type_red" style="position:" bindtap="gotoAddress">新增地址</view>
-            </view> -->
-            <view class="addBotton" style="{{userAddress.length==0?'opacity:1':'opacity:0.6'}}" bindtap="gotoAddress">+</view>
-          <view>
-        </scroll-view>
-      </view>
-    </view>
-  </view>
-</view>
-</template>
-
 
 <style>
 /*隐藏滚动栏*/
@@ -493,3 +391,107 @@ color:#fff;
     height:50rpx;
 }
 </style>
+
+<template>
+<view class="stv-container">
+  <view class="tab-bar">
+    <view wx:for="{{tabs}}" wx:key="unique" data-index=
+    "{{index}}" bindtap="handlerTabTap" class="tab {{activeTab==index?'tab-active':''}}" style="width: {{stv.windowWidth/tabs.length}}px">
+      <text>{{item}}</text>
+    </view>
+    <view style="width: {{stv.lineWidth}}px; left: {{stv.offset/tabs.length}}px" class="under-line {{!stv.tStart? 'withAnimate': ''}}"></view>
+  </view>
+  <view class="scroll-view">
+    <view bindtouchstart="handlerStart" catchtouchmove="handlerMove" bindtouchcancel="handlerCancel" bindtouchend="handlerEnd"  class="scroll-view-wrapper {{!stv.tStart? 'withAnimate': ''}}" style="left: -{{stv.offset}}px">
+      <view style="width: {{stv.windowWidth}}px;" wx:for="{{tabs}}" wx:for-item="item" class="one-scene">
+        <scroll-view style="height:100%" scroll-y>
+          <view wx:if="{{item=='我的收藏'}}">
+            <view wx:if="{{CollectList==null&&init}}" >
+                <image style="width:100%;"  mode="widthFix" src="{{ossUrl+'noneCollect.png'}}"/>
+                <navigator open-type="switchTab" 
+                          class='goindex' 
+                          url="/pages/index">去发现更多好货~
+                </navigator>
+            </view>
+            <view wx:else>
+                <classifyGood></classifyGood>
+            </view>
+          </view>
+          <view wx:if="{{item=='意见反馈'}}"  style='position:relative; height:100%;'>
+            <view style="color:#666;font-size:28rpx">（必选）请选择您想反馈的问题点</view>
+            <view style='background:#fff;padding:10rpx;font-size:35rpx'>
+                <checkbox-group bindchange="checkboxChange">
+                <label style='margin-bottom:15rpx;' wx:for="{{yijianList}}">
+                  <view style='margin-bottom:15rpx;'>
+                  <checkbox value="{{item.value}}" 
+                            checked="{{item.checked}}"/>{{item.value}}</view>
+                </label>
+                </checkbox-group>
+            </view>
+            <view style='padding:20rpx;font-size:30rpx;'>请补充详细问题和意见（{{textareaNum}}/250）
+            </view>
+              <view style='height:200rpx;background:#fff;font-size:30rpx;padding-left:15rpx;padding-top:10rpx;color:#000;'>
+              <textarea style='height:200rpx' maxlength="250" placeholder="请用不少于15个字描述您的意见吧，程序员小哥会努力去修复哦～" value="{{fankuixiangqing}}" bindinput="getInput"/>
+              </view>
+            <view style="color:#666;font-size:28rpx">（可选）请提供相关问题的截图或照片（{{imgArr.length}}/4）</view>
+            <view style='position:relative;padding: 20rpx 20rpx;background-color: #fff;display: flex;flex-wrap: wrap;align-items: center;'>
+           
+              <!--显示已经选择的图片-->
+              <view wx:for="{{imgArr}}" wx:key="key">
+                <view class="upFile" bindtap="showImage" style="border-radius: 5px" data-id="{{index}}">
+                    <image class="itemImv" src="{{item}}"/>
+                    <image class="closeImv" src="{ossUrl+'delect.png'}}" mode="scaleToFill" catchtap="deleteImv"  data-id="{{index}}"/>
+                </view>
+              </view>
+               <!--添加图片按钮-->
+              <view class="chooseView" bindtap="chooseImage" style="border-radius: 5px" wx:if="{{chooseViewShow}}">
+                <image class="chooseImv" style="width:50rpx;height:50rpx;" 
+                        src="{{ossUrl+'addPic.jpg'}}"/>
+              </view>
+            </view>
+            <button bindtap="submit" type="primary" style='width:80%;position:absulote;bottom:-50rpx;margin-top:80rpx;background-color:#ff6b5d;'>提交</button>
+          </view>
+
+          <view wx:if="{{item=='我的地址'}}">
+            <view wx:if="{{userAddress.length==0}}" style='align-items: center;margin:30rpx 20rpx;display:flex;flex-direction:colunm;justify-content:center;color:#666;' >
+              <text >当前没有任何地址信息呢～</text>
+            </view>
+            <scroll-view  scroll-y wx:else style="display:flex;flex-direction:column;height:90%">      
+                <view  wx:for="{{userAddress}}">
+                  <view class='addressCard'>
+                    <view style="margin-left:12rpx;color:blue;font-size:28rpx;color:#ff6b5d" wx:if="{{item.is_default}}">[默认地址]</view>
+                    <view style='margin-left:15rpx;display:flex;flex-direction:row'>
+                      <view style='display: flex;flex-direction: column;width:75%;border-right: 2rpx solid #eee;'>
+                        <view style="display:flex;justify-content:space-between;padding-right:10rpx;">
+                          <text>{{item.name}}</text>
+                          <text style='color:#ff6b5d;font-size:30rpx;'>{{item.area_name}}</text>
+                        </view>
+                        <view style="margin-left:50rpx;font-size:30rpx;margin-right:10rpx;">{{item.mobile}}</view>
+                        <view style="margin-left:50rpx;font-size:30rpx;margin-right:10rpx;">{{item.tabs_name}} {{item.area_name}} {{item.address}}</view>   
+                      </view>
+                    <view class="addressDel">
+                      <view data-item="{{item}}" 
+                            bindtap='delAddress'
+                            style='color:red;'>删除</view>
+                      <view data-item="{{item}}" 
+                            bindtap='editAddress'>修改</view>
+                      <view data-item="{{item}}" 
+                            bindtap='setDefaultAddress'>设为默认</view>
+                      </view> 
+                    </view>                                 
+                  </view>
+                </view>
+            </scroll-view>  
+            <!-- <view class="add_wrap">
+              <view class="button type_red" style="position:" bindtap="gotoAddress">新增地址</view>
+            </view> -->
+            <view class="addBotton" style="{{userAddress.length==0?'opacity:1':'opacity:0.6'}}" bindtap="gotoAddress">+</view>
+          <view>
+        </scroll-view>
+      </view>
+    </view>
+  </view>
+</view>
+</template>
+
+

@@ -674,9 +674,11 @@ export default class Cart extends wepy.page{
           confirmColor: "#ff6b5d",
           content: "您还没有设置默认地址哟～",
           success:function(e){
-            wx.navigateTo({
-              url: '/pages/my-func?id=1',
-            })
+           if(e.confirm){
+              wx.navigateTo({
+                url: '/pages/my-func?id=1',
+              })
+           }
           },
         })
         return;

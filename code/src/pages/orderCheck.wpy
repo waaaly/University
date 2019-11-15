@@ -1,6 +1,6 @@
 <template>
 
-  <view class="comfire_order" >
+  <view class="comfire_order" wx:if="{{init}}">
     <view class="address" @tap="goAddress">
       <view class="address_info">
         <text class="defult" wx:if="{{address.is_default==1}}">[默认]</text>
@@ -48,7 +48,7 @@
         </view>
       </block>
     </view>
-<!--商品区域end-->
+    <!--商品区域end-->
 
     <view class="spacing"/>
     <view class="order_info">
@@ -91,6 +91,7 @@ export default class orderCheck extends wepy.page{
       orderGoodsInfos:[],//訂單中的商品列表
       totalPrice:0.00,//該訂單的真正價格
       postscript:'',//买家留言
+      init:false,//是否下单成功
     }
     onLoad(e){
         //修改页面标题
@@ -121,6 +122,7 @@ export default class orderCheck extends wepy.page{
                 this.shopInfo = res.cartListInfo.shopInfo;
                 this.orderGoodsInfos = res.cartListInfo.cartList;
                 this.totalPrice =  res.cartListInfo.TotalPrice;
+                this.init = true;
             }
             this.$apply();
         })

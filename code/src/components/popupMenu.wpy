@@ -1,9 +1,8 @@
 <template>
     <view style="position:fixed;right:-10px;bottom:-10px;">
-        <!-- <image src="/images/icons/topic.png" class="img-style" animation="{{animCollect}}" bindtap="question"/> -->
-        <image src="/images/icons/posting.png" class="img-style" animation="{{animTranspond}}" bindtap="idea"/>
-        <image src="/images/icons/newsList.png" class="img-style" animation="{{animInput}}" bindtap="answer"/>
-        <image src="/images/icons/menu.png" class="img-plus-style" animation="{{animPlus}}" bindtap="plus"/>
+        <image src="{{ossUrl+'posting.png'}}" class="img-style" animation="{{animTranspond}}" bindtap="idea"/>
+        <image src="{{ossUrl+'newsList.png'}}" class="img-style" animation="{{animInput}}" bindtap="answer"/>
+        <image src="{{ossUrl+'menu.png'}}" class="img-plus-style" animation="{{animPlus}}" bindtap="plus"/>
     </view>
 </template>
 
@@ -34,6 +33,7 @@ export default class popupMenu extends wepy.component{
         animCollect: {},//item位移,透明度
         animTranspond: {},//item位移,透明度
         animInput: {},//item位移,透明度
+        ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
     }
     methods={
         //提问

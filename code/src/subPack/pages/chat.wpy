@@ -23,7 +23,7 @@
   </scroll-view>
 
   <view class='inputRoom' style='bottom: {{inputBottom}}'>
-    <image style='width: 7vw; margin-left: 3.2vw;' src='../../images/pic_icon.png' mode='widthFix'/>
+    <image style='width: 7vw; margin-left: 3.2vw;' src="{{ossUrl+'pic_icon.png'}}" mode='widthFix'/>
     <input bindconfirm='sendClick' adjust-position='{{false}}' type='text'
     value='{{inputVal}}' confirm-type='send' bindfocus='focus' 
     bindblur='blur'/>
@@ -44,6 +44,7 @@
     }
 
     data = {
+      ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
       scrollHeight: '100vh',
       inputBottom: 0,
       msgList : [

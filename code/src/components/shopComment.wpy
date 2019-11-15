@@ -32,7 +32,7 @@
         </view>       
     </scroll-view>
   <view wx:if="{{commentList.length==0}}" style="height:100%;">
-    <image src="{{OssUrl+'zq/' + 'noneMsg.png'}}" mode="widtgFix" style="width:100%;height:400px;"/>                  
+    <image src="{{ossUrl+'noneMsg.png'}}" mode="widtgFix" style="width:100%;height:400px;"/>                  
   </view>
 </block>
 </template>
@@ -49,7 +49,7 @@ export default class shopComment extends wepy.component{
     Pagination:Pagination,
   }
     data = {
-      OssUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/',
+      ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
       shopInfo:{
         type:Object,
         default:{}
@@ -61,13 +61,13 @@ export default class shopComment extends wepy.component{
       shopId:0,//
     }
     onLoad(e){
-     
+
     }
     methods = {
       previewImg(index,picList) {
             let picUrlList = [];
             for(let item of picList){
-              picUrlList.push(this.OssUrl+item);
+              picUrlList.push(`https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/+${item}`);
             }
             wx.previewImage({
             //当前显示图片

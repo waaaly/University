@@ -1,7 +1,6 @@
 <template>
   <scroll-view scroll-y="true" class="scroll" wx:if="{{init}}">
-      <!-- <image src="{{imageUrl + 'zq/orderIsOk.png'}}"  style="width:100%;"/> -->
-      <image src="/images/icons/orderIsOk.jpg"  style="width:100%;height:120px"/>
+      <image src="{{ossUrl+'orderIsOk.jpg'}}"  style="width:100%;height:120px"/>
       <orderDetail></orderDetail>
       <view class="pay_box">
         <form report-submit bindsubmit="wePay">
@@ -41,7 +40,7 @@ export default class orderSubmit extends wepy.page{
     }
     data = {
         init:false,
-        imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
+        ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
         orderId:0,
     }
     onLoad(e){

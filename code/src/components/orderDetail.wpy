@@ -7,7 +7,12 @@
       data = {
         isShopOrder:false,
         isUserOrder:false,
-        order:{}
+        order:{},
+        ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
+        orderIcon:null,
+      }
+      onLoad(){
+
       }
         events = {
             'orderSubmit':(order,$event)=>{
@@ -15,15 +20,18 @@
                 this.order = order;
                 this.isShopOrder = false;
                 this.isUserOrder = false;
+                this.orderIcon = this.ossUrl +'status-'+ String(order.order_status)+'.png';
             },
             'userOrder':(order,$event)=>{
                 this.order = order;
                 this.isShopOrder = false;
                 this.isUserOrder = true;
+                this.orderIcon = this.ossUrl +'status-'+ String(order.order_status)+'.png';
             },
             'shopOrder':(order,$event)=>{
                 this.isShopOrder = true;
                 this.isUserOrder = false;
+                this.orderIcon = this.ossUrl +'status-'+ String(order.order_status)+'.png';
             }
         }
         methods = {
@@ -40,18 +48,18 @@
 <view>
   <!--地址展现-->
   <!--地址分隔符-->
-  <image class="hr-address" src="/images/icons/address-hr.png"/>
+  <image class="hr-address" src="{{ossUrl+'address-hr.png'}}"/>
   <view class="address-box row">
       <!--左侧图标-->
       <view class="icon-box">
-          <image class="icon-lg" src="/images/icons/address.png"/>
+          <image class="icon-lg" src="{{ossUrl+'address.png'}}"/>
       </view>
       <!-- 地址内容 -->
       <view class="info-box column" style="width:100%;">
           <view class="row-between" style="color:#262626;font-size:30rpx;">
               <text>联系人：{{order.consignee}}</text>
-              <view class="row" @tap="tel({{order.mobile}})">
-              <image class="icon" src="/images/icons/call.png"/>
+              <view class="row" bindtap="tel({{order.mobile}})">
+              <image class="icon" src="{{ossUrl+'call.png'}}"/>
               <text class="primary" style="margin-left:10rpx">{{order.mobile}}</text>
               </view>
           </view>
@@ -61,12 +69,12 @@
       </view>
   </view>
   <!--地址分隔符-->
-  <image class="hr-address" src="/images/icons/address-hr.png"/>
+  <image class="hr-address" src="{{ossUrl+'address-hr.png'}}"/>
   <!--地址展现end-->
 
   <!--订单状态浮动-->
   <view class="orderStatus">
-    <image class="icon-lg" src="/images/orderStatus/status-{{order.order_status}}.png"/>
+    <image class="icon-lg" src="{{orderIcon}}"/>
     <text class="xxl">{{order.order_status_text}}</text>
   </view>
 
@@ -77,7 +85,7 @@
     <view  class="order-header-container colunm">
       <view class="row-between">
         <view style="align-items: center;display: flex;">
-          <image class="icon" src="/images/icons/idcard.png"/>
+          <image class="icon" src="{{ossUrl+'idcard.png'}}"/>
           <text  style="font-size:26rpx;margin-left:10rpx;">{{order.consignee}}</text>
         </view>
         <view>
@@ -91,6 +99,7 @@
       </view>
     </view>
   </view>
+  
   <view wx:else class="weui-cells">
     <view class="weui-cell">
       <view class="weui-cell__bd">订单流水</view>

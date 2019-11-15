@@ -178,12 +178,11 @@
 				<text>首页</text>
 			</navigator>
 			<button open-type="share" class="share-btn" style="background-color:transparent;">
-				<image style="width:21px;height:21px;"  src="../images/icons/share.jpg"/>
+				<image style="width:21px;height:21px;"  src="{{ossUrl+'share.png'}}"/>
 				<text>分享</text>
 			</button>
 			 <view class="p-b-btn"  @tap="showQR">
-				 <image style="width:24px;height:24px;" src="../images/icons/callme.jpg"/>
-				<!-- <text class="yticon icon-shoucang"></text> -->
+				 <image style="width:24px;height:24px;" src="{{ossUrl+'callme.jpg'}}"/>
 				<text style="color:#606266;">联系团长</text>
 			</view> 
 			<view class="action-btn-group">
@@ -216,6 +215,7 @@
 
 		data = {
 				imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
+				ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
 				productInfo:{},//商品属性
 				current_scroll_id:'scroll_0',//0是商品详情，1是评价
 				timer:null,

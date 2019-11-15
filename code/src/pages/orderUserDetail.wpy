@@ -9,6 +9,7 @@ export default class orderUserDetail extends wepy.page{
         goodsList:{},
         shopInfo:{},
         imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
+        ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
     }
     onLoad(e){
         console.log(e)
@@ -255,22 +256,21 @@ export default class orderUserDetail extends wepy.page{
 <template>
 <view>
   <!--地址展现-->
-  <image style="margin-top:60rpx;" class="hr-address" src="/images/icons/address-hr.png"/>
+  <image style="margin-top:60rpx;" class="hr-address" src="{{ossUrl+'address-hr.png'}}"/>
     <view class="address-box">
-        <image  src="/images/icons/address.png"/>
+        <image  src="{{ossUrl+'address.png'}}"/>
         <!-- 地址内容 -->
         <view class="info-box " style="width:100%;">
             <view class="user">
                 <view>联系人：{{order.consignee}}</view>
                 <view class="phone">
-                    <!-- <image src="/images/icons/call.png"/> @tap="tel(order.mobile)" -->
                     <text>{{order.mobile}}</text>
                 </view>
             </view>
             <view>地址：{{order.address}} </view>
         </view>
     </view>
-  <image class="hr-address" src="/images/icons/address-hr.png"/>
+  <image class="hr-address" src="{{ossUrl+'address-hr.png'}}"/>
   <!--地址展现end-->
 
     <!--订单状态浮动-->
@@ -281,9 +281,9 @@ export default class orderUserDetail extends wepy.page{
     <view class="shop-info" @tap="goShoper">
         <image class="shop-icon" src="{{imageUrl+shopInfo.shop_icon}}"/>
         <view class="shop-name">{{shopInfo.shop_name}}</view>
-        <image src="http://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/xiangyou.png"/>
+        <image src="{{ossUrl+'xiangyou.png'}}"/>
         <view class="callShoper"  @tap.stop="tel(shopInfo.bind_phone)">
-            <image src="/images/icons/call.png"/> 
+            <image src="{{ossUrl+'call.png'}}"/> 
             <text>{{shopInfo.bind_phone}}</text>
         </view>
     </view>
@@ -363,9 +363,6 @@ export default class orderUserDetail extends wepy.page{
   <!--信息汇总-->
   <view class="summary-box">
     <view class="price-box row-between">  
-      <!-- <text>联系商家：</text>  
-      <image src="/images/icons/call.png"/> 
-      <text>{{shopInfo.bind_phone}}</text> -->
     </view>
     <view class="final-box">
       <text class="major">实付款：￥{{order.actual_price}}</text>

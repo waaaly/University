@@ -57,15 +57,15 @@
                     </view>
                     <view class="tabs">
                         <view class="item">
-                            <image src="../images/icons/comment.png" style="margin-right:10rpx;"/>
+                            <image src="{{ossUrl+'comment.png'}}" style="margin-right:10rpx;"/>
                             <view wx:if="{{item.commentNum==0}}" class="num">评论</view>
                             <view wx:else class="num">{{item.commentNum}}</view>
                         </view>
                         <view class="item" catchtap="changeLike({{item}},{{index}})">                           
                             <view wx:if="{{item.likeNum==0}}" class="num">抢首赞</view>
                             <view wx:else class="num">{{item.likeNum}}</view>
-                            <image wx:if="{{item.iLike}}" src="../images/icons/like-on.png"/>
-                            <image wx:else src="../images/icons/like-off.png"/>
+                            <image wx:if="{{item.iLike}}" src="{{ossUrl+'like-on.png'}}"/>
+                            <image wx:else src="{{ossUrl+'like-off.png'}}"/>
                         </view>
                     </view>
                 </view>
@@ -92,6 +92,7 @@ export default class find extends wepy.page {
 
     data = {
         init:false,
+        ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
         imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
         toRightIcon:'http://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/xiangyou.png',
         swiperImg: [

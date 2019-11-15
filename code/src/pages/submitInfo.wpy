@@ -4,7 +4,7 @@
         <view wx:if="{{isShoper===1}}">
             <view class="box" style="border-top: 20rpx solid #bbb;">
                 <view class='title' @tap='showTips(1)'>
-                    <image  src='../images/icons/tips.png'/>
+                    <image  src="{{ossUrl+'tips.png'}}"/>
                     <text>基本信息</text>
                 </view>
                 <view class="flex-row" >
@@ -15,7 +15,7 @@
                     <text class="left">联系人二维码</text> 
                     <view class="right flex-row-between">
                         <image style="width:100rpx;height:100rpx;" src="{{imageUrl+code_pic}}" />
-                        <image @tap.stop='openPic(codeQR)'  src="../images/icons/openFlie.png"/>
+                        <image @tap.stop='openPic(codeQR)'  src="{{ossUrl+'openFlie.png'}}"/>
                     </view>
                 </view>
             </view>
@@ -23,7 +23,7 @@
             <view class="box">
                 <view class='title' @tap='showTips(2)'>
                     
-                    <image  src='../images/icons/tips.png'/>
+                    <image  src="{{ossUrl+'tips.png'}}"/>
                     <text>个性设置</text>
                 </view>
                 <view class="flex-row" >
@@ -34,14 +34,14 @@
                     <text class="left">商铺图标</text> 
                     <view class="right flex-row-between">
                         <image style="width:100rpx;height:100rpx;" src="{{imageUrl+shop_icon}}" />
-                        <image @tap.stop='openPic(icon)'   src="../images/icons/openFlie.png"/>
+                        <image @tap.stop='openPic(icon)'   src="{{ossUrl+'openFlie.png'}}"/>
                     </view>  
                 </view>
             </view>
 
             <view class="box" style="border-bottom: 20rpx solid #bbb;">
                 <view class='title' @tap='showTips(3)' >
-                     <image  src='../images/icons/tips.png'/>
+                     <image  src="{{ossUrl+'tips.png'}}"/>
                      <text>详细信息</text>
                 </view>
                 <view class="row-wrap" >
@@ -89,7 +89,7 @@
                 <text class="left">团长二维码</text> 
                 <view class="right flex-row-between">
                     <image style="width:100rpx;height:100rpx;" src="{{imageUrl+code_pic}}" />
-                    <image @tap.stop='openPic(codeQR)'  src="../images/icons/openFlie.png"/>
+                    <image @tap.stop='openPic(codeQR)'  src="{{ossUrl+'openFlie.png'}}"/>
                 </view>
             </view>
         </view>
@@ -137,6 +137,7 @@ import api from '../utils/API';
 export default class submitInfo extends wepy.page{
     data ={
         imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
+        ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
         init:false,
         showTips:0,//显示哪个提示
         addressMenuIsShow:false,//商家地址选择器

@@ -6,10 +6,10 @@
   <view class="image_content">
     <view class='image' wx:for="{{img_url}}">
       <image class="moment_img" src="{{item}}" data-index="{{index}}" mode="aspectFill" bindtap="previewImg"/>
-			<image src="../../images/icons/delete.png" class='deleteimg' catchtap="delete" data-index="{{index}}"/>
+			<image src="{{ossUrl+'delete.png'}}" class='deleteimg' catchtap="delete" data-index="{{index}}"/>
     </view>
     <view class='image' style="display:{{hideAdd?'none':'block'}}">
-      <image bindtap="chooseimage" class="moment_img" src='../../images/icons/add.jpg'/>
+      <image bindtap="chooseimage" class="moment_img" src="{{ossUrl+'add.jpg'}}"/>
     </view>
   </view>
 </view>
@@ -17,7 +17,7 @@
 <view class="section">
     <picker class="section_pic" bindchange="bindPickerChange" 
 			range="{{enableViewList}}" range-key="value"> 
-			<image src="../../images/icons/lxr.png" class="lxrimg"/>
+			<image src="{{ossUrl+'lxr.png'}}" class="lxrimg"/>
       <view class="picker_text">
         谁可以见：
       </view>
@@ -39,6 +39,7 @@
     }
 
   data = {
+		  ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
 			current: 0,
 			min: 5, //最少字数
 			max: 100, //最多字数

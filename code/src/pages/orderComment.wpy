@@ -11,6 +11,7 @@ const uploadFile = require("../utils/Upload.js");
 export default class orderComment extends wepy.page{
 
   data = {
+    ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
     current:0,
     attitude:true,
     time: true,
@@ -222,10 +223,10 @@ export default class orderComment extends wepy.page{
           <view class='left'>图片</view>
           <view class='right'>
               <view class="parcel" wx:for="{{pics}}" wx:key="{{index}}">
-                  <image src="{{pics[index]}}" class="According" data-index="{{index}}" mode="aspectFill" bindtap="previewImg"></image>
-                  <image src="/images/icons/error.png" class='deleteimg' catchtap="deleteImg" data-index="{{index}}"></image>
+                  <image src="{{pics[index]}}" class="According" data-index="{{index}}" mode="aspectFill" bindtap="previewImg"/>
+                  <image src="{{ossUrl+'error.png'}}" class='deleteimg' catchtap="deleteImg" data-index="{{index}}"/>
               </view>
-            <image wx:if="{{addPic}}" src='/images/icons/addPic.jpg' class='add' bindtap='choose'/>
+            <image wx:if="{{addPic}}" src="{{ossUrl+'addPic.jpg'}}" class='add' bindtap='choose'/>
           </view>
         </view>
       </view>
