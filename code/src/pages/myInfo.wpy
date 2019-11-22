@@ -260,6 +260,7 @@ export default class myInfo extends wepy.page {
   color: #777;
   position: relative;
 }
+
 .tips{
    position: absolute;
     bottom: -90rpx;

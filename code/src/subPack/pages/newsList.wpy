@@ -1,12 +1,12 @@
 <template>
     <view style="position:relative;">
         <scroll-view  scroll-y="true" class="posts-his" 
-              style="height:{{screenH}}px;transform:translateX({{x0}}px);"  catchtap="changeCurPost({{null}})"
+              style="height:{{scrollH}}px;transform:translateX({{x0}}px);"  catchtap="changeCurPost({{null}})"
               >
             <view  class="posts-record" wx:for="{{postList}}" wx:for-item="post" wx:for-index="postIndex" bindtap="goDetail({{post}})">
               <view class="time-like">
                 <view class="time">{{post.postTime}}</view>
-                <view class="like">
+                <view class="like" catchtap="changeILike({{postIndex}},{{post.likeNum}})">
                   <view wx:if="{{post.likeNum==0}}" class="text">抢首赞</view>
                   <view wx:else class="text">{{post.likeNum}}</view>
                   <image class="icon" wx:if="{{post.iLike}}" src="{{ossUrl+'like-on.png'}}"/>
@@ -45,8 +45,9 @@
               </view>
             </view>
         </scroll-view>
-        <scroll-view  scroll-y="true" class="reply" bindtap="isShowInput({{false}},{{null}})"
-              style="height:{{screenH}}px;transform:translateX({{x1}}px);"
+
+        <scroll-view  scroll-y="true" class="reply" bindscroll="hisScroll" 
+              style="height:{{scrollH}}px;transform:translateX({{x1}}px);"
               >
             <view class="reply-record" wx:for="{{replyList}}" wx:for-item="reply" 
                   wx:for-index="replyIndex"  bindtap="goDetail({{reply}})">
@@ -67,26 +68,26 @@
               </view>
               <view class="i-say">我：{{reply.iSay}}</view> 
             </view>
-            <view wx:if="{{replyInputShow}}" class="reply-bottom">
-                <input class="input"  placeholder="回复{{replyTo}}"  bindinput="replyInput" value="{{replyText}}"
-                  focus="true"  bindfocus="replyInputFocus"/>
-                <view catchtap="sendComment" class="{{commentText.length==0?'send-off':'send-on'}}" >评论</view>
+        </scroll-view>
+        <view wx:if="{{replyInputShow}}" class="reply-bottom" style="bottom:{{inputBottomH}}px">
+            <input class="input"  placeholder="回复{{replyTo}}"  bindinput="replyInput" value="{{replyText}}"
+              focus="true" maxlength='-1' cursor-spacing='10'  bindfocus="replyInputFocus" bindblur="replyInputBlur"/>
+            <view catchtap="sendComment" class="{{replyText.length==0?'send-off':'send-on'}}" >评论</view>
+        </view>
+
+        <scroll-view  scroll-y="true" class="chat" style="height:{{scrollH}}px;transform:translateX({{x2}}px);" >
+            <view class="chat-record" wx:for="{{conversations}}" wx:for-item="chat" bindtap="goChat({{chat}})" bindlongpress="delete" >
+              <image class="avatar" src="{{chat.friendHeadUrl}}"/>
+              <view class="name-cnt">
+                <view class="name">{{chat.friendName}}</view>
+                <view class="chat-cnt">{{chat.content}}</view>
+              </view>
+              <view class="chat-time">{{chat.timeStr}}</view>
+              <view wx:if="{{chat.unread != 0}}" class="dian_show">{{chat.unread}}</view>
             </view>
         </scroll-view>
-        <scroll-view  scroll-y="true" class="chat" style="height:{{screenH}}px;transform:translateX({{x2}}px);" >
-            <navigator class="chat-record" wx:for="{{chatList}}" wx:for-item="chat" bindtap="goChat({{chat}})" bindlongpress="delete" >
-              <image class="avatar" src="{{chat.userInfo.avatar}}"/>
-              <view class="name-cnt">
-                <view class="name">{{chat.userInfo.name}}</view>
-                <view class="chat-cnt">{{chat.chatCnt}}</view>
-              </view>
-              <view class="chat-time">{{chat.chat_time}}</view>
-              <view wx:if="{{chat.status == 1}}" class="dian_hide"></view>
-              <view wx:else ="{{chat.status == 0}}" class="dian_show"></view>
-            </navigator>
-        </scroll-view>
 
-        <view class="bottom-tab">
+        <view wx:if="{{bottomTabShow}}" class="bottom-tab">
             <view class="item" bindtap='changeTab(0)'>
               <image wx:if="{{curTab==0}}" class="icon" src="{{ossUrl+'lishi-on.png'}}"/>
               <image wx:else class="icon" src="{{ossUrl+'lishi-off.png'}}"/>
@@ -118,17 +119,12 @@
 
     data = {
       ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
-      isShow:true, // 判断是否弹窗
-    	cz_right:35, 
-    	cz_top:950,
-      focusInput:false, //控制键盘
-      height: '',
-      isInput: false,
 
       lastTab:1,
       curTab:1,//当前页面
       screenW:0,//屏幕宽度
-      screenH:0,//高度
+      scrollH:0,//滚动高度
+      tabH:0,//底部tab高度
       x0:0,
       x1:0,
       x2:0,
@@ -142,18 +138,10 @@
       replyTo:"",//输入框的占位符，回复谁
       curReplyIndex:null,//当前操作的回复
       replyText:'',//回复内容
+      inputBottomH:0,//输入框底部偏移量
+      bottomTabShow:true,//底部tab
 
-
-      chatList:[
-        {
-          userInfo:{
-            name:'waaaly',
-            avatar:'https://wx.qlogo.cn/mmopen/vi_32/wkHYcqJcjQ9cAQsEjPgWaFPezIXzYCCNgV6NbiaExocicf0OJSevlUW4z0OlOJrL9ibrryzPgDy179WDjE6L02ZJw/132',
-          },
-          chatCnt:'明天有空嘛，约否？',
-          chatTime:'昨天'
-        }
-      ]
+      conversations:[],//会话列表
     }
 
 
@@ -164,14 +152,10 @@
           this.x0 = -(res.screenWidth+1);
           this.x2 = res.screenWidth+1;
           this.screenW = res.screenWidth+1;
-          this.screenH = res.screenHeight-0.18*res.screenHeight;
+          this.scrollH = res.screenHeight-0.18*res.screenHeight;
+          this.tabH = res.screenHeight * 0.08;
         })
       })
-
-      this.chatList.push(this.chatList[0])
-      this.chatList.push(this.chatList[0])
-      this.chatList.push(this.chatList[0])
-      this.chatList.push(this.chatList[0])
 
       //获取可见标签数组
       http.get(api.ArticleTab,{
@@ -204,8 +188,36 @@
           this.postList.push(item.postList);
         }
       })
+
+      
     }
-    //切换页面
+
+    async onShow(){
+      //设置监听会话列表
+      this.$parent.getIMHandler().setOnReceiveMessageListener({
+            listener: (msg) => {
+                console.log('会话列表', msg);
+                if(msg.type === 'get-conversations'){
+                  this.conversations = msg.conversations.map(item => this.getConversationsItem(item));
+                  this.$apply();
+                }
+            }
+        });
+        try {
+            await this.$parent.getIMHandler().sendMsg({
+                content: {
+                    type: 'get-conversations',
+                    userId: wx.getStorageSync('userInfoInServer').id,
+                }
+            });
+            console.log('获取会话列表消息发送成功');
+        } catch (e) {
+            console.log('获取会话列表失败', e);
+        }
+    } 
+    /**
+     * 切换页面
+     */
     changeView(){
         this[`x${this.curTab}`] = 0;  
         if(this.lastTab<this.curTab){
@@ -215,12 +227,22 @@
         }
         this.$apply();
     }
+    /**
+     * 
+     */
+    getConversationsItem(item) {
+        let {latestMsg, ...msg} = item;
+        return Object.assign(msg, JSON.parse(latestMsg));
+    }
     methods={
       //切换底部tab
       changeTab(tab){
         if(this.curTab==tab){return;}
         this.lastTab = this.curTab;
         this.curTab = tab; 
+        this.replyInputShow = false;  
+        this.curReplyIndex = null; 
+        this.replyTo = "";
         this.$apply();
         this.changeView();
       },
@@ -241,6 +263,12 @@
       //切换当前操作的帖子
       changeCurPost(postIndex){
         this.curPostIndex = postIndex;
+      },
+      changeILike(postIndex,isLike){
+        this.postList[postIndex].iLike = isLike?0:1;
+        this.postList[postIndex].likeNum = isLike?
+        this.postList[postIndex].likeNum-1:
+        this.postList[postIndex].likeNum+1;
       },
       //删除帖子
       delePost(postIndex){
@@ -266,6 +294,13 @@
         this.curPostIndex = null;
         this.$apply();
       },
+      //历史屏滚动
+      hisScroll(){
+        this.replyInputShow = false;  
+        this.curReplyIndex = null; 
+        this.replyTo = "";
+        this.$apply();
+      },
       //回复框显示/隐藏
       isShowInput(status,index){
         this.replyInputShow = status;  
@@ -276,23 +311,31 @@
       //回复框取得焦点
       replyInputFocus(e){
         console.log(e);
+        this.bottomTabShow = false;
+        this.$apply();
+      },
+      //回复框失去焦点
+      replyInputBlur(e){
+        this.inputBottomH = this.tabH + 5;
+        this.bottomTabShow = true;
+        this.$apply();  
       },
       //回复框输入事件
       replyInput(e){
         this.replyText = e.detail.value;
+        this.$apply();
       },
 
       //前往聊天页
       goChat(chat){
-        console.log(chat);
         wx.navigateTo({
-              url: './chat',
-          })
+            url: `./IM/chat?friend=${JSON.stringify(chat)}`
+        });
       },
       //删除聊天
       delete: function(e){
         var that = this;
-        var chatlist = that.data.chatList
+        var chatlist = that.data.conversations
         var index = e.currentTarget.dataset.index;
         wx.showModal({
           title: '提示', //提示的标题,
@@ -303,9 +346,7 @@
             }else if(res){
               return false;
             }
-            that.setData({
-              chatlist
-            });
+            that.conversations = chatlist;
           }
         });
         
@@ -313,7 +354,23 @@
 
     }
     watch={
-    } 
+      async curTab(newTab,old){
+        if(newTab == 2){
+          try {
+            await this.$parent.getIMHandler().sendMsg({
+                content: {
+                    type: 'get-conversations',
+                    userId: wx.getStorageSync('userInfoInServer').id,
+                }
+            });
+            console.log('获取会话列表消息发送成功');
+          } catch (e) {
+              console.log('获取会话列表失败', e);
+          }
+        }
+      }
+    }
+       
 }
 </script>
 <style lang='scss'>
@@ -456,47 +513,6 @@
     border-right: 11px solid #eee;
 
   }
-  .biao{
-	width: 50rpx;
-	height:40rpx;
-	overflow:hidden;
-	margin-top:-45rpx;
-	margin-left:605rpx;
- }
- .baseimg
- {
-   width:100%;
-   height:100%;
- }
- .caozuo{
-	width:250rpx;
-	height:40rpx;
-	background:rgba(0,0,0,0.6);
-	font-size:12px;
-	color:#fff;
-	font-weight:600;
-	position:absolute;
-	border-radius:2px; 
-	overflow:hidden;
-	opacity: 0;
-}
-.kejian{
-	position:absolute;
-	width:120rpx;
-	border-right: 1px solid #ccc;
-	top:5rpx;
-	left:0;
-	text-align:center;
-}
-.delete{
-	position:absolute;
-  	width:120rpx;
-  	border-left: 1px solid #ccc;
-  	right:0;
-  	top:5rpx;
-  	text-align:center;
-}
-
 }
 //回复我
 .reply{
@@ -575,16 +591,17 @@
      content: '';
     right: 0rpx;
     bottom: 0rpx;
-    border: 1rpx solid #eee;
+    border-bottom: 1rpx solid #eee;
     position: absolute;
     left: 130rpx;
   }
-  .reply-bottom{
-    position:fixed;
+  
+}
+.reply-bottom{
+    position: fixed;
     display: flex;
     z-index:10;
     left: 0rpx;
-    bottom: 0rpx;
     right:0rpx;
     align-items: center;
     justify-content: space-between;
@@ -618,8 +635,6 @@
     }
         
   }
-}
-
 //丢纸条
 .chat{
   position: absolute;
@@ -667,7 +682,7 @@
     content: '';
     right: 0rpx;
     bottom: 0rpx;
-    border: 1px solid #eee;
+    border-bottom: 1rpx solid #eee;
     position: absolute;
     left: 130rpx;
   }
@@ -706,21 +721,14 @@
 }
 .dian_show {
   float: right;
-  width: 16rpx;
-  height: 16rpx;
+  width: 16px;
+  height: 16px;
   background-color: red;
   border-radius: 50%;
   margin-top: -35px;
+  font-size:10rpx;
 }
-.dian_hide {
-  float: right;
-  width: 16rpx;
-  height: 16rpx;
-  background-color: red;
-  border-radius: 50%;
-  margin-top: -35px;
-  display: none;
-}
+
 
 /*隐藏滚动条*/
 // ::-webkit-scrollbar {

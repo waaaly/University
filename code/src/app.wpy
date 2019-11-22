@@ -3,6 +3,7 @@
 <script>
 import wepy from 'wepy'
 import 'wepy-async-function'
+import AppIMDelegate from "./libs/IMAgent/app-im-delegate";
 const checkUpdate = require("./utils/updateManager.js");
 const dowloadNewVersion = require("./utils/updateManager.js");
 export default class extends wepy.app {
@@ -43,7 +44,7 @@ export default class extends wepy.app {
             'pages/postingDetail',
             'pages/postingEdit',
             'pages/newsList',
-            'pages/chat',
+            'pages/IM/chat',
           ]
         }],
         window: {
@@ -104,13 +105,19 @@ export default class extends wepy.app {
   }
 
   globalData = {
+    userInfo:{
+      // userId:wx.getStorageSync('userInfoInServer').id,
+      // myHeadUrl:wx.getStorageSync('userInfoInServer').avatar,
+    },
+    friendsId:null,
     ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
   }
 
   constructor() {
-    super()
-    this.use('requestfix')
+    super();
+    this.use('requestfix');
     this.use('promisify');
+    this.appIMDelegate = null;
   }
 
   onLaunch() {
@@ -138,20 +145,25 @@ export default class extends wepy.app {
         content:'当前您使用的微信版本过低，无法使用该功能，请升级到最新微信版本后重试～',
       })
     }
+    //创建im代理委托消息收发
+    this.appIMDelegate = new AppIMDelegate(this);
+    this.appIMDelegate.onLaunch();
   }
 
-  getUserInfo(cb) {
-    const that = this
-    if (this.globalData.userInfo) {
-      return this.globalData.userInfo
-    }
-    wepy.getUserInfo({
-      success (res) {
-        that.globalData.userInfo = res.userInfo
-        cb && cb(res.userInfo)
-      }
-    })
+  onHide() {
+      this.appIMDelegate.onHide();
   }
+
+  onShow() {
+      this.appIMDelegate.onShow();
+  }
+  /**
+   * 获取全局im代理器
+   */
+  getIMHandler() {
+    return this.appIMDelegate.getIMHandlerDelegate();
+  }
+
 }
 </script>
 <style lang="less">
