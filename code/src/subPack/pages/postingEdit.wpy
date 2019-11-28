@@ -1,7 +1,7 @@
 <template>
 <view>
 <view class='page'>
-  <textarea class='text' bindinput="input" placeholder="输入帖子内容" minlength="{{min}}" maxlength="{{max}}" />
+  <textarea class='text' bindinput="input" placeholder="输入帖子内容" value="{{content}}" minlength="{{min}}" maxlength="{{max}}" />
 	<text class="currentWordNumber">{{currentWordNumber|0}}/{{max}}</text>
   <view class="image_content">
     <view class='image' wx:for="{{img_url}}">
@@ -13,18 +13,18 @@
     </view>
   </view>
 </view>
-<button bindtap="send" class="btn">发布</button>
-<view class="section">
+
+ <view class="section">
     <picker class="section_pic" bindchange="bindPickerChange" 
 			range="{{enableViewList}}" range-key="value"> 
 			<image src="{{ossUrl+'lxr.png'}}" class="lxrimg"/>
       <view class="picker_text">
         谁可以见：
       </view>
-			<view class="picker">{{curEnable}}</view>
+			<view class="picker">{{curEnableValue}}</view>
     </picker>
   </view>
-	
+<button bindtap="send" class="btn">发布</button>
 </view>
 </template>
 
@@ -40,16 +40,17 @@
 
   data = {
 		  ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
-			current: 0,
-			min: 5, //最少字数
-			max: 100, //最多字数
+			currentWordNumber: 0,
+			min:15,
+			max: 300, //最多字数
 			content:"" ,//文章内容
 			img_url: [] ,//图片本地url
 			img_oss_url:[],//oss服务器url
 			userInfo: {} ,//个人信息
 			index: 0, //默认显示位置
 			enableViewList:[],//可见标签数组
-			curEnable:'全部可见',
+			curEnableId:0,
+			curEnableValue:'全部可见',
 	}
 	onLoad(e){
 		//获取可见标签组
@@ -59,60 +60,46 @@
 		}).then(res=>{
 				console.log(res)
 				this.enableViewList = res.enableViewList;
+				this.enableViewList[0].value = this.curEnableValue;
 				this.$apply();
 		})
 	}
 	//发布前线把用户选择的图片保存到oss
 	//参数为图片路径数组
 	uploadImage(imgPathList){
-		return new Promise((resolve,reject)=>{
-			var perfix = 'front/' + userId +'/';
-			var fileName = "";
-			for(let imgPath of imgPathList){
-				if(imgPath.indexOf('http://tmp')!=-1){
-					fileName = imgPath.replace('http://tmp/', perfix);//模拟器
-				}else{
-					fileName = imgPath.replace('wxfile://tmp_', perfix);//真机
-				}
-				console.log(fileName);
-				//保存地址到数组
-				this.img_oss_url.push(fileName);
-				//上传图片到oss服务器
-				uploadFile(imgPath,wx.getStorageSync('userInfoInServer').id);
+		var userId = wx.getStorageSync('userInfoInServer').id;
+		var perfix = 'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/front/' + userId +'/';
+		var img_oss_url = [];
+		for(let item of imgPathList){
+			uploadFile(item,userId);//上传图片到oss
+
+			if(item.indexOf('http://tmp')!=-1){
+				img_oss_url.push(item.replace('http://tmp/', perfix));//模拟器
+			}else{
+				img_oss_url.push(item.replace('wxfile://tmp_', perfix));//真机
 			}
-			resolve();
-		})
+		}
+		return img_oss_url;
 	}
 	methods = {
 		
 		//picker选择器
 		bindPickerChange: function(e){
-			this.curEnable =  e.detail.value;
+			this.curEnableId =  this.enableViewList[e.detail.value].id;
+			this.curEnableValue =  this.enableViewList[e.detail.value].value;
 			this.$apply();
 		},
-		//帖子内容
-		//字数限制
-		input: function(e){
+		//帖子内容输入
+		input(e){
 			//获取内容
 			var value = e.detail.value;
-			this.content = value;
 			//获取输入框内容长度
-			var len = parseInt(value.length);
-			//最少字数限制
-			if (len <= this.data.min)
-				this.setData({
-					texts: " "
-			})
-			else if (len > this.data.min)
-				this.setData({
-					texts: " "
-			})
-			
+			var len = parseInt(value.length);	
 			//最多字数限
-			if(len > this.data.max) return;
-				this.setData({
-					currentWordNumber: len //当前字数
-				})
+			if(len > this.max) return;
+			this.content = value;
+			this.currentWordNumber = len;
+			this.$apply();
 		},
 		chooseimage: function(){
 			var that = this;
@@ -149,19 +136,36 @@
 		},
 		//发布()
 		send: function(){
-			this.uploadImage(this.img_url).then(res=>{
-				http.get(api.ArticleTab,{
-						user_id:wx.getStorageSync('userInfoInServer').id,
-						tabs_id:'',
-						tabs_lable:'',
-						article_content:'',
-						article_author:wx.getStorageSync('userInfoInServer').name,		
-						article_img:this.img_oss_url,
-				},true).then(res=>{
-						console.log(res)
+			if(this.content==''){
+				wx.showModal({
+					content:'帖子正文内容无法为空哦～',
+					showCancel: false,
 				})
-			}).catch(err=>{
-
+				return;
+			}
+			if(this.content.length < this.min){
+				wx.showModal({
+					content:'帖子正文内容不能少于15字哦～',
+					showCancel: false,
+				})
+				return;
+			}
+			
+			http.post(api.ArticleAdd,{
+					user_id:wx.getStorageSync('userInfoInServer').id,
+					tabs_id:this.curEnableId,
+					tabs_label:this.curEnableValue,
+					article_content:this.content,
+					article_author:wx.getStorageSync('userInfoInServer').name,		
+					article_img:this.uploadImage(this.img_url),
+			},true).then(res=>{
+				if(res.msg == "添加文章成功！"){
+					wx.showToast({title:'帖子发布成功！'});
+					setTimeout(()=>{
+						wx.navigateBack({})
+					},1000)
+				}
+					console.log(res)
 			})
 		}
 		
@@ -225,7 +229,7 @@
   line-height: 80rpx;
   position: fixed;
   left: 75rpx;
-  bottom: 60rpx;
+  bottom: 20rpx;
 }
 .currentWordNumber{
 	font-size: 12px;
@@ -237,7 +241,7 @@
 .section_pic{
 	height: 40px;
 	width: 100%;
-	margin-left: 20px;
+	margin-left: 10px;
 	font-size: 16px;
 	/* position: absolute;
 	left: 45%; */

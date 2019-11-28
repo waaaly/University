@@ -38,33 +38,57 @@ export default class popupMenu extends wepy.component{
     methods={
         //提问
         question(){
-            wx.showToast({
-                icon:'none',
-                title:'该功能正在开发中',
-            })
-            // wx.navigateTo({
-            //     url: '../subPack/pages/question',
-            // })
+
         },
         //发帖
         idea(){
-            // wx.showToast({
-            //     icon:'none',
-            //     title:'该功能正在开发中',
-            // })
-            wx.navigateTo({
-                url: '../subPack/pages/postingEdit',
-            })
+            if(!wx.getStorageSync("userInfoInServer")){
+                wx.showModal({
+                    title: '提示',
+                    content: '您当前尚未登陆无法进行相关操作呢~',
+                    confirmColor: '#ff6b5d',
+                    confirmText: '前往登陆',
+                    success: (res => {
+                        if (res.confirm) {
+                            wx.navigateTo({
+                                url: '/pages/authorize',
+                            })
+                        }
+                    }),
+                })
+            }else{
+                wx.navigateTo({
+                    url: '../subPack/pages/postingEdit',
+                })
+            }
+            this.takeback();
+            this.data.isPopping=false;
+            this.$apply();
         },
         //消息中心
         answer(){
-            // wx.showToast({
-            //     icon:'none',
-            //     title:'该功能正在开发中',
-            // })
-            wx.navigateTo({
-                url: '../subPack/pages/newsList',
-            })
+            if(!wx.getStorageSync("userInfoInServer")){
+                wx.showModal({
+                    title: '提示',
+                    content: '您当前尚未登陆无法进行相关操作呢~',
+                    confirmColor: '#ff6b5d',
+                    confirmText: '前往登陆',
+                    success: (res => {
+                        if (res.confirm) {
+                            wx.navigateTo({
+                                url: '/pages/authorize',
+                            })
+                        }
+                    }),
+                })
+            }else{
+                wx.navigateTo({
+                    url: '../subPack/pages/newsList',
+                })
+            }          
+            this.takeback();
+            this.data.isPopping=false;
+            this.$apply();
         },
         //点击弹出
         plus: function () {
@@ -140,6 +164,7 @@ export default class popupMenu extends wepy.component{
         this.animTranspond = animationTranspond.export();
         this.animInput = animationInput.export();
     }
+
 }
 </script>
 

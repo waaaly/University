@@ -151,11 +151,12 @@ export default class extends wepy.app {
   }
 
   onHide() {
-      this.appIMDelegate.onHide();
+    this.appIMDelegate.closeSocket();
   }
 
   onShow() {
-      this.appIMDelegate.onShow();
+     //连上socket      
+      this.appIMDelegate.creatSockt();
   }
   /**
    * 获取全局im代理器

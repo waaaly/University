@@ -76,7 +76,7 @@ import api from '../utils/API';
 var QQMapWX = require('../utils/qqmap-wx-jssdk.js');
 //实例化api核心类
 var qqmapsdk;
- //引入TX地图SDK
+//引入TX地图SDK
 qqmapsdk = new QQMapWX({
     key: "EJKBZ-W4HKQ-MYR5T-G4BHS-ATA47-QMFLY", // 必填
 });
@@ -190,7 +190,7 @@ export default class addressChoose extends wepy.page {
       this.$apply();
     }
     //手动选择地址
-    chooseLocation(){
+   async chooseLocation(){
       wx.chooseLocation({
         success:(res=>{
             qqmapsdk.reverseGeocoder({
@@ -208,8 +208,10 @@ export default class addressChoose extends wepy.page {
             })
         }),
         fail:(err=>{
-          this.scope = false;
-          this.showExit();
+          if(err.errMsg==="chooseLocation:fail auth deny"){
+            this.scope = false;
+            this.showExit();
+          }     
         })
       })
     }
@@ -223,6 +225,9 @@ export default class addressChoose extends wepy.page {
         },
         //选择校区
         schoolChange:function(e){
+            if(this.schoolList[e.detail.value].name=='暂无开通服务校区'){
+                return;
+            }
             this.curSchoolName = this.schoolList[e.detail.value].name;
             var userArea = wx.getStorageSync('userArea');
             userArea.area_name = this.curAddressName;
@@ -236,10 +241,29 @@ export default class addressChoose extends wepy.page {
           wx.setStorageSync('userChooseArea',this.areaList[e.detail.value]);
         },
         //新增地址
-        add:function(e){
-            wx.navigateTo({
-                url: '/pages/addressAdd',
-            })
+         add(e){
+          //没有授权，弹出窗口引导授权
+          if(!this.scope){
+            this.showExit();        
+          }else{
+            //没有获取到当前地区
+            if(this.curAddressName === '未知'){
+              wx.showModal({
+                title:'定位失败',
+                content:'无法获取到您当前所在地区，请您手动选择当前位置,再进行新增地址操作！',
+                showCancel:'false',
+                success:(res=>{
+                  if(res.confirm){
+                    this.chooseLocation();
+                  }
+                })
+              })          
+            }else{
+              wx.navigateTo({
+                    url: '/pages/addressAdd',
+              })
+            } 
+          }   
         },
         //选择地址
         click:function(e){

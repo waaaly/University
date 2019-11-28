@@ -38,17 +38,20 @@ export default class FileManager {
      * @param duration 由输入组件接收到的录音时间
      */
     async sendOneMsg({ type, content, duration }) {
-        console.log('sendOneMsg', arguments[0]);
+        console.log('send flie Msg', arguments[0]);
         try {
-            const { savedFilePath } = await FileSaveManager.saveFileRule({ tempFilePath: content });
+            //发送语音，图片时保存到oss
+            const { savedFilePath } = await FileSaveManager.saveFileRuleOss({ tempFilePath: content });
+            //const { savedFilePath } = await FileSaveManager.saveFileRule({ tempFilePath: content });
+            console.log('save in oss', savedFilePath)
             await this._sendFileMsg({ content: savedFilePath, duration, type });
         } catch (e) {
+            console.log('save in oss fail');
             await this._sendFileMsg({ content, type, duration });
         }
     }
 
     async _sendFileMsg({ content, duration, type }) {
-        console.log('sendFileMsg', arguments[0]);
         const temp = this._page.imOperator.createNormalChatItem({ type, content, duration });
         const { itemIndex } = await this._page.UI.showItemForMoment(temp);
         await this.uploadFileAndSend({ content, duration, itemIndex, type })

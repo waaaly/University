@@ -1,57 +1,78 @@
 <template>
     <view class="container">
-    <form bindsubmit="bindSave">
-    <view class="form-box">
-        <view class="row-wrap">
-            <view class="label">联系人</view>
-            <view class="label-right">
-                <input id="1" name="contact" class="input" maxlength="13" type="text" placeholder="姓名" value="{{editAddress.name}}" bindinput="getInput"/>
+        <form bindsubmit="bindSave">
+            <view class="form-box">
+                <view class="row-wrap">
+                    <view class="label">联系人</view>
+                    <view class="label-right">
+                        <input id="1" name="contact" class="input" maxlength="13" type="text" placeholder="姓名" value="{{editAddress.name}}" bindinput="getInput"/>
+                    </view>
+                </view>
+                <view class="row-wrap">
+                    <view class="label">联系手机</view>
+                    <view class="label-right">
+                        <input id="2" name="mobile" class="input" maxlength="11" type="number" placeholder="11位手机号码" value="{{editAddress.mobile}}" bindinput="getInput"/>
+                    </view>
+                </view>
+                <view class="row-wrap" >
+                    <view class="label">选择所在地区</view>
+                    <view class="picker" bindtap="chooseDistrict">{{curDistrict}}</view>
+                </view>
+                <view class="row-wrap" >
+                    <view class="label">选择所在校区</view>
+                    <picker  bindchange="schoolChange" range-key="name" range="{{schoolList}}">
+                        <view class="picker">{{curSchool}}</view>
+                    </picker>
+                </view>
+                <view  class="row-wrap" >
+                    <view class="label">选择服务区域</view>
+                    <picker  bindchange="areaChange" range-key="area_name" range="{{areaList}}">
+                        <view class="picker">{{curArea}}</view>
+                    </picker>
+                </view>
+                <view class="addr-details">
+                    <view class="label">详细地址</view>
+                    <view class="label-right">
+                        <textarea name="address" auto-height placeholder="填写宿舍楼门牌号"  value="{{editAddress.address}}" id="3" bindinput="getInput"/>
+                    </view>
+                </view>
+                <view class="row-wrap">
+                    <view class="label">设为默认地址</view>
+                    <view style='position:fixed;left:120px;'>
+                    <checkbox-group bindchange="checkboxChange">
+                        <checkbox disabled="{{disDefault}}" value="flase" checked="{{editAddress.is_default}}" ></checkbox>
+                    </checkbox-group>
+                    </view>
+                </view>
             </view>
-        </view>
-        <view class="row-wrap">
-            <view class="label">联系手机</view>
-            <view class="label-right">
-                <input id="2" name="mobile" class="input" maxlength="11" type="number" placeholder="11位手机号码" value="{{editAddress.mobile}}" bindinput="getInput"/>
-            </view>
-        </view>
-        <view class="row-wrap" >
-            <view class="label">选择所在校区</view>
-            <picker  bindchange="schoolChange" range-key="name" range="{{schoolList}}">
-                <view class="picker">{{curSchool}}</view>
-            </picker>
-        </view>
-        <view  class="row-wrap" >
-            <view class="label">选择服务区域</view>
-            <picker  bindchange="areaChange" range-key="area_name" range="{{areaList}}">
-                <view class="picker">{{curArea}}</view>
-            </picker>
-        </view>
-        <view class="addr-details">
-            <view class="label">详细地址</view>
-            <view class="label-right">
-                <textarea name="address" auto-height placeholder="填写宿舍楼门牌号"  value="{{editAddress.address}}" id="3" bindinput="getInput"/>
-            </view>
-        </view>
-        <view class="row-wrap">
-            <view class="label">设为默认地址</view>
-            <view style='position:fixed;left:120px;'>
-              <checkbox-group bindchange="checkboxChange">
-                <checkbox disabled="{{disDefault}}" value="flase" checked="{{editAddress.is_default}}" ></checkbox>
-              </checkbox-group>
+            <button  class="save-btn" formType="submit">保存</button>
+            <button type="default" class="save-btn" bindtap="deleteAddress" data-id="{{addressData.id}}" wx:if="{{addressData}}">删除该地址</button>
+            <button type="default" class="cancel-btn" bindtap="bindCancel">返回</button>
+        </form>
+        <view wx:if="{{scopefail}}"  class="scopefail-back">
+            <view class="scopefail-box">
+                <view class="title">授权失败</view>
+                <view class="content">您拒绝了小程序使用地址的请求，我们无法为您提供相应服务，请点击下方设置按钮重新授权！</view>
+                <view class="btn">
+                    <view class="cancle" bindtap="hideExit">下次再说</view>
+                    <button class="confirm" bindtap="openSetting">打开设置</button>  
+                </view> 
             </view>
         </view>
     </view>
-    <button  class="save-btn" formType="submit">保存</button>
-    <button type="default" class="save-btn" bindtap="deleteAddress" data-id="{{addressData.id}}" wx:if="{{addressData}}">删除该地址</button>
-    <button type="default" class="cancel-btn" bindtap="bindCancel">返回</button>
-    </form>
-</view>
 </template>
 <script>
 import wepy from "wepy";
 import http from '../utils/Base';
 import api from '../utils/API';
-
+//引入sdk核心类
+var QQMapWX = require('../utils/qqmap-wx-jssdk.js');
+//实例化api核心类
+var qqmapsdk;
+//引入TX地图SDK
+qqmapsdk = new QQMapWX({
+    key: "EJKBZ-W4HKQ-MYR5T-G4BHS-ATA47-QMFLY", // 必填
+});
 
 var animation;
 export default class addressAdd extends wepy.page{
@@ -70,11 +91,14 @@ export default class addressAdd extends wepy.page{
             area_name:'',
             tabs_name:'',
         },
+        curDistrict:'点击选择所在地区',
         schoolList:[],
         curSchool:'点击选择所在校区',
         areaList:[],
         curArea:'点击选择服务区域',
         edit:false,
+        scopefail:false,//授权弹窗
+        scope:true,//授权记录
    } 
    onLoad(options){
 
@@ -92,12 +116,20 @@ export default class addressAdd extends wepy.page{
             this.$apply();
         }
 
+        
+    
         //获取开通服务的校区
-        http.get(api.ShopTabs,{district:wx.getStorageSync('userArea').area_name}).then(res=>{
+        http.get(api.ShopTabs,{district:wx.getStorageSync('userArea').address_name}).then(res=>{
             console.log(res);
-            this.schoolList = res;
-            this.$apply();
+            if(res.msg=="区域无代理点"){
+                this.schoolList=[{name:'暂无开通服务校区'}];
+            }else{
+                this.schoolList = res;
+                this.$apply();
+            }           
         })
+        
+        
         //获取后台服务区域列表
         http.get(api.ShopAreaTabs,{tabs_id:wx.getStorageSync('userArea').school_id}).then(res=>{
             console.log(res);
@@ -106,6 +138,18 @@ export default class addressAdd extends wepy.page{
         })
    }
     watch={
+        curDistrict(districtName,old){
+             //获取开通服务的校区
+            http.get(api.ShopTabs,{district:wx.getStorageSync('userArea').address_name}).then(res=>{
+                console.log(res);
+                if(res.msg=="区域无代理点"){
+                    this.schoolList=[{name:'暂无开通服务校区'}];
+                }else{
+                    this.schoolList = res;
+                    this.$apply();
+                }           
+            })
+        },
         curSchool(schoolName,old){
             //获取后台服务区域列表
             http.get(api.ShopAreaTabs,{tabs_id:wx.getStorageSync('userArea').school_id}).then(res=>{
@@ -118,22 +162,56 @@ export default class addressAdd extends wepy.page{
    //提交保存
     postAddress(){
         var postAddress = this.editAddress;
+        
         this.edit?'':postAddress['id']=this.editAddress.id;
         http.post(api.AddressSave,{...postAddress},true).then(res=>{
             console.log(res)
-            if(res.code==200){
+            
+            if(res.id){
                 this.edit?
                 wx.showToast({
                     title:'地址修改成功',
                 }):wx.showToast({
                     title:'新增地址成功',
                 });
+                if(res.is_default){
+                    wx.setStorageSync('userDefaultAddress',res);
+                }
+                setTimeout(()=>{
+                    wx.navigateBack();
+                },500)
             }else{
                 wx.showToast({
-                    title:res.message,
+                    title:'保存地址失败！',
                 })
             }         
         })
+    }
+    //手动选择当前地址
+    chooseLocation(){
+      wx.chooseLocation({
+        success:(res=>{
+            qqmapsdk.reverseGeocoder({
+              location: {
+                latitude: res.latitude,
+                longitude: res.longitude,
+              },
+              success:(map=>{
+                var userArea = wx.getStorageSync('userArea');
+                userArea.address_name = map.result.address_component.district; 
+                wx.setStorageSync('userArea',userArea); 
+                this.curDistrict = map.result.address_component.district; 
+                this.$apply();         
+              })
+            })
+        }),
+        fail:(err=>{
+            if(err.errMsg==="chooseLocation:fail auth deny"){
+                this.scope = true;
+                this.$apply();
+            }
+        })
+      })
     }
    methods = {
        //保存前校验
@@ -142,7 +220,7 @@ export default class addressAdd extends wepy.page{
             var mobile               = e.detail.value.mobile;
             var address              = e.detail.value.address;
             this.editAddress.user_id = wx.getStorageSync('userInfoInServer').id;
-            if (name == "") {
+            if (this.editAddress.name=='') {
             wx.showModal({
                 title: '提示',
                 content: '请填写联系人姓名',
@@ -174,6 +252,15 @@ export default class addressAdd extends wepy.page{
                 duration: 1500
             })
             return false;
+            }
+            else if (this.curDistrict == "点击选择所在地区") {
+                let tips = "请选择所在地区";             
+                wx.showModal({
+                    title: '提示',
+                    content: tips,
+                    showCancel: false
+                })
+                return
             }
             else if (this.curSchool == "点击选择所在校区") {
                 let tips = "请选择所在校区";             
@@ -229,31 +316,67 @@ export default class addressAdd extends wepy.page{
         //设为默认地址
         checkboxChange: function (event) {
             event.detail.value.length==0?this.editAddress.is_default = 0: this.editAddress.is_default = 1;
-            // if (event.detail.value.length==0){
-            //     this.editAddress.is_default = 0;
-            // }
-            // else{
-            // this.editAddress.is_default = 1;
-            // } 
+        },
+        //选择地区
+        chooseDistrict(){
+          //没有授权，弹出窗口引导授权
+          if(!this.scope){
+              this.scopefail = true;
+              this.$apply();
+              return;
+          }
+          this.chooseLocation();
         },
         //选择校区
         schoolChange(e){
+            if(this.schoolList[e.detail.value].name=='暂无开通服务校区'){
+                return;
+            }
+            
+            var userArea = wx.getStorageSync('userArea');
+            userArea.school_id = this.schoolList[e.detail.value].id;
+            userArea.school_name = this.schoolList[e.detail.value].name;
+            wx.setStorageSync('userArea',userArea);
             this.editAddress.tabs_name = this.schoolList[e.detail.value].name;
             this.curSchool = this.schoolList[e.detail.value].name;
             this.$apply();
         },
         //选择服务区域
         areaChange(e){
+            var userChooseArea = wx.getStorageSync('userChooseArea');
+            userChooseArea.id = this.areaList[e.detail.value].id;
+            userChooseArea.area_name = this.areaList[e.detail.value].area_name;
+            wx.setStorageSync('userChooseArea',userChooseArea);
+
             this.editAddress.area_id   = this.areaList[e.detail.value].id;
             this.editAddress.area_name = this.areaList[e.detail.value].area_name;
             this.curArea   = this.areaList[e.detail.value].area_name;
             this.$apply();
         },
+        //打开授权
+        openSetting(){
+         wx.openSetting({
+            success:(res=>{
+                    if(res.authSetting['scope.userLocation']){
+                        this.scope = true;
+                        this.hideExit();
+                        this.chooseLocation();
+                    }else{
+                        this.showExit();            
+                    }
+                })
+            })                 
+        },
+        //隐藏提示框
+        hideExit(){
+            this.scopefail = false;
+            this.$apply();
+        }
    }
 }
 </script>
 
-<style>
+<style lang='scss'>
 page{
     height: 100%;
 }
@@ -397,5 +520,81 @@ picker {
   color: white;
   border-radius: 5px;
   background-color: #ff6b5d;
+}
+
+.scopefail-back{
+    background-color: #5f5f5f;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    z-index:10;
+    top:0rpx;
+    left: 0rpx;
+    right: 0rpx;
+    bottom:0rpx;
+    .scopefail-box{
+        display: flex;
+        flex-direction: column;
+        border-radius: 10rpx;
+        background-color: #fff;
+        height: 35vh;
+        justify-content: space-between;
+        margin: 0 10vw;
+
+        .title{
+            color: #6c6c6c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 30rpx;
+
+        }
+        .content{
+            color: #b5b5b5;
+            padding: 0 20rpx;
+            display: flex;
+            text-align: center;
+        }
+        .btn{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 10px;
+            font-size: 18px;
+            padding:0 20rpx;
+            .cancle{
+                color: #b5b5b5;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .confirm{
+                color:#7a8aab;
+            }
+        }
+        .btn::after{
+            position: absolute;
+            content:'';
+            border:1rpx solid #eee;
+            left:0rpx;
+            right:0rpx;
+            top: -10rpx;
+        }
+    }
+}
+button{
+    background-color: #fff;
+}
+button::after{
+border: none;
+content:"";
+color:none;
+}
+
+.button-hover{
+color:none;
+background-color:#fff;
 }
 </style>

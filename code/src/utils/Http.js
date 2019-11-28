@@ -79,7 +79,7 @@ export default class http {
                         wx.setStorageSync("showPopup", 1);
                         wx.showModal({
                             title: '提示',
-                            content: '您当前尚未登陆无法进行相关操作呢',
+                            content: '您当前尚未登陆无法进行相关操作呢~',
                             confirmColor: '#ff6b5d',
                             confirmText: '前往登陆',
                             success: (res1 => {

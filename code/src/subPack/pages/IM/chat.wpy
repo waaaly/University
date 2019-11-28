@@ -1,11 +1,11 @@
 <template>
   <view>
-    <view style="background-color: {{chatStatue==='open'?'#40c9ff':'#888888'}};" class="chat-page-status-style">
+    <!-- <view style="background-color: {{chatStatue==='open'?'#40c9ff':'#888888'}};" class="chat-page-status-style">
         {{chatStatusContent}}
-    </view>
+    </view> -->
     <scroll-view
           enable-flex="{{true}}"
-          style="height:{{pageHeight}}px;width: 100%;display: flex;flex-direction: column;margin-top: 54rpx;"
+          style="height:{{scrollHeight}}px;width: 100%;flex-direction: column;"
           scroll-y="true"
           scroll-top="{{scrollTopVal}}"
           bindtap="resetInputStatus">
@@ -44,27 +44,64 @@
       textMessage:'',
       chatStatue:'open',
       chatStatusContent:'',
-      pageHeight:0,
+      windowHeight:0,//屏幕高度
+      scrollHeight:0,//滚动屏高度
+      extraViewHeight:110,//更多功能高度
+      textInputHeight:50,//输入框高度
+      isShowExtra:false,//
       scrollTopVal:0,
       chatItems:[],
+      friend:null,
     }
     onLoad(options){
-        const friend = JSON.parse(options.friend);
+        this.friend = JSON.parse(options.friend);
         wx.setNavigationBarTitle({
-            title: friend.friendName || ''
+            title: this.friend.sender_name,
         });
-        this.pageHeight = wx.getSystemInfoSync().windowHeight*0.85;
-
+        this.windowHeight = wx.getSystemInfoSync().windowHeight;
+        this.scrollHeight = wx.getSystemInfoSync().windowHeight-this.textInputHeight;
         this.msgManager = new MsgManager(this); 
-        this.imOperator = new IMOperator(this.$parent, friend);
-        //设置监听 实时监听接受到的消息
+        this.imOperator = new IMOperator(this.$parent, this.friend);
+        this.UI = new UI(this); 
+        
+        //获取聊天记录
+         http.get(api.MessageDetail,{user_id:wx.getStorageSync('userInfoInServer').id,
+         sender_id:this.friend.sender_id}).then(res=>{
+             console.log(res);
+             this.chatItems = res;
+             this.scrollTopVal = res.length * 999;
+             this.$apply();
+         })
+    }
+    onShow(){
+        //设置监听 实时监听对方发送的消息
         this.imOperator.onSimulateReceiveMsg((msg) => {
-            console.log('receive Msg',msg);
-            this.msgManager.showMsg({msg})
+            console.log('receive Msg in chat:',msg);
+             if(msg.isMy=='true'){
+                //保存已经发送的消息
+                http.post(api.MessageSend,{
+                    sender_id:wx.getStorageSync('userInfoInServer').id,
+                    sender_name:wx.getStorageSync('userInfoInServer').name,
+                    receiver_id:this.friend.sender_id,
+                    receiver_name:this.friend.sender_name,
+                    content:msg.content,
+                    type:msg.type,
+                    is_read:0,
+                    show_time:msg.showTime,
+                    time:msg.time,
+                    timestamp:msg.timestamp,
+                    voice_duration:msg.voiceDuration,
+                    is_playing:msg.isPlaying,
+                    send_status:'success'},true,false).then(res=>{
+                console.log(res)
+            })
+            }else{
+                //显示好友发的消息
+                this.msgManager.showMsg({msg})
+            }
+            this.scrollTopVal = this.chatItems.length * 999;
+            this.$apply();         
         });
-        this.UI = new UI(this);
-        this.UI.updateChatStatus('正在聊天中...');   
-        console.log(this);     
     }
     /**
      * 模拟上传文件，注意这里的cbOk回调函数传入的参数应该是上传文件成功时返回的文件url，
@@ -88,6 +125,7 @@
      */
     async sendMsg({content, itemIndex}) {
         try {
+            console.log('chat sendmsg',content);
             const {msg} = await this.imOperator.onSimulateSendMsg({content})
             this.UI.updateViewWhenSendSuccess(msg, itemIndex);
             return {msg};
@@ -108,6 +146,12 @@
     }
     methods = {
         /**
+         * 
+         */
+        resetInputStatus(e){
+            this.$invoke('chatInput', 'closeExtraView');
+        },
+        /**
          * 预览图片事件
          */
       previewImage(e){
@@ -126,13 +170,22 @@
           this.resendMsgEvent(e);
       }
     }
-
+    watch = {
+        isShowExtra(_new,old){
+            _new?this.scrollHeight = this.windowHeight-this.extraViewHeight-this.textInputHeight:
+            this.scrollHeight = this.windowHeight-this.textInputHeight;
+            this.scrollTopVal = this.chatItems.length * 999;
+            this.$apply();
+        }
+    }
     events = {
       /**
        * 打开更多功能
        */
       'extraClickEvent':(param,$event)=>{
         console.log(param)
+        this.isShowExtra = param.isShow;
+        this.$apply();
       },
       /**
        * 单击更能多功能单项
@@ -150,7 +203,12 @@
             sizeType: ['compressed'],
             sourceType: chooseIndex === 0 ? ['album'] : ['camera'],
             success: (res) => {
-                this.msgManager.sendMsg({type: IMOperator.ImageType, content: res.tempFilePaths[0]})
+                //关闭更多视图
+                this.$invoke('chatInput', 'closeExtraView');
+                //等待socket重连
+                setTimeout(()=>{
+                    this.msgManager.sendMsg({type: IMOperator.ImageType, content: res.tempFilePaths[0]})
+                },500)           
             }
         });
       },

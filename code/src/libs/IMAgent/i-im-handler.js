@@ -23,14 +23,14 @@ export default class IIMHandler {
 
     /**
      * 发送消息
-     * @param content 需要发送的消息，是一个对象，如{type:'text',content:'abc'}
+     * @param msgObj 需要发送的消息，是一个对象，如{type:'text',content:'abc'}
      */
-    sendMsg({ content }) {
+    sendMsg({ msgObj }) {
         return new Promise((resolve, reject) => {
             if (this._isLogin) {
-                return this._sendMsgImp({ content, success: resolve, fail: reject });
+                return this._sendMsgImp({ msgObj, success: resolve, fail: reject });
             } else {
-                this._msgQueue.push({ content, resolve, reject });
+                this._msgQueue.push({ msgObj, resolve, reject });
             }
         });
     }
@@ -47,7 +47,7 @@ export default class IIMHandler {
         // 作为抽象函数
     }
 
-    _sendMsgImp({ content, success, fail }) {
+    _sendMsgImp({ msgObj, success, fail }) {
         // 作为抽象函数
     }
 }

@@ -26,7 +26,7 @@ export default class VoiceManager extends FileManager {
             if (isUpdateView) {
                 that.data.chatItems.forEach(item => {
                     if (IMOperator.VoiceType === item.type) {
-                        item.isPlaying = false
+                        item.isPlaying = 'false'
                     }
                 });
                 that.setData({
@@ -47,7 +47,7 @@ export default class VoiceManager extends FileManager {
 
     async _playVoice({ dataset }) {
         let data = this._page.data;
-        if (dataset.voicePath === data.latestPlayVoicePath && data.chatItems[dataset.index].isPlaying) {
+        if (dataset.voicePath === data.latestPlayVoicePath && data.chatItems[dataset.index].isPlaying == 'false') {
             this.stopAllVoicePlay();
         } else {
             this._startPlayVoice(dataset);
@@ -94,11 +94,11 @@ export default class VoiceManager extends FileManager {
         const that = this._page,
             { latestPlayVoicePath, chatItems } = that.data,
             currentPlayItem = chatItems[dataset.index]; //本次要播放的语音消息
-        currentPlayItem.isPlaying = true;
+        currentPlayItem.isPlaying = 'true';
         if (latestPlayVoicePath && latestPlayVoicePath !== currentPlayItem.content) { //如果重复点击同一个，则不将该isPlaying置为false
             for (let item of chatItems) {
                 if (IMOperator.VoiceType === item.type && latestPlayVoicePath === item.content) {
-                    item.isPlaying = false;
+                    item.isPlaying = 'false';
                     break;
                 }
             }

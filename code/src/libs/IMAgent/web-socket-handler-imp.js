@@ -1,5 +1,6 @@
 import IIMHandler from "./i-im-handler";
-
+import http from '../../utils/Base';
+import api from '../../utils/API';
 export default class WebSocketHandlerImp extends IIMHandler {
     constructor() {
         super();
@@ -30,11 +31,12 @@ export default class WebSocketHandlerImp extends IIMHandler {
         });
     }
 
-    _sendMsgImp({ content, success, fail }) {
+    _sendMsgImp({ msgObj, success, fail }) {
+        let data = `${msgObj.content},${msgObj.myId},${msgObj.friendId},${msgObj.headUrl},${msgObj.isMy},${msgObj.isPlaying},${msgObj.msgId},${msgObj.sendStatus},${msgObj.showTime},${msgObj.time},${msgObj.timestamp},${msgObj.type},${msgObj.voiceDuration},${msgObj.myName}`;
         wx.sendSocketMessage({
-            data: JSON.stringify(content),
+            data: data,
             success: () => {
-                success && success({ content });
+                success && success({ msgObj });
             },
             fail: (res) => {
                 fail && fail(res);
@@ -72,39 +74,34 @@ export default class WebSocketHandlerImp extends IIMHandler {
 
     /**
      * webSocket是在这里接收消息的
-     * 在socket连接成功时，服务器会返回给客户端推送一条消息类型为login的信息，
-     * 在接收到login消息后客户端将用户信息发送给服务端
-     * 在login信息接收前发送的所有消息，都会被推到msgQueue队列中，
-     * 在登录成功后会自动重新发送。
-     * 这里我进行了事件的分发，接收到非login类型的消息，会回调监听函数。
+     * 在这个函数里做消息的分发
+     * 并调用监听回调函数
      * @private
      */
     _onSocketMessage() {
         wx.onSocketMessage((res) => {
-            let msg = JSON.parse(res.data);
-            console.log('socket receive msg:', msg);
-            if ('login' === msg.type) {
-                //服务端返回连接成功
-                this._isLogin = true;
-                this._sendMsgImp({
-                    content: {...this._userInfo },
-                });
-                // this._app.globalData.userInfo = msg.userInfo;
-                // this._app.globalData.friendsId = msg.friendsId;
-                // if (this._msgQueue.length) {
-                //     let temp;
-                //     while (this._isLogin && !!(temp = this._msgQueue.shift())) {
-                //         this._sendMsgImp({
-                //             content: {...temp.content, userId: msg.userInfo.userId },
-                //             success: temp.resolve,
-                //             fail: temp.reject
-                //         });
-                //     }
-                // }
-            } else {
-                this._receiveListener && this._receiveListener(msg);
+            var data = JSON.parse(res.data);
+            let msg = new Object();
+            console.log('socket receive msg:', data);
+            switch (data.type) {
+                case 'init':
+                    this._isLogin = true;
+                    msg['client_id'] = data.client_id;
+                    //收到服务器连接socket成功返回的消息，绑定socket凭证
+                    http.post(api.SocketBind, {
+                        client_id: msg.client_id,
+                        user_id: wx.getStorageSync('userInfoInServer').id
+                    }, false, false).then((res) => {
+                        console.log('socket绑定成功');
+                    })
+                    break;
+                case '@heart@':
+                    break;
+                default:
+                    msg = data.message;
+                    this._receiveListener && this._receiveListener(msg);
+                    break;
             }
         })
     }
-
 }

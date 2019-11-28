@@ -22,7 +22,8 @@
                 class="chat-input-style" style="margin-left:{{showVoicePart?0:16}}rpx;"
                 maxlength="500" confirm-type="send" value="{{textMessage}}" bindconfirm="_chatInput_send_text_message" bindfocus="_chatInput_bind_focus_event" bindblur="_chatInput_bind_blur_event" bindinput="_chatInput_getValue_event"/>
             <view hover-class="press-style-opacity">
-                <view wx:if="{{inputType==='text'}}" class="chat-input-send-button-style" bindtap="_chatInput_send_text_message02">发送</view>
+                <view wx:if="{{inputFoucs}}" class="chat-input-send-button-style" 
+                style="{{textMessage.length!=0?'background-color: mediumseagreen;':'background-color: #dfdfdf;'}}" bindtap="_chatInput_send_text_message02">发送</view>
                 <image wx:else class="extra-btn-style"
                     src="../image/chat/extra.png" bindtap="_chatInput_extra_click_event" />
             </view>
@@ -102,11 +103,12 @@ export default class ChatInput extends wepy.component{
                 description: '拍摄'
             }, {
                 picName: 'close_chat',
-                description: '自定义功能'
+                description: '更多功能'
             }]
         },
         inputStatus: 'text',
-        inputValueEventTemp: ''
+        inputValueEventTemp: '',
+        inputFoucs:false
     }
 
     onLoad (){
@@ -131,7 +133,7 @@ export default class ChatInput extends wepy.component{
         clearInterval(this.timer);
     }
     /**
-     * 使用高版本处理语音输入，监听录音输入事件
+     * 使用高版本处理语音输入，监听录音开始事件
      */
     _dealVoiceLongClickEventWithHighVersion() {
         this.recorderManager.onStart(() => {
@@ -187,6 +189,8 @@ export default class ChatInput extends wepy.component{
         this.voiceObj['moveToCancel']              = false,   
         this.voiceObj['voicePartPositionToLeft']   = (windowWidth - width) / 2,
         this.voiceObj['voicePartPositionToBottom'] = (windowHeight - width / 2.4) / 2;
+        this.voiceObj['showCancelSendVoicePart']   = false;
+        this.voiceObj['timeDownNum']               = 60;   
     }
 
     /**
@@ -284,6 +288,8 @@ export default class ChatInput extends wepy.component{
      */
     closeExtraView() {
         this.extraObj['chatInputShowExtra'] = false;
+        this.$apply();
+        this.triggerEvent(EVENT.EXTRA_CLICK, { isShow:false });
     }
     methods = {
         /**
@@ -396,11 +402,11 @@ export default class ChatInput extends wepy.component{
          * input组件取得焦点
          */
         _chatInput_bind_focus_event() {
-            this.inputType = 'text';
+            this.inputFoucs = true;
             this.$apply();
         },
         /**
-         * input自带发送按钮事件
+         * input键盘发送按钮事件
          */
         _chatInput_send_text_message(e) {         
             this.triggerEvent(EVENT.SEND_MESSAGE, { value: e.detail.value });
@@ -415,29 +421,32 @@ export default class ChatInput extends wepy.component{
             setTimeout(() => {
                 if (!this.inputValueEventTemp) {
                     this.inputValueEventTemp = '';
-                    this.inputType = 'none';
+                    this.inputFoucs = false;
                 }
                 this.extraObj['chatInputShowExtra'] = false;
                 this.$apply();
             });
         },
+        /**
+         * input发送按钮事件
+         */
         _chatInput_send_text_message02() {
-            console.log('222222222222');
+            if(this.textMessage.length==0){
+                return;
+            }
             if (!!this.inputValueEventTemp) {
                 this.triggerEvent(EVENT.SEND_MESSAGE, { value: this.inputValueEventTemp });
                 this.inputValueEventTemp = '';
             }
             this.textMessage = '';
-            this.setData({
-                textMessage: '',
-                'inputType': 'none'
-            })
+            this.inputFoucs = false;
             this.$apply();
         },
         /**
          * input输入事件
          */
         _chatInput_getValue_event(e) {
+            this.inputValueEventTemp = e.detail.value;
             this.textMessage = e.detail.value;
             this.$apply();
         },
@@ -451,6 +460,7 @@ export default class ChatInput extends wepy.component{
     }
     watch = {
         _startTimeDown (startTimeDown,old) {
+            console.log(startTimeDown)
             this._startTimeDown = this.startTimeDown && (this.startTimeDown < MAX_VOICE_TIME )
             && (this.startTimeDown > 0 ? this.startTimeDown : START_TIME_DOWN);
             this.$apply();
@@ -476,7 +486,7 @@ export default class ChatInput extends wepy.component{
     width: 100%;
     align-items: center;
     justify-content: space-between;
-    height:100rpx;
+    height:50px;
 }
 
 .extra-btn-style{
@@ -551,7 +561,6 @@ export default class ChatInput extends wepy.component{
     text-align: center;
     margin: 0 10rpx;
     border-radius: 10rpx;
-    background-color: mediumseagreen;
     color: white;
 }
 
@@ -571,8 +580,8 @@ export default class ChatInput extends wepy.component{
 
 .extra-super{
     display: flex;
-    padding-top: 25rpx;
-    height: 234rpx;
+    padding-top: 10px;
+    height: 100px;
     width: 100%;
     background-color: white
 }

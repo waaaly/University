@@ -69,21 +69,27 @@
               <view class="i-say">我：{{reply.iSay}}</view> 
             </view>
         </scroll-view>
-        <view wx:if="{{replyInputShow}}" class="reply-bottom" style="bottom:{{inputBottomH}}px">
+        <view wx:if="{{replyInputShow}}" wx:for-index="replyIndex" class="reply-bottom" style="bottom:{{inputBottomH}}px">
             <input class="input"  placeholder="回复{{replyTo}}"  bindinput="replyInput" value="{{replyText}}"
-              focus="true" maxlength='-1' cursor-spacing='10'  bindfocus="replyInputFocus" bindblur="replyInputBlur"/>
-            <view catchtap="sendComment" class="{{replyText.length==0?'send-off':'send-on'}}" >评论</view>
+              focus="true" maxlength='-1' cursor-spacing='10'  bindfocus="replyInputFocus" bindblur="replyInputBlur"/> 
+            <view catchtap="sendReply" class="{{replyText.length==0?'send-off':'send-on'}}" >回复</view>
         </view>
 
         <scroll-view  scroll-y="true" class="chat" style="height:{{scrollH}}px;transform:translateX({{x2}}px);" >
             <view class="chat-record" wx:for="{{conversations}}" wx:for-item="chat" bindtap="goChat({{chat}})" bindlongpress="delete" >
-              <image class="avatar" src="{{chat.friendHeadUrl}}"/>
+              <image class="avatar" src="{{chat.avatar}}"/>
               <view class="name-cnt">
-                <view class="name">{{chat.friendName}}</view>
-                <view class="chat-cnt">{{chat.content}}</view>
+                <view class="name">{{chat.sender_name}}</view>
+                <block wx:if="{{chat.type=='text'}}">
+                  <view class="chat-cnt">{{chat.content}}</view>
+                </block>
+                <block wx:else>
+                  <view wx:if="{{chat.type=='image'}}" class="chat-cnt">[图片]</view>
+                  <view wx:if="{{chat.type=='voice'}}" class="chat-cnt">[语音]</view>
+                </block>
               </view>
-              <view class="chat-time">{{chat.timeStr}}</view>
-              <view wx:if="{{chat.unread != 0}}" class="dian_show">{{chat.unread}}</view>
+              <view class="chat-time">{{chat.time}}</view>
+              <!-- <view wx:if="{{chat.unReadNum != 0}}" class="unread-dot">{{chat.unReadNum}}</view> -->
             </view>
         </scroll-view>
 
@@ -146,9 +152,10 @@
 
 
     onLoad(option) {
+      
+    
       wx.getSystemInfo({
         success:(res=>{
-          console.log(res)
           this.x0 = -(res.screenWidth+1);
           this.x2 = res.screenWidth+1;
           this.screenW = res.screenWidth+1;
@@ -159,62 +166,73 @@
 
       //获取可见标签数组
       http.get(api.ArticleTab,{
-				user_id:wx.getStorageSync('userInfoInServer')?
-				wx.getStorageSync('userInfoInServer').id:'',
-		  }).then(res=>{
-        this.enableViewList = res.enableViewList;
-        this.enableViewList[0].value = '全部可见';
+          user_id:wx.getStorageSync('userInfoInServer')?
+          wx.getStorageSync('userInfoInServer').id:'',
+        }).then(res=>{
+          this.enableViewList = res.enableViewList;
+          this.enableViewList[0].value = '全部可见';
       })
 
        //获取回复列表
       http.get(api.ReplyList,{
-				user_id:80,
-				//wx.getStorageSync('userInfoInServer').id:'',
-		  }).then(res=>{
-        console.log(res);
-        for(let item of res){
-          this.replyList.push(item.replyList);
-        }
-        this.$apply();
+          user_id:wx.getStorageSync('userInfoInServer').id,
+        }).then(res=>{
+          console.log(res);
+          for(let item of res){
+            this.replyList.push(item.replyList);
+          }
+          this.$apply();
       })
 
       //获取历史贴
       http.get(api.ArticleHis,{
-				user_id:79,
-				//wx.getStorageSync('userInfoInServer').id:'',
-		  }).then(res=>{
-        console.log(res);
-        for(let item of res){
-          this.postList.push(item.postList);
-        }
-      })
-
-      
+          user_id:wx.getStorageSync('userInfoInServer').id,
+        }).then(res=>{
+          console.log(res);
+          for(let item of res){
+            this.postList.push(item.postList);
+          }
+      })      
     }
 
-    async onShow(){
-      //设置监听会话列表
+    onShow(){
+       //获取会话列表
+      http.get(api.MessageList,{
+          user_id:wx.getStorageSync('userInfoInServer').id,
+        }).then(res=>{
+          console.log(res);
+          this.conversations = res;
+      })
+      //设置监听会话列表更新
       this.$parent.getIMHandler().setOnReceiveMessageListener({
-            listener: (msg) => {
-                console.log('会话列表', msg);
-                if(msg.type === 'get-conversations'){
-                  this.conversations = msg.conversations.map(item => this.getConversationsItem(item));
-                  this.$apply();
-                }
+          listener: (msg) => {              
+            var isNew = true;
+            for(let item of this.conversations){
+              if(item.sender_id == msg.friendId){
+                console.log('更新会话', msg);
+                item['time'] = msg.time;
+                item['avatar'] = msg.headUrl;
+                isNew = false;
+                this.$apply();
+                return;
+              }
             }
-        });
-        try {
-            await this.$parent.getIMHandler().sendMsg({
-                content: {
-                    type: 'get-conversations',
-                    userId: wx.getStorageSync('userInfoInServer').id,
-                }
-            });
-            console.log('获取会话列表消息发送成功');
-        } catch (e) {
-            console.log('获取会话列表失败', e);
-        }
-    } 
+
+            if(isNew){
+              console.log('插入新会话', msg);
+              var chatItem = {
+                sender_id: msg.friendId,
+                sender_name: msg.friendName,
+                content: msg.content,
+                time: msg.time,
+                avatar: msg.headUrl,
+              }             
+              this.conversations.unshift(chatItem);
+              this.$apply();
+            }                                   
+          }
+      })
+    }  
     /**
      * 切换页面
      */
@@ -248,9 +266,9 @@
       },
       //帖子详情页
       goDetail(posting){
-          console.log(posting);
+        console.log(posting)
           wx.navigateTo({
-              url: './postingDetail',
+              url: `./postingDetail?posting_id=${posting.articleId}`,
           })
       },
       //预览图片
@@ -264,11 +282,18 @@
       changeCurPost(postIndex){
         this.curPostIndex = postIndex;
       },
+      //改变点赞
       changeILike(postIndex,isLike){
-        this.postList[postIndex].iLike = isLike?0:1;
-        this.postList[postIndex].likeNum = isLike?
-        this.postList[postIndex].likeNum-1:
-        this.postList[postIndex].likeNum+1;
+        http.post(api.ArticleLike,{
+            user_id:wx.getStorageSync("userInfoInServer").id,
+            article_id:this.postList[postIndex].articleId,
+        },false,false).then(res=>{
+            this.postList[postIndex].iLike = res.state?1:0;
+            this.postList[postIndex].likeNum = res.state?
+            this.postList[postIndex].likeNum+1:
+            this.postList[postIndex].likeNum-1;
+            this.$apply();
+        })   
       },
       //删除帖子
       delePost(postIndex){
@@ -277,10 +302,13 @@
           content:'您确定将当前帖子删除吗？',
           success:(res=>{
             if(res.confirm){
-              this.postList.splice(postIndex,1);
-              wx.showToast({title:"删除成功！"});
-              this.curPostIndex = null;
-              this.$apply();
+              http.post(api.ArticleDelete,{id:this.postList[postIndex].articleId},true).then(res=>{
+                console.log(res);
+                this.postList.splice(postIndex,1);
+                wx.showToast({title:"删除成功！"});
+                this.curPostIndex = null;
+                this.$apply();
+              })      
             }else{
               this.curPostIndex = null;
               this.$apply();
@@ -310,12 +338,12 @@
       },
       //回复框取得焦点
       replyInputFocus(e){
-        console.log(e);
         this.bottomTabShow = false;
         this.$apply();
       },
       //回复框失去焦点
       replyInputBlur(e){
+        this.replyInputShow = false; 
         this.inputBottomH = this.tabH + 5;
         this.bottomTabShow = true;
         this.$apply();  
@@ -325,9 +353,33 @@
         this.replyText = e.detail.value;
         this.$apply();
       },
-
+      //快速回复
+      sendReply(){  
+        http.post(api.ArticleComment,{
+            parent_id:              this.replyList[this.curReplyIndex].parentId,//回复
+            be_reply_comment_id:    this.replyList[this.curReplyIndex].commentId,
+            article_id:             this.replyList[this.curReplyIndex].articleId,//帖子id
+            article_author_uid:     this.replyList[this.curReplyIndex].articleAuthorUid,//帖子作者id
+            replyer_user_id:        wx.getStorageSync('userInfoInServer').id,   //回复者id       
+            replyer_user_name:      wx.getStorageSync('userInfoInServer').name,//回复者名字
+            be_replyer_user_id:     this.replyList[this.curReplyIndex].userInfo.user_id,//被回复者id
+            be_replyer_user_name:   this.replyList[this.curReplyIndex].userInfo.name,  //被回复者名字                    
+            reply_to:               this.replyList[this.curReplyIndex].userInfo.name,//是否显示回复者的名字 
+            content:                this.replyText,
+        },true,false).then(res=>{
+            console.log(res)
+            if(res.code==200){
+                wx.showToast({title:'回复成功！'});
+            }else{
+                wx.showToast({title:res.msg});
+            }
+        })
+      },
       //前往聊天页
       goChat(chat){
+        console.log(chat)
+        //不需要content字段
+        delete chat.content;
         wx.navigateTo({
             url: `./IM/chat?friend=${JSON.stringify(chat)}`
         });
@@ -355,19 +407,17 @@
     }
     watch={
       async curTab(newTab,old){
-        if(newTab == 2){
-          try {
-            await this.$parent.getIMHandler().sendMsg({
-                content: {
-                    type: 'get-conversations',
-                    userId: wx.getStorageSync('userInfoInServer').id,
-                }
-            });
-            console.log('获取会话列表消息发送成功');
-          } catch (e) {
-              console.log('获取会话列表失败', e);
-          }
+        let title = '';
+        if(newTab==0){
+          title= '我的历史贴';
+        }else if(newTab==1){
+          title= '回复我的';
+        }else if(newTab==2){
+          title= '纸条消息';
         }
+        wx.setNavigationBarTitle({
+          title: title, 
+        })
       }
     }
        
@@ -473,7 +523,7 @@
             height: 50px;
             align-items: center;
             justify-content: space-between;
-            top: -10px;
+            top: -20px;
             border:1px solid #eee;
             .tips-item{
               color:#999;
@@ -696,13 +746,14 @@
   right:0rpx;
   background-color:#f8f8f8;
   display: flex;
-  padding: 10rpx 80rpx;
+  padding: 10rpx 0rpx;
   border-top:1rpx solid #ddd;
   align-items: center;
   justify-content: space-between;
   font-size: 24rpx;
   .item{
     display: flex;
+    flex: 1;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -719,7 +770,7 @@
     }
   }
 }
-.dian_show {
+.unread-dot {
   float: right;
   width: 16px;
   height: 16px;
@@ -727,6 +778,7 @@
   border-radius: 50%;
   margin-top: -35px;
   font-size:10rpx;
+  color:#fff;
 }
 
 

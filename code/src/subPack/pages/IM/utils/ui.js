@@ -12,7 +12,7 @@ export default class UI {
      */
     updateViewWhenReceive(msg) {
         this._page.data.chatItems.push(msg);
-        this._page.data.chatItems = this._page.data.chatItems.sort(UI._sortMsgListByTimestamp);
+        // this._page.data.chatItems = this._page.data.chatItems.sort(UI._sortMsgListByTimestamp);
         this._page.data.scrollTopVal = this._page.data.chatItems.length * 999;
         this._page.$apply();
     }
@@ -35,9 +35,9 @@ export default class UI {
      */
     updateDataWhenStartSending(sendMsg, addToArr = true, needScroll = true) {
         this._page.$invoke('chatInput', 'closeExtraView');
-        // this._page.chatInput.closeExtraView();
         sendMsg.sendStatus = 'sending';
         addToArr && this._page.chatItems.push(sendMsg);
+        console.log('设置消息发送状态为发送中:', sendMsg);
         this._page.data.textMessage = '';
         this._page.data.chatItems = this._page.chatItems;
         needScroll && (this._page.data.scrollTopVal = this._page.data.chatItems.length * 999);
@@ -50,7 +50,6 @@ export default class UI {
      * @param itemIndex
      */
     updateViewWhenSendSuccess(sendMsg, itemIndex) {
-            console.log('发送成功', sendMsg);
             let item = this._page.data.chatItems[itemIndex];
             item.timestamp = sendMsg.timestamp;
             this.updateSendStatusView('success', itemIndex);

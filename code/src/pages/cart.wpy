@@ -450,7 +450,14 @@ export default class Cart extends wepy.page{
     checkGoodTotal:0,//购物车已勾选的总价格
   }
   onLoad(e){
-     
+    /**
+     * 用户非正常打开小程序，分享，扫码进入，为保证使用地址功能
+     * 手动插入缓存
+     */
+     if(!wx.getStorageSync('userChooseArea') || !wx.getStorageSync('userArea')){
+         wx.setStorageSync('userChooseArea',  {id:1,area_name:"智趣社区"})
+         wx.setStorageSync('userArea',  {address_name:"未知",school_id:null,school_name:"未知"})
+     }
   }
   onShow(e){
     

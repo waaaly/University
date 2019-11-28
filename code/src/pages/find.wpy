@@ -1,8 +1,8 @@
 
 
 <template>
-    <view wx:if="{{init}}">
-        <swiper style="height:220px;background-color:#fff;" 
+    <view wx:if="{{init}}" >
+        <swiper style="height:200px;background-color:#fff;" 
               indicator-dots="{{true}}" 
               autoplay="{{true}}" 
               interval="{{3000}}"  
@@ -11,23 +11,24 @@
               >
             <block wx:for="{{swiperImg}}" wx:key="key">
                 <swiper-item>
-                    <image src="{{imageUrl+item}}" style="width:100%;" mode="widthFix"  />
+                    <image src="{{item}}" style="width:100%;" mode="widthFix"  />
                 </swiper-item>
             </block>
         </swiper>
-        <view class="enable-view">
-            <view class="item-box" style="max-height: {{enableViewH}}vh;">
+        <scroll-view scroll-y="true" class="scroll-box" style="height: {{enableViewH}}rpx;">
+            <view  class="flex-box" >
                 <block wx:for="{{enableViewList}}">
                     <view class="{{enableViewId==item.id?'item-active':'item'}}"
-                          bindtap="changeId({{item.id}})"
-                    >{{item.value}}</view>
-                </block>
-            </view>
-            <view class="icon-box" bindtap="changeHight">
-                <image wx:if="{{enableViewH==30}}" class="icon-up" src="{{toRightIcon}}"/>
-                <image wx:else class="icon-down" src="{{toRightIcon}}"/>
-            </view>
+                        bindtap="changeId({{item.id}})">{{item.value}}</view>
+                </block>             
+            </view>      
+        </scroll-view>
+
+        <view class="icon-box" bindtap="changeHight">
+            <image wx:if="{{enableViewH==240}}" class="icon-up" src="{{toRightIcon}}"/>
+            <image wx:else class="icon-down" src="{{toRightIcon}}"/>
         </view>
+
         <view class="posting-box"  wx:if="{{postingList.length!=0}}">
             <block wx:for="{{postingList}}">
                 <view class="posting" bindtap="goDetail({{item}})" >
@@ -71,6 +72,9 @@
                 </view>
             </block>
         </view>
+        <view class='no-posting' wx:else>
+            <image src='https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/noTuan.png' mode='aspectFit'/>
+        </view>
         <menu></menu> 
     </view>
 </template>
@@ -96,13 +100,14 @@ export default class find extends wepy.page {
         imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
         toRightIcon:'http://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/xiangyou.png',
         swiperImg: [
-            'images/24cb32843f404d7682e0830632fb2e7e.png',
-            'images/bc2d7f9d6f0a39e315700e1b959b32c7.png',
-            'images/4cf9526786add9b8e1b19d5c7042e649.png',
-            'images/80c3f854526ee74e55121fe8af463684.jpg'
+            "https://i0.hdslb.com/bfs/archive/7b919fed5884726fcc3b3b1ae3de3d12423ab82b.jpg@1100w_484h_1c_100q.jpg",
+            'https://i0.hdslb.com/bfs/sycp/creative_img/201911/a9ff04e2f70a2c307f12c47cb6811fee.jpg@1100w_484h_1c_100q.jpg',
+            'https://i0.hdslb.com/bfs/archive/741462a49e9e686ca14f622290c1172711d7c13f.jpg@1100w_484h_1c_100q.jpg',
+            'https://i0.hdslb.com/bfs/archive/dc70998dde9e3e29524a53ff11e6787ec23d42a6.jpg@1100w_484h_1c_100q.jpg',
+            'https://i0.hdslb.com/bfs/archive/319618d9ec19ebd7c5d94e47efc038b0d9a5ba10.jpg@1100w_484h_1c_100q.jpg',
         ],
         imgHeight:0,//帖子详情图片高度
-        enableViewH:14,//可见标签高度
+        enableViewH:150,//可见标签高度
         enableViewId:0,//当前可见标签id
         enableViewList:[],//可见区域列表
         postingList:[],//帖子列表
@@ -135,37 +140,41 @@ export default class find extends wepy.page {
     //上拉加载
     onReachBottom(){
         //获取帖子
-        http.get(api.ArticleList,{},true).then(res=>{
+        http.get(api.ArticleList,{tabs_id:this.enableViewId},true).then(res=>{
             if(res.length==this.postingList.length){
                 wx.showToast({title:'没有更多啦～',icon:'none'})
                 setTimeout(()=>{
                     return;
                 },500)           
+            }else{
+                this.postingList = res;
+                this.$apply();
             }
-            this.postingList = res;
-            this.$apply();
         })
     }
 
     methods = {
         //前往详情页
         goDetail(posting){
-            // data-item="{{item}}"
-            // var posting = e.currentTarget.dataset.item;
-            console.log(posting);
             wx.navigateTo({
                 url: `../subPack/pages/postingDetail?posting_id=${posting.articleId}`,
             })
         },
         //改变可见便签高度
         changeHight(){
-            this.enableViewH = this.enableViewH==14?30:14;
+            this.enableViewH = this.enableViewH==150?240:150;
             this.$apply();
         },
         //改变可见标签id
         changeId(id){
             this.enableViewId = id;
-            this.$apply();
+            http.get(api.ArticleList,{tabs_id:id},true).then(res=>{
+                if(res.length==0){
+                    wx.showToast({icon:'none',title:'暂无相关帖子信息'})
+                }
+                this.postingList = res;
+                this.$apply();
+            })
         },
         //预览图片
         previewImage (imgList,curImg) {
@@ -176,12 +185,18 @@ export default class find extends wepy.page {
         },
         //改变点赞
         changeLike(posting,index){
-            console.log(index);
-            this.postingList[index].likeNum = posting.iLike?
-            this.postingList[index].likeNum-1: this.postingList[index].likeNum+1;
-            this.postingList[index].iLike = posting.iLike?0:1;
-            this.$apply();
-        }
+            http.post(api.ArticleLike,{
+                user_id:wx.getStorageSync("userInfoInServer").id,
+                article_id:this.postingList[index].articleId,
+            },false,false).then(res=>{
+                console.log(res)
+                this.postingList[index].likeNum = res.state?
+                this.postingList[index].likeNum+1: this.postingList[index].likeNum-1;
+                this.postingList[index].iLike = res.state?1:0;
+                this.$apply();
+            })
+        },
+
     }
     computed = {
 
@@ -192,16 +207,17 @@ export default class find extends wepy.page {
 </script>
 <style lang="less">
 page{
-    background-color: #e0e0e0;
+    background-color: #eee;
 }
-.enable-view{
-    display: flex;
-    flex-direction: column;
+
+
+.scroll-box{  
     padding: 10rpx;
     background-color: #fff;
-    .item-box{
+    overflow: hidden;
+    position: relative;
+    .flex-box{
         display: flex;
-        // justify-content: space-around;
         flex-wrap: wrap;
         overflow: hidden;
         .item{
@@ -223,22 +239,24 @@ page{
             background-color: #fefefe;
             border-radius:26rpx;
         }
+    }      
+}
+
+.icon-box{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+
+    .icon-down{
+        width: 40rpx;
+        height: 40rpx;
+        transform: rotate(90deg);
     }
-    .icon-box{
-        margin-top:20rpx;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        .icon-down{
-            width: 40rpx;
-            height: 40rpx;
-            transform: rotate(90deg);
-        }
-        .icon-up{
-            width: 40rpx;
-            height: 40rpx;
-            transform: rotate(-90deg);
-        }
+    .icon-up{
+        width: 40rpx;
+        height: 40rpx;
+        transform: rotate(-90deg);
     }
 }
 
@@ -324,5 +342,16 @@ page{
     padding:20rpx;
     display: flex;
     flex-direction: column;
+}
+
+.no-posting{
+    margin-top: 10rpx;
+    font-size: 26rpx;
+    color: #999;
+    background-color: #fff;
+    padding-top: 10rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 </style>
