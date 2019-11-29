@@ -47,14 +47,14 @@
     <swiper-item>
       <view wx:if="{{cardList==''}}" style="justify-content:center;margin-top:30rpx">暂无卡卷可兑换~</view>
         <view wx:else>
-          <view class="card" wx:for="{{cardList}}" wx:for-item="row" wx:for-index="index">
+          <view class="card" wx:for="{{cardList}}" wx:for-item="item" wx:for-index="index">
                 <view class="content">
                   <view class="left">
                     <view class="title">
-                      {{row.title}}
+                      {{item.name}}
                     </view>
                     <view class="time">
-                      {{row.timeStart}} ~ {{row.timeEnd}}
+                      {{item.use_start_date}} ~ {{item.use_end_date}}
                     </view>
                     <view class="gap-top"></view>
                     <view class="gap-bottom"></view>
@@ -62,12 +62,12 @@
                   <view class="right">
                     <view class="ticket">
                       <view class="num">
-                        {{row.num}}
+                        {{item.type_money}}
                       </view>
                       <view class="unit">元</view>
                     </view>
                     <view class="criteria">
-                      {{row.criteria}}
+                      {{item.min_amount}}
                     </view>
                     <view class="use" bindtap="exChange" data-index="{{index}}">兑换</view>
                   </view>
@@ -104,7 +104,12 @@
                   <view class="criteria">
                     {{row.criteria}}
                   </view>
-                  <navigator class="use" url="/pages/index" open-type="switchTab">去使用</navigator>
+                  <view wx:if="{{isUse==1}}">
+                    <view class="use" bindtap="useCoupon">使用</view>
+                  </view>
+                  <view wx:else>
+                    <navigator class="use" url="/pages/index" open-type="switchTab">去使用</navigator>
+                  </view>
                 </view>
               </view>
             </view>
@@ -117,6 +122,8 @@
 
 <script>
 import wepy from "wepy";
+import http from '../utils/Http';
+import api from '../utils/API'
 export default class myAsset extends wepy.page{
   data = {
     ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
@@ -125,18 +132,13 @@ export default class myAsset extends wepy.page{
     currentTab: 0,
     currentSelect: 1,
 
+    isUse: '',
     hasRule: false,
     //测试数据 卡卷列表
-    cardList:[
-      {id:1,title:"全场优惠立减2元",timeStart:"2019-11-20",timeEnd:"2020-11-20",num:"2",criteria:"满15使用"},
-      {id:2,title:"双十二优惠立减5元",timeStart:"2019-12-12",timeEnd:"2019-12-12",num:"5",criteria:"满30使用"},
-      {id:3,title:"圣诞优惠立减10元",timeStart:"2019-12-25",timeEnd:"2019-12-25",num:"10",criteria:"满50使用"},
-      {id:4,title:"元旦大出血立减20元",timeStart:"2020-01-01",timeEnd:"2020-01-01",num:"20",criteria:"满50使用"},
-      {id:5,title:"新年优惠立减10元",timeStart:"2020-01-02",timeEnd:"2020-01-31",num:"10",criteria:"满15使用"}
-    ],
+    cardList:[],
     integralList:[
-      {num:"120",cumulative:"888",consumption:"999"}
-      ],
+      {num:"8",cumulative:"8",consumption:"8"}
+    ],
   }
   
   onLoad(e){
@@ -153,6 +155,21 @@ export default class myAsset extends wepy.page{
         title:'我的资产'
       })
       that.currentTab = e.id;
+      if(e.isUse){
+        that.data.isUse = e.isUse;
+      }
+
+      //获取积分
+      http.get(api.UserPoints,{user_id:wx.getStorageSync('userInfoInServer').id}).then(res =>{
+        console.log(res);
+        that.data.integralList[index].num = res;
+      })
+
+      //获取优惠劵
+      http.get(api.CouponCenter,{}).then(res =>{
+        console.log(res)
+        that.data.cardList = res
+      })
   }
   methods = {
       // 滑动切换tab
@@ -165,7 +182,7 @@ export default class myAsset extends wepy.page{
       swichTab: function(e){
         var that = this;
         if(this.data.currentTab === e.target.dataset.current){
-          return false;
+          return false;    
         }else{
           that.currentTab = e.target.dataset.current
           that.$apply();
@@ -225,9 +242,31 @@ export default class myAsset extends wepy.page{
             that.$apply();
           }
         })
+      },
+
+      //当从订单页跳转过来使用
+      useCoupon: function(e){
+        var that = this
+        var uselist = that.cardlist[index]
+        wx.showModal({
+          title: '提示',
+          content: '确定使用卡卷',
+          success: function(res){
+            if(res.confirm){
+              wx.setStorageSync({key: 'useList',value: 'uselist'});
+              wx.navigateBack({
+              })
+            }else{
+              return false;
+            }
+          }
+        })
+        
+        
       }
   }
-  
+
+      
 
 }
 </script>
@@ -500,7 +539,6 @@ page{
     margin:10rpx 0;
   }
   .use{
-    width: 50%;
     height: 40rpx;
     display: flex;
 		flex-wrap: wrap;
