@@ -22,7 +22,7 @@
     <view class="shop-box" @tap="goShop({{shopInfo.id}})">
       <image style="width:45rpx;height:45rpx;border-radius:50%;" src="{{imageUrl + shopInfo.shop_icon}}"/>
       <text class="sm" style='flex:9;'>{{shopInfo.shop_name}}</text>
-      <view class="arrow" style='flex:1;color:#ff6b5d;'>></view>
+      <view class="arrow" style='color:#ff6b5d;'>></view>
     </view>
 
    <!--商品区域-->
@@ -64,8 +64,17 @@
       </view>
       <view class="spacing"/>
       <view class="block">
-        <view class="left tongji">商品金额</view>
-        <view><view class="right price" >应付:￥{{totalPrice}}</view></view>
+        <view class="left tongji">优惠券</view>
+        <view><view bindtap="goCoupon" class="right price" >{{coupon}}</view></view>
+      </view>
+      <view class="block">
+        <view class="left tongji">实际付款</view>
+        <view><view class="right price" >￥{{totalPrice}}</view></view>
+      </view>
+      <view class="spacing"/>
+      <view class="block">
+        <view class="left tongji">可得积分</view>
+        <view><view  class="right total_jf" >+{{integral}}</view></view>
       </view>
     </view>
     <view class="pay_box">
@@ -92,6 +101,8 @@ export default class orderCheck extends wepy.page{
       totalPrice:0.00,//該訂單的真正價格
       postscript:'',//买家留言
       init:false,//是否下单成功
+      coupon:'前往选择',//优惠券抵扣
+      integral:0,//可得积分
     }
     onLoad(e){
         //修改页面标题
@@ -112,6 +123,7 @@ export default class orderCheck extends wepy.page{
               wx.showModal({
                 title:'提示',
                 content:'您的订单已提交，请勿重复操作！',
+                showCancel:false,
                 success: function() {
                   wepy.reLaunch({
                       url: '/pages/cart'
@@ -122,6 +134,7 @@ export default class orderCheck extends wepy.page{
                 this.shopInfo = res.cartListInfo.shopInfo;
                 this.orderGoodsInfos = res.cartListInfo.cartList;
                 this.totalPrice =  res.cartListInfo.TotalPrice;
+                this.integral = parseInt(res.cartListInfo.TotalPrice);
                 this.init = true;
             }
             this.$apply();
@@ -155,6 +168,12 @@ export default class orderCheck extends wepy.page{
       goodDetail(goodId){
             wx.navigateTo({
                 url: '/pages/goodDetail?goodId=' + goodId + '&shopId='+this.shopInfo.id,
+        })
+      },
+      //前往选择优惠券
+      goCoupon(){
+        wx.navigateTo({
+            url: '/pages/my-asset?id=2&isUse=1',
         })
       }
     }
@@ -191,7 +210,7 @@ page{
 }
 
 .address .address_info .arrow {
-  color: #9a9a9a;
+  color: #ff6b5d;
 }
 
  .address .address_info .user_info {
@@ -225,8 +244,8 @@ page{
 
 .address .address_info .defult {
   font-size:35rpx;
-  color: #ea4a3a;
-  margin-bottom:80rpx;
+  color: #ff6b5d;
+  margin-bottom:100rpx;
 }
 
 .address .address_info {
@@ -265,6 +284,7 @@ color:#fff;
   align-items: center;
   padding-top:20rpx;
   padding-bottom:20rpx;
+  padding-right:30rpx;
 }
 
 .shop-box text {
@@ -348,12 +368,12 @@ color:#fff;
 }
 
 .order_info .block .price {
-  color: #ea4a3a;
+  color: #ff6b5d;
   font-size: 32rpx;
 }
 
 .order_info .block .tongji {
-  font-size: 32rpx;
+  font-size: 28rpx;
 }
 
 .order_info .block .input_box {
@@ -363,6 +383,7 @@ color:#fff;
 
 .order_info .block .total_jf {
   font-size: 32rpx;
+  color: #108ee9;
 }
 
 .list_box {
