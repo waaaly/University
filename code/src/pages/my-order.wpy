@@ -53,8 +53,9 @@ export default class myOrder extends wepy.page{
     totalNum:1,//总页数
     activeTab: 0,
     orderStatus:10,//订单状态码
-    tabs:['全部订单','待付款','待收货','已完成'],              //order_status 10-待支付 22-支付完成 32-代收货 40-订单完成) 空是全部
-                                                          //10 确认支付 取消订单 22：申请退款 32：确认收货 申请退款 40：前往评价
+    tabs:['全部订单','待付款','待收货','已完成'],
+    //order_status 10-待支付 22-支付完成 32-代收货 40-订单完成) 空是全部
+    //10 确认支付 取消订单 22：申请退款 32：确认收货 申请退款 40：前往评价              
     OrderList:[],
     stv: {
       windowWidth: 0,

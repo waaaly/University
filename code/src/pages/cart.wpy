@@ -242,8 +242,7 @@ border-bottom: none;
   display: block;
   text-align: center;
   margin-left:35rpx;
-margin-top:30rpx;
-
+  margin-top:30rpx;
 }
 
 .empty-box .goindex {
@@ -255,8 +254,6 @@ margin-top:30rpx;
   color: #fff;
   margin: 0 auto;
   font-size: 32rpx;
-  margin-top:100rpx;
-
 }
 
 .bindphone{
@@ -406,7 +403,7 @@ padding-top: 40rpx;
 
         <!--购物车空-->
         <view class='empty-box' wx:if="{{shopList.length==0}}">
-          <image src="{{StaticImgUrl+'noneCart.png'}} "
+          <image src="{{StaticImgUrl+'noCart.png'}} "
             mode='widthFix'/>
           <view class='goindex' bindtap='gotoindex'>去商城逛逛吧</view>
         </view>

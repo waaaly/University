@@ -73,7 +73,7 @@
             </block>
         </view>
         <view class='no-posting' wx:else>
-            <image src='https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/noTuan.png' mode='aspectFit'/>
+            <image src='https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/noPosting.png' mode='aspectFit'/>
         </view>
         <menu></menu> 
     </view>
@@ -129,6 +129,7 @@ export default class find extends wepy.page {
     onShow() {
         //获取帖子
         http.get(api.ArticleList,{
+            tabs_id:this.enableViewId,
             user_id:wx.getStorageSync('userInfoInServer')?
             wx.getStorageSync('userInfoInServer').id:'',
         }).then(res=>{
@@ -172,8 +173,8 @@ export default class find extends wepy.page {
                 if(res.length==0){
                     wx.showToast({icon:'none',title:'暂无相关帖子信息'})
                 }
-                this.postingList = res;
-                this.$apply();
+                this.postingList = res; 
+                this.$apply()          
             })
         },
         //预览图片

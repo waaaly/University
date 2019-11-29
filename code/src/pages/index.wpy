@@ -235,8 +235,8 @@ export default class Index extends wepy.page{
     },
     //前往商品
     goHotGood(e){
-          wx.navigateTo({
-              url: `/pages/goodDetail?goodId=${e.currentTarget.dataset.goodid}&shopId=${e.currentTarget.dataset.shopid}`,
+        wx.navigateTo({
+            url: `/pages/goodDetail?goodId=${e.currentTarget.dataset.goodid}&shopId=${e.currentTarget.dataset.shopid}`,
         })
       },
     //前往商家
