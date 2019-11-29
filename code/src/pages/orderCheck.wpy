@@ -14,7 +14,7 @@
             {{address.tabs_name}}{{address.area_name}}{{address.address}}
           </view>
         </view>
-        <view class="arrow" >></view>
+        <view style="color:#ff6b5d;" >></view>
       </view>
     </view>
 
@@ -22,7 +22,7 @@
     <view class="shop-box" @tap="goShop({{shopInfo.id}})">
       <image style="width:45rpx;height:45rpx;border-radius:50%;" src="{{imageUrl + shopInfo.shop_icon}}"/>
       <text class="sm" style='flex:9;'>{{shopInfo.shop_name}}</text>
-      <view class="arrow" style='color:#ff6b5d;'>></view>
+      <view  style='color:#ff6b5d;'>></view>
     </view>
 
    <!--商品区域-->
@@ -64,17 +64,17 @@
       </view>
       <view class="spacing"/>
       <view class="block">
-        <view class="left tongji">优惠券</view>
-        <view><view bindtap="goCoupon" class="right price" >{{coupon}}</view></view>
+        <view class="left color">优惠券</view>
+        <view><view bindtap="goCoupon" class="right coupon" >{{coupon}}<view  style='color:#ff6b5d;margin-left: 10rpx;'>></view></view></view>
       </view>
       <view class="block">
-        <view class="left tongji">实际付款</view>
+        <view class="left color">实际付款</view>
         <view><view class="right price" >￥{{totalPrice}}</view></view>
       </view>
       <view class="spacing"/>
       <view class="block">
-        <view class="left tongji">可得积分</view>
-        <view><view  class="right total_jf" >+{{integral}}</view></view>
+        <view class="left jf_color">可得积分</view>
+        <view><view  class="right total_jf" >+{{integral}}积分</view></view>
       </view>
     </view>
     <view class="pay_box">
@@ -155,9 +155,17 @@ export default class orderCheck extends wepy.page{
       },
       //向后台提交订单
       submitOrder(e){
-         wx.navigateTo({
-           url: '/pages/orderSubmit?addressId='+this.addressId+'&shopId='+this.shopId+'&postscript='+this.postscript,
-        }) 
+        http.post(api.OrderSubmit,{
+          address_id:this.addressId,
+          shop_id:this.shopId,
+          postscript:this.postscript,
+          coupon_id:0,
+          user_id:wx.getStorageSync('userInfoInServer').id}).then(res=>{
+            wx.navigateTo({
+              url: `/pages/orderSubmit?data=${JSON.stringify(res)}`,
+            })
+        })
+          
       },
       //买家留言
       bindKeyInput(e){
@@ -294,7 +302,7 @@ color:#fff;
 }
 /*商品区域 */
 .order-goods-container{
-  background-color:#fafafa;
+  background-color:#fff;
   padding:10rpx 20rpx 15rpx 25rpx;
   font-size:28rpx;
   color:#262626;
@@ -359,21 +367,28 @@ color:#fff;
 }
 
 .order_info .block .left {
+  font-size: 28rpx;
   color: #000;
 }
 
 .order_info .block .right {
   color: #9a9a9a;
   text-align: right;
+  font-size: 28rpx;
 }
 
+.order_info .block .coupon {
+  color: #ff6b5d;
+  font-size: 28rpx;
+  display: flex;
+}
 .order_info .block .price {
   color: #ff6b5d;
   font-size: 32rpx;
 }
 
-.order_info .block .tongji {
-  font-size: 28rpx;
+.order_info .block .color {
+  color: #ff6b5d;
 }
 
 .order_info .block .input_box {
@@ -381,6 +396,9 @@ color:#fff;
   margin-left: 20rpx;
 }
 
+.order_info .block .jf_color {
+  color: #108ee9;
+}
 .order_info .block .total_jf {
   font-size: 32rpx;
   color: #108ee9;

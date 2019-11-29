@@ -36,6 +36,10 @@
         }
         methods = {
           tel(phone) {
+            //用户不能给自己打电话
+            if(!this.isShopOrder){
+              return;
+            }
             wx.makePhoneCall({
               phoneNumber: phone,
             })
@@ -79,9 +83,8 @@
   </view>
 
   
-  <!--订单项目-->
+  <!--用户个人信息-->
   <view wx:if="{{isShopOrder||isUserOrder}}" class="order-item-container column">
-    <!--基本信息-->
     <view  class="order-header-container colunm">
       <view class="row-between">
         <view style="align-items: center;display: flex;">
@@ -116,22 +119,18 @@
       <view class="weui-cell__ft">{{order.order_status_text}}</view>
     </view>
   </view>
-  <!--订单项目end-->
 
   <!--商品区域-->
   <view wx:if="{{isShopOrder||isUserOrder}}" >
     <block wx:for="{{order.goodsList}}" wx:for-index="index" wx:for-item="item" wx:key="goodsId">
       <view class="order-goods-fold">    
         <view class="order-goods-container row-between">
-          <!--商品图片-->
           <image class="order-goods-image" mode="aspectFill" src="{{item.list_pic_url}}"/>
-          <!--商品说明-->
           <view class="order-goods-title-container column">
             <text>{{item.goods_name}}</text>
             <text style="font-size:24rpx;color:#666" wx:if="{{item.product_id!=0}}">商品属性：{{item.goods_specifition_name_value}}</text>
             <text style="font-size:24rpx;color:#666" wx:else>商品属性：默认属性</text>
           </view>
-          <!--商品信息-->
           <view class="order-goods-buy-container column">
             <text>￥{{item.actual_price}}</text>
             <text class="muted">x{{item.number}}</text>
@@ -143,14 +142,12 @@
   </view>
   <!--商品区域end-->
 
-  <!--汇总信息-->
+  <!--订单金额合计-->
   <view wx:if="{{isShopOrder||isUserOrder}}" class="order-footer-container row-end">
-    <!-- <text style="margin-right:20rpx;font-size:28rpx;color:#262626;">共{{4}}件商品</text> -->
     <text style="font-size:28rpx;color:#262626;">合计:</text>
     <text style="font-size:32rpx;color:#ff6200;margin-right:20rpx;">￥{{order.goods_price}}</text>
     <text style="font-size:28rpx;color:#262626;">(含运费￥{{0}})</text>
   </view>
-  <!--汇总信息end-->
   
   <!--订单详情-->
   <view class="weui-cells">
@@ -178,7 +175,7 @@
       <text class="major">￥{{order.actual_price}}</text>
     </view>
     <view class="final-box">
-      <text class="lg">实付款：</text>
+      <text class="lg major">实付款：</text>
       <text class="lg major">￥{{order.actual_price}}</text>
     </view>
   </view>
@@ -264,14 +261,7 @@
     flex-direction: column;
     justify-content:center;
 }
-.icon-lg{
-    height: 30px;
-    width:30px;
-}
-.xxl{
-    font-size: 34rpx;
-    color:#262626;
-}
+
 
 .icon{
     height: 20px;
@@ -345,6 +335,19 @@
 }
 
 .orderStatus{
-  
+  display: flex;
+  align-items: center;
+  padding-left: 10rpx;
+  border-bottom: 1rpx #eee solid;
+
+}
+.icon-lg{
+    height: 30px;
+    width:30px;
+}
+.xxl{
+    font-size: 34rpx;
+    color:#1286db;
+    margin-left:20rpx;
 }
 </style>
