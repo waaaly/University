@@ -31,11 +31,11 @@
         <view class="top">
           <view class="top-title">当前积分</view>
           <image src="{{ossUrl+'yuan.png'}}" style="width:90px;height:90px;position:absolute;top:48rpx;left:290rpx;" />
-          <view class="top-num"><text>{{item.num}}</text></view>
+          <view class="top-num"><text>{{item.user_points}}</text></view>
         </view>
         <view class="middel">
-          <view class="middel-num">{{item.cumulative}}</view>
-          <view class="middel-num">{{item.consumption}}</view>
+          <view class="middel-num">{{item.user_points}}</view>
+          <view class="middel-num">{{item.user_points}}</view>
         </view>
         <view class="bottom">
           <view class="bottom-title">累计积分</view>
@@ -67,7 +67,7 @@
                       <view class="unit">元</view>
                     </view>
                     <view class="criteria">
-                      {{item.min_amount}}
+                      满{{item.min_amount}}可用
                     </view>
                     <view class="use" bindtap="exChange" data-index="{{index}}">兑换</view>
                   </view>
@@ -77,17 +77,17 @@
     </swiper-item>
 
     <swiper-item>
-      <view wx:if="{{cardList==''}}" style="justify-content:center;margin-top:50rpx;">暂无更多卡卷~</view>
+      <view wx:if="{{couponList==''}}" style="justify-content:center;margin-top:50rpx;">暂无更多卡卷~</view>
       <view wx:else>
-        <view class="card-list" wx:for="{{cardList}}" wx:for-item="row" wx:for-index="index" bindlongpress="deleteCard" data-index="{{index}}">
+        <view class="card-list" wx:for="{{couponList}}" wx:for-item="row" wx:for-index="index" bindlongpress="deleteCard" data-index="{{index}}">
             <view class="card">
               <view class="content">
                 <view class="left">
                   <view class="title">
-                    {{row.title}}
+                    {{row.name}}
                   </view>
                   <view class="time">
-                    {{row.timeStart}} ~ {{row.timeEnd}}
+                    {{row.start_time}} ~ {{row.end_time}}
                   </view>
                   <view class="gap-top"></view>
                   <view class="gap-bottom"></view>
@@ -97,12 +97,12 @@
                 <view class="right">
                   <view class="ticket">
                     <view class="num">
-                      {{row.num}}
+                      {{row.type_money}}
                     </view>
                     <view class="unit">元</view>
                   </view>
                   <view class="criteria">
-                    {{row.criteria}}
+                    满{{row.min_amount}}可用
                   </view>
                   <view wx:if="{{isUse==1}}">
                     <view class="use" bindtap="useCoupon">使用</view>
@@ -135,10 +135,9 @@ export default class myAsset extends wepy.page{
     isUse: '',
     hasRule: false,
     //测试数据 卡卷列表
-    cardList:[],
-    integralList:[
-      {num:"8",cumulative:"8",consumption:"8"}
-    ],
+    cardList:[], //领卷中心
+    integralList:[], //我的积分
+    couponList: [], //我的卡卷
   }
   
   onLoad(e){
@@ -162,13 +161,22 @@ export default class myAsset extends wepy.page{
       //获取积分
       http.get(api.UserPoints,{user_id:wx.getStorageSync('userInfoInServer').id}).then(res =>{
         console.log(res);
-        that.data.integralList[index].num = res;
+        that.integralList = res;
+        that.$apply();
       })
 
       //获取优惠劵
       http.get(api.CouponCenter,{}).then(res =>{
         console.log(res)
-        that.data.cardList = res
+        that.cardList = res;
+        that.$apply();
+      })
+
+      //获取我的卡卷
+      http.get(api.UserCouponList,{wx:getStorageSync('userInfoServer').id}).then(res =>{
+        console.log(res)
+        that.couponList = res;
+        that.$apply();
       })
   }
   methods = {
