@@ -56,6 +56,8 @@
                     <view class="time">
                       {{row.timeStart}} ~ {{row.timeEnd}}
                     </view>
+                    <view class="gap-top"></view>
+                    <view class="gap-bottom"></view>
                   </view>
                   <view class="right">
                     <view class="ticket">
@@ -89,6 +91,8 @@
                   </view>
                   <view class="gap-top"></view>
                   <view class="gap-bottom"></view>
+                  <view class="gap-top" style="right:-210rpx;"></view>
+                  <view class="gap-bottom" style="right:-210rpx;"></view>
                 </view>
                 <view class="right">
                   <view class="ticket">
@@ -267,12 +271,15 @@ page{
 .rule-box{
   width: 100%;
   min-height: 100%;
+  display: flex;
+  flex-wrap: wrap;
 }
 .rule-title{
   color: coral;
   font-size: 32rpx;
   line-height: 1.5;
   overflow: hidden;
+  display: flex;
   padding: 0;
   height: 68rpx;
   width: 610rpx;
@@ -305,6 +312,7 @@ page{
 }
 
 .rulebtn{
+  display: flex;
   position:fixed;
   z-index: 10;
   background-color: #bbb;
@@ -337,6 +345,8 @@ page{
 .top{
   flex-direction: column;
   align-items: center;
+  display: flex;
+  width: 100%
 }
 .top-title{
   margin-top: 13rpx;
@@ -352,6 +362,7 @@ page{
 }
 .middel{
   justify-content: space-around;
+  display: flex;
 }
 .middel-num{
   font-size: 34rpx;
@@ -362,9 +373,10 @@ page{
 .bottom{
   flex-wrap: nowrap;
   position: absolute;
-  top: 295rpx;
+  top: 300rpx;
   width: 100%;
   left: 80rpx;
+  display: flex;
 }
 .bottom-title{
   width: 90%;
