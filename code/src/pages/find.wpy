@@ -142,6 +142,7 @@ export default class find extends wepy.page {
     onReachBottom(){
         //获取帖子
         http.get(api.ArticleList,{tabs_id:this.enableViewId},true).then(res=>{
+            console.log(res)
             if(res.length==this.postingList.length){
                 wx.showToast({title:'没有更多啦～',icon:'none'})
                 setTimeout(()=>{

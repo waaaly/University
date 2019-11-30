@@ -22,6 +22,7 @@
         "nodejs-websocket": "^1.7.2",
         "sass": "^1.23.7",
         "start": "^5.1.0",
+        "util": "^0.12.1",
         "wechat-mini-programs-apis": "^1.6.2",
         "wepy": "^1.7.2",
         "wepy-async-function": "^1.4.7",

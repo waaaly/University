@@ -27,15 +27,15 @@
           <view class="rule-duihuan">积分用于兑换优惠劵，100积分可换取一张</view>
         </view>
       </view>
-      <view class="integral-list" wx:for="{{integralList}}" wx:for-item="item" wx:for-index="index">
+      <view class="integral-list" >
         <view class="top">
           <view class="top-title">当前积分</view>
           <image src="{{ossUrl+'yuan.png'}}" style="width:90px;height:90px;position:absolute;top:48rpx;left:290rpx;" />
-          <view class="top-num"><text>{{item.user_points}}</text></view>
+          <view class="top-num"><text>{{integral.user_points}}</text></view>
         </view>
         <view class="middel">
-          <view class="middel-num">{{item.user_point_record}}</view>
-          <view class="middel-num">{{item.user_point_record}}</view>
+          <view class="middel-num">{{integral.user_point_record}}</view>
+          <view class="middel-num">{{integral.user_point_record}}</view>
         </view>
         <view class="bottom">
           <view class="bottom-title">累计积分</view>
@@ -132,10 +132,11 @@ export default class myAsset extends wepy.page{
     currentTab: 0,
     currentSelect: 1,
 
-    isUse: '',
+    isUse: null,
+    order_price:0,//订单金额
     hasRule: false,
     cardList:[], //领卷中心
-    integralList:[], //我的积分
+    integral:[], //我的积分
     couponList: [], //我的卡卷
   }
   
@@ -152,46 +153,70 @@ export default class myAsset extends wepy.page{
       wx.setNavigationBarTitle({
         title:'我的资产'
       })
-      that.currentTab = e.id;
+      //切换tab
+      that.UserTap(e.id);
       if(e.isUse){
         that.data.isUse = e.isUse;
       }
-
-      //获取积分
-      http.get(api.UserPoints,{user_id:wx.getStorageSync('userInfoInServer').id}).then(res =>{
-        console.log(res);
-        that.integralList = res;
-        that.$apply();
-      })
-
-      //获取优惠劵
-      http.get(api.CouponCenter,{}).then(res =>{
-        console.log(res)
-        that.cardList = res;
-        that.$apply();
-      })
-
-      //获取我的卡卷
-      http.get(api.UserCouponList,{user_id:wx.getStorageSync('userInfoInServer').id}).then(res =>{
-        console.log(res)
-        that.couponList = res;
-        that.$apply();
-      })
+      if(e.order_price){
+        that.order_price = e.order_price;
+      }
+      that.accessInterface(e.id);
+    
+  }
+  accessInterface(tab){
+    switch(tab){
+        //获取积分
+      case 0:
+          http.get(api.UserPoints,{user_id:wx.getStorageSync('userInfoInServer').id}).then(res =>{
+            console.log(res);
+            this.integral = res;
+            this.$apply();
+          })
+        break;
+      case 1:
+        //获取优惠劵
+        http.get(api.CouponCenter,{}).then(res =>{
+          console.log(res)
+          this.cardList = res;
+          this.$apply();
+        })
+        break;
+      case 2:
+        if(this.isUse){
+          //获取可用卡券
+          http.get(api.UserCouponList,{user_id:wx.getStorageSync('userInfoInServer').id,order_total_price:this.order_price}).then(res =>{
+            console.log(res)
+            this.couponList = res;
+            this.$apply();
+          })
+        }else{
+          //获取我的卡卷
+          http.get(api.UserCouponList,{user_id:wx.getStorageSync('userInfoInServer').id,}).then(res =>{
+            console.log(res)
+            that.couponList = res;
+            that.$apply();
+          })
+        }       
+        break;
+      default:break;
+    }
   }
   methods = {
       // 滑动切换tab
       bindchange: function(e){
         var that = this;
-        that.currentTab = e.detail.current;
+        that.UserTap = e.currentTab.dataset.current;
         that.$apply();
       },
       // 点击tab进行切换
       swichTab: function(e){
         var that = this;
-        if(this.data.currentTab === e.target.dataset.current){
+        if(this.data.currentTab === e.currentTarget.dataset.current){
           return false;    
         }else{
-          that.currentTab = e.target.dataset.current
+          that.currentTab = e.currentTarget.dataset.current;
+          that.accessInterface(e.currentTarget.dataset.current);
           that.$apply();
         }
       },      
@@ -212,14 +237,14 @@ export default class myAsset extends wepy.page{
           user_id: wx.getStorageSync('userInfoInServer').id,
           coupon_id: this.cardList[index].id,
         },true).then(res =>{
-          if(res.code == 402){
+          if(res.msg){
             wx.showModal({
               title: '提示',
-              content: res.message,
+              content: res.msg,
             })
           }else{
             wx.showModal({
-              title: res.msg
+              title: res.message,
             })
           }
         })
@@ -249,13 +274,13 @@ export default class myAsset extends wepy.page{
       //当从订单页跳转过来使用
       useCoupon: function(e){
         var that = this
-        var uselist = that.cardlist[index]
+        var userCoupon = that.cardlist[index]
+        wx.setStorageSync({key:'userCoupon',value:'userCoupon'})
         wx.showModal({
           title: '提示',
           content: '确定使用卡卷',
           success: function(res){
             if(res.confirm){
-              wx.setStorageSync({key: 'useList',value: 'uselist'});
               wx.navigateBack({
               })
             }else{

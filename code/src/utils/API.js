@@ -91,9 +91,13 @@ module.exports = {
     MessageDetail: ApiRootUrl + "message-detail", //获取与好友聊天记录
     MessageSend: ApiRootUrl + "message-send", //保存聊天消息
     SocketBind: ApiRootUrl + "socket-bind", //绑定socket 客户端id
+    
+    /**我的资产相关接口 **/
     UserPoints: ApiRootUrl + "user-points", //我的积分
     CouponCenter: ApiRootUrl + "coupon-center", //优惠劵中心
     UserCouponList: ApiRootUrl + "user-coupon-list", //我的卡卷
     GetCoupon: ApiRootUrl + "get-coupon", //兑换卡卷
+    ChooseCoupon:ApiRoot + "choose-coupon",//筛选可用卡券
+    
 
 }

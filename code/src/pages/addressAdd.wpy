@@ -299,17 +299,20 @@ export default class addressAdd extends wepy.page{
         },
         //获取用户名，手机，详细地址
         getInput:function (e){
-            // console.log(e.currentTarget.id);
-            // console.log(e.detail.value);
+            console.log(e.currentTarget.id);
+            console.log(e.detail.value);
             switch (parseInt(e.currentTarget.id)){
                 case 1: 
                      this.editAddress.name = e.detail.value;
+                     this.$apply();
                 break;
                 case 2:
                     this.editAddress.mobile = e.detail.value;
+                    this.$apply();
                 break;
                 case 3:
                     this.editAddress.address = e.detail.value;
+                    this.$apply();
                 break;
             }
         },
