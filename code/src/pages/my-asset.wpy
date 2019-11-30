@@ -34,8 +34,8 @@
           <view class="top-num"><text>{{item.user_points}}</text></view>
         </view>
         <view class="middel">
-          <view class="middel-num">{{item.user_points}}</view>
-          <view class="middel-num">{{item.user_points}}</view>
+          <view class="middel-num">{{item.user_point_record}}</view>
+          <view class="middel-num">{{item.user_point_record}}</view>
         </view>
         <view class="bottom">
           <view class="bottom-title">累计积分</view>
@@ -45,9 +45,9 @@
     </swiper-item>
 
     <swiper-item>
-      <view wx:if="{{cardList==''}}" style="justify-content:center;margin-top:30rpx">暂无卡卷可兑换~</view>
+      <view wx:if="{{cardList==''}}" style="justify-content:center;margin-top:30rpx;display:flex;">暂无卡卷可兑换~</view>
         <view wx:else>
-          <view class="card" wx:for="{{cardList}}" wx:for-item="item" wx:for-index="index">
+          <view class="card" wx:for="{{cardList}}" wx:for-item="item">
                 <view class="content">
                   <view class="left">
                     <view class="title">
@@ -69,7 +69,7 @@
                     <view class="criteria">
                       满{{item.min_amount}}可用
                     </view>
-                    <view class="use" bindtap="exChange" data-index="{{index}}">兑换</view>
+                    <view class="use" bindtap="exChange({{item}},{{index}})">兑换</view>
                   </view>
                 </view>
             </view>
@@ -77,7 +77,7 @@
     </swiper-item>
 
     <swiper-item>
-      <view wx:if="{{couponList==''}}" style="justify-content:center;margin-top:50rpx;">暂无更多卡卷~</view>
+      <view wx:if="{{couponList==''}}" style="justify-content:center;margin-top:50rpx;display:flex;">暂无更多卡卷~</view>
       <view wx:else>
         <view class="card-list" wx:for="{{couponList}}" wx:for-item="row" wx:for-index="index" bindlongpress="deleteCard" data-index="{{index}}">
             <view class="card">
@@ -134,7 +134,6 @@ export default class myAsset extends wepy.page{
 
     isUse: '',
     hasRule: false,
-    //测试数据 卡卷列表
     cardList:[], //领卷中心
     integralList:[], //我的积分
     couponList: [], //我的卡卷
@@ -173,7 +172,7 @@ export default class myAsset extends wepy.page{
       })
 
       //获取我的卡卷
-      http.get(api.UserCouponList,{wx:getStorageSync('userInfoServer').id}).then(res =>{
+      http.get(api.UserCouponList,{user_id:wx.getStorageSync('userInfoInServer').id}).then(res =>{
         console.log(res)
         that.couponList = res;
         that.$apply();
@@ -208,27 +207,22 @@ export default class myAsset extends wepy.page{
       },
       
       //兑换卡卷
-      exChange: function(e){
-        var that = this
-        if(that.integralList.num >= 100){
-          wx.showModal({
-            title: '提示',
-            content: '确定兑换此卡卷',
-            success: function(res){
-              if(res.confirm){
-                that.integralList.num - 100;
-                that.$apply();
-              }else{
-                return false;
-              }
-            }
-          })
-        }else{
-          wx.showModal({
-            title: '提示',
-            content: '积分不足，不能兑换'
-          })
-        }
+      exChange: function(item,index){
+        http.post(api.GetCoupon,{
+          user_id: wx.getStorageSync('userInfoInServer').id,
+          coupon_id: this.cardList[index].id,
+        },true).then(res =>{
+          if(res.code == 402){
+            wx.showModal({
+              title: '提示',
+              content: res.message,
+            })
+          }else{
+            wx.showModal({
+              title: res.msg
+            })
+          }
+        })
       },
 
       //长按删除卡卷
