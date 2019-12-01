@@ -86,7 +86,7 @@
         <view class="swiper-tab-item" data-current="0" bindtap="swichNav">商品概述</view>
     </view>
     <!-- <rich-text nodes="{{goodInfo.html}}"></rich-text> -->
-    <view > 
+    <view style="display: flex;flex-direction: column;"> 
       <image wx:for="{{goodInfo.details_pic_url}}" style="width:100%;" src="{{imageUrl + item}}" mode="widthFix"/>
     </view>
     <!-- 商品底部导航栏 -->

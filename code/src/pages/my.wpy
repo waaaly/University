@@ -228,7 +228,7 @@ export default class my extends wepy.page{
             this.$apply();
         })
     } 
-    
+
     methods = {
         //管理我的商铺
         goMyShop(e){

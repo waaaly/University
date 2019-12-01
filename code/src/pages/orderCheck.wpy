@@ -64,12 +64,12 @@
       </view>
       <view class="spacing"/>
       <view class="block">
-        <view class="left color">优惠券</view>
-        <view><view bindtap="goCoupon" class="right coupon" >{{coupon}}<view  style='color:#ff6b5d;margin-left: 10rpx;'>></view></view></view>
+        <view class="left color">订单总额</view>
+        <view><view class="right price" >￥{{totalPrice}}</view></view>
       </view>
       <view class="block">
-        <view class="left color">实际付款</view>
-        <view><view class="right price" >￥{{totalPrice}}</view></view>
+        <view class="left color">使用优惠券</view>
+        <view><view bindtap="goCoupon" class="right coupon" >{{coupon}}<view  style='color:#ff6b5d;margin-left: 10rpx;'>></view></view></view>
       </view>
       <view class="spacing"/>
       <view class="block">
@@ -101,6 +101,7 @@ export default class orderCheck extends wepy.page{
       totalPrice:0.00,//該訂單的真正價格
       postscript:'',//买家留言
       init:false,//是否下单成功
+      coupon_id:0,//优惠券id
       coupon:'前往选择',//优惠券抵扣
       integral:0,//可得积分
     }
@@ -109,36 +110,26 @@ export default class orderCheck extends wepy.page{
         wx.setNavigationBarTitle({
           title:'填写订单'
         })
-        this.addressId = e.addressId;
-        this.shopId = e.shopId;
-        this.$apply();
+        http.get(api.CartCheckout,{address_id:e.addressId,
+                  shop_id:e.shopId,
+                  user_id:wx.getStorageSync('userInfoInServer').id},true).then(res=>{
+            this.address = wx.getStorageSync('userDefaultAddress');
+            this.addressId = e.addressId;
+            this.shopId = e.shopId;
+            this.shopInfo = res.cartListInfo.shopInfo;
+            this.orderGoodsInfos = res.cartListInfo.cartList;
+            this.totalPrice =  res.cartListInfo.TotalPrice;
+            this.integral = parseInt(res.cartListInfo.TotalPrice);
+            this.init = true;  
+            this.$apply();        
+        })
     }
     onShow(e){
-        this.address = wx.getStorageSync('userDefaultAddress');
-        http.get(api.CartCheckout,{address_id:this.addressId,
-                  shop_id:this.shopId,
-                  user_id:wx.getStorageSync('userInfoInServer').id},true).then(res=>{
-            console.log(res);
-            if(res.msg){
-              wx.showModal({
-                title:'提示',
-                content:'您的订单已提交，请勿重复操作！',
-                showCancel:false,
-                success: function() {
-                  wepy.reLaunch({
-                      url: '/pages/cart'
-                    })
-                }
-              })
-            }else{
-                this.shopInfo = res.cartListInfo.shopInfo;
-                this.orderGoodsInfos = res.cartListInfo.cartList;
-                this.totalPrice =  res.cartListInfo.TotalPrice;
-                this.integral = parseInt(res.cartListInfo.TotalPrice);
-                this.init = true;
-            }
-            this.$apply();
-        })
+        if(wx.getStorageSync('useCoupon')){
+          this.coupon_id = wx.getStorageSync('useCoupon').coupon_id;
+          this.coupon = '-' + wx.getStorageSync('useCoupon').type_money;
+         
+        }
     }
     methods = {
       //修改收货地址
@@ -159,9 +150,10 @@ export default class orderCheck extends wepy.page{
           address_id:this.addressId,
           shop_id:this.shopId,
           postscript:this.postscript,
-          coupon_id:0,
+          coupon_id:this.coupon_id,
           user_id:wx.getStorageSync('userInfoInServer').id}).then(res=>{
-            wx.navigateTo({
+            wx.removeStorageSync('useCoupon');
+            wx.redirectTo({
               url: `/pages/orderSubmit?data=${JSON.stringify(res)}`,
             })
         })
@@ -174,14 +166,14 @@ export default class orderCheck extends wepy.page{
       },
       //点击商品
       goodDetail(goodId){
-            wx.navigateTo({
-                url: '/pages/goodDetail?goodId=' + goodId + '&shopId='+this.shopInfo.id,
+        wx.navigateTo({
+          url: '/pages/goodDetail?goodId=' + goodId + '&shopId='+this.shopInfo.id,
         })
       },
       //前往选择优惠券
       goCoupon(){
         wx.navigateTo({
-            url: '/pages/my-asset?id=2&isUse=1',
+            url: `/pages/my-asset?id=2&isUse=1&order_price=${this.totalPrice}`,
         })
       }
     }

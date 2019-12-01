@@ -75,7 +75,9 @@
         <view class='no-posting' wx:else>
             <image src='https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/noPosting.png' mode='aspectFit'/>
         </view>
-        <menu></menu> 
+        <view class="{{showMenu?'show-menu':'hide-menu'}}">
+            <menu></menu>
+        </view>       
     </view>
 </template>
 
@@ -96,6 +98,8 @@ export default class find extends wepy.page {
 
     data = {
         init:false,
+        showMenu:true,
+        scrollTop:0,//页面滚动距离
         ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
         imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
         toRightIcon:'http://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/xiangyou.png',
@@ -200,6 +204,23 @@ export default class find extends wepy.page {
         },
 
     }
+    //监听页面滚动
+    onPageScroll(e){
+        this.scrollTop = e.scrollTop;
+        this.$apply();
+    }
+    watch = {
+        scrollTop(_new,old){
+            console.log(_new - old);
+            if(_new - old > 20){
+                this.showMenu = false;
+                this.$apply();
+            }else if(_new - old < -20){
+                this.showMenu = true;
+                this.$apply();
+            }
+        }
+    }
     computed = {
 
     }
@@ -212,7 +233,15 @@ page{
     background-color: #eee;
 }
 
+.show-menu{
+    opacity: 1;
+}
 
+.hide-menu{
+    opacity: 0;
+    transform: scale(0.2);
+    transition: all .8s;
+}
 .scroll-box{  
     padding: 10rpx;
     background-color: #fff;

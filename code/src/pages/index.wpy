@@ -224,11 +224,7 @@ export default class Index extends wepy.page{
         this.$apply();
       }
     }
-  //监听页面滚动
-  onPageScroll(e){
 
-      
-    }
   methods ={
       //swiperChange
     swiperChange(e){

@@ -15,16 +15,16 @@
         <view class="rule-box">
           <view class="rule-title">
             <view class="line"></view>
-            <view class="rule-title-text">获取规则</view>
+            <view class="rule-title-text">积分获取</view>
             <view class="line"></view>
           </view>
-          <view class="rule-content">消费1元为1分，不足1元不计</view>
+          <view class="rule-content">消费1元可获得1积分，10元10积分，100元100积分，上不封顶，不足1元不计</view>
           <view class="rule-title" style="margin-top:-196px;">
             <view class="line"></view>
             <view class="rule-title-text" >积分兑换</view>
             <view class="line"></view>
           </view>
-          <view class="rule-duihuan">积分用于兑换优惠劵，100积分可换取一张</view>
+          <view class="rule-duihuan">积分可用于兑换卡劵，同一张卡券仅能持有一张，详细兑换规则可在“领券中心”查看</view>
         </view>
       </view>
       <view class="integral-list" >
@@ -33,15 +33,27 @@
           <image src="{{ossUrl+'yuan.png'}}" style="width:90px;height:90px;position:absolute;top:48rpx;left:290rpx;" />
           <view class="top-num"><text>{{integral.user_points}}</text></view>
         </view>
-        <view class="middel">
-          <view class="middel-num">{{integral.user_point_record}}</view>
-          <view class="middel-num">{{integral.user_point_record}}</view>
-        </view>
         <view class="bottom">
-          <view class="bottom-title">累计积分</view>
-          <view class="bottom-title">累计消费</view>
+          <view class="bottom-title">累计积分：{{integral.user_pay_points}}</view>
+          <view class="bottom-title">累计消费：{{integral.user_get_points}}</view>
         </view>
-      </view>   
+      </view> 
+      <view class="recode-list">
+        <view class="recode-title">积分收支明细</view>
+        <view class="recode-box">
+          <view wx:for="{{integral.user_point_record}}" wx:for-item="pointItem" class="recode-item">
+            <view class="item-left">
+              <view class="action">{{pointItem.action}}</view>
+              <view class="add_time">{{pointItem.add_time}}</view>
+            </view>
+            <view class="item-right">
+              <view wx:if="{{pointItem.type=='获得'}}" class="type_add">+</view>
+              <view wx:else class="type_sub">-</view>
+              <view class="point" style="{{pointItem.type=='获得'?'color:#108ee9':'color:#eb3c2b'}}">{{pointItem.points}}</view>
+            </view>
+          </view>
+        </view>
+      </view>  
     </swiper-item>
 
     <swiper-item>
@@ -53,18 +65,22 @@
                     <view class="title">
                       {{item.name}}
                     </view>
+                    <view class="time" style="color:#ff6b5d;">
+                      使用期限:{{item.use_start_date}} ~ {{item.use_end_date}}
+                    </view>
                     <view class="time">
-                      {{item.use_start_date}} ~ {{item.use_end_date}}
+                      领取时间:{{item.use_start_date}} ~ {{item.use_end_date}}
                     </view>
                     <view class="gap-top"></view>
                     <view class="gap-bottom"></view>
                   </view>
                   <view class="right">
                     <view class="ticket">
+                      <view class="unit">消耗</view>
                       <view class="num">
-                        {{item.type_money}}
+                        {{item.pay_points}}
                       </view>
-                      <view class="unit">元</view>
+                      <view class="unit">积分</view>
                     </view>
                     <view class="criteria">
                       满{{item.min_amount}}可用
@@ -87,7 +103,7 @@
                     {{row.name}}
                   </view>
                   <view class="time">
-                    {{row.start_time}} ~ {{row.end_time}}
+                    使用期限:{{row.start_time}} ~ {{row.end_time}}
                   </view>
                   <view class="gap-top"></view>
                   <view class="gap-bottom"></view>
@@ -99,13 +115,13 @@
                     <view class="num">
                       {{row.type_money}}
                     </view>
-                    <view class="unit">元</view>
+                    <view class="unit_yuan">元</view>
                   </view>
                   <view class="criteria">
                     满{{row.min_amount}}可用
                   </view>
                   <view wx:if="{{isUse==1}}">
-                    <view class="use" bindtap="useCoupon">使用</view>
+                    <view class="use" bindtap="useCoupon({{index}})">可使用</view>
                   </view>
                   <view wx:else>
                     <navigator class="use" url="/pages/index" open-type="switchTab">去使用</navigator>
@@ -129,8 +145,7 @@ export default class myAsset extends wepy.page{
     ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
     winHeight: 0,
     winWidth: 0,
-    currentTab: 0,
-    currentSelect: 1,
+    currentTab: null,
 
     isUse: null,
     order_price:0,//订单金额
@@ -154,9 +169,9 @@ export default class myAsset extends wepy.page{
         title:'我的资产'
       })
       //切换tab
-      that.UserTap(e.id);
+      that.currentTab = (e.id);
       if(e.isUse){
-        that.data.isUse = e.isUse;
+        that.isUse = e.isUse;
       }
       if(e.order_price){
         that.order_price = e.order_price;
@@ -165,19 +180,18 @@ export default class myAsset extends wepy.page{
     
   }
   accessInterface(tab){
-    switch(tab){
+    const tab_int = parseInt(tab);
+    switch(tab_int){
         //获取积分
       case 0:
-          http.get(api.UserPoints,{user_id:wx.getStorageSync('userInfoInServer').id}).then(res =>{
-            console.log(res);
+          http.get(api.UserPoints,{user_id:wx.getStorageSync('userInfoInServer').id},true).then(res =>{      
             this.integral = res;
             this.$apply();
           })
         break;
       case 1:
-        //获取优惠劵
-        http.get(api.CouponCenter,{}).then(res =>{
-          console.log(res)
+        //获取可领取的优惠劵
+        http.get(api.CouponCenter,{},true).then(res =>{
           this.cardList = res;
           this.$apply();
         })
@@ -185,17 +199,16 @@ export default class myAsset extends wepy.page{
       case 2:
         if(this.isUse){
           //获取可用卡券
-          http.get(api.UserCouponList,{user_id:wx.getStorageSync('userInfoInServer').id,order_total_price:this.order_price}).then(res =>{
-            console.log(res)
+          http.get(api.ChooseCoupon,{user_id:wx.getStorageSync('userInfoInServer').id,
+          order_total_price:this.order_price},true).then(res =>{
             this.couponList = res;
             this.$apply();
           })
         }else{
           //获取我的卡卷
-          http.get(api.UserCouponList,{user_id:wx.getStorageSync('userInfoInServer').id,}).then(res =>{
-            console.log(res)
-            that.couponList = res;
-            that.$apply();
+          http.get(api.UserCouponList,{user_id:wx.getStorageSync('userInfoInServer').id},true).then(res =>{
+            this.couponList = res;
+            this.$apply();
           })
         }       
         break;
@@ -206,7 +219,8 @@ export default class myAsset extends wepy.page{
       // 滑动切换tab
       bindchange: function(e){
         var that = this;
-        that.UserTap = e.currentTab.dataset.current;
+        that.currentTab = e.currentTab.dataset.current;
+        that.accessInterface(e.currentTab.dataset.current);
         that.$apply();
       },
       // 点击tab进行切换
@@ -237,13 +251,16 @@ export default class myAsset extends wepy.page{
           user_id: wx.getStorageSync('userInfoInServer').id,
           coupon_id: this.cardList[index].id,
         },true).then(res =>{
+          
           if(res.msg){
             wx.showModal({
-              title: '提示',
-              content: res.msg,
+              title: '领券提示',
+              content: '您已持有此卡券！',
+              showCancel:false,
             })
           }else{
-            wx.showModal({
+            wx.showToast({
+              icon:'none',
               title: res.message,
             })
           }
@@ -272,24 +289,18 @@ export default class myAsset extends wepy.page{
       },
 
       //当从订单页跳转过来使用
-      useCoupon: function(e){
-        var that = this
-        var userCoupon = that.cardlist[index]
-        wx.setStorageSync({key:'userCoupon',value:'userCoupon'})
+      useCoupon: function(index){
+        var that = this;
         wx.showModal({
           title: '提示',
           content: '确定使用卡卷',
           success: function(res){
             if(res.confirm){
-              wx.navigateBack({
-              })
-            }else{
-              return false;
+              wx.setStorageSync('useCoupon',that.couponList[index]);
+              wx.navigateBack({});        
             }
           }
-        })
-        
-        
+        })     
       }
   }
 
@@ -298,7 +309,7 @@ export default class myAsset extends wepy.page{
 }
 </script>
 
-<style>
+<style lang='scss'>
 page{
   background-color: #fafafa;
 }
@@ -360,21 +371,26 @@ page{
 }
 .rule-title-text{
   padding: 0 24rpx;
-  font-size: 28rpx;
   font-weight: 700;
   margin-top: 13px;
 }
 .rule-content{
   position: absolute;
-  top: 15%;
-  left: 20%;
+  top: 12%;
+  text-align: center;
   color: white;
+  line-height: 30px;
+  padding: 0 40rpx;
+  font-size: 28rpx;
 }
 .rule-duihuan{
   position: absolute;
-  top: 35%;
-  left: 78rpx;
+  top: 32%;
+  text-align: center;
   color: white;
+  line-height: 30px;
+  padding: 0 40rpx;
+  font-size: 28rpx;
 }
 
 .rulebtn{
@@ -426,9 +442,56 @@ page{
   z-index: 10;
   padding-top: 5rpx;
 }
-.middel{
-  justify-content: space-around;
-  display: flex;
+.recode-list{
+  .recode-title{
+    font-size: 34rpx;
+    widows: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1rpx solid #eee;
+    padding:20rpx 0rpx;
+    color:#ff6b5d;
+  }
+  .recode-box{
+    display: flex;
+    flex-direction: column;
+    padding: 0 20rpx;
+    .recode-item{
+      padding:10rpx 0rpx;
+      display: flex;
+      align-items: center;
+      border-bottom:1rpx #eee solid;
+      .item-left{
+        display: flex;
+        flex-direction: column;
+        flex:1;
+        .action{
+          font-size: 30rpx;
+        }
+        .add_time{
+          margin-top:10rpx;
+          font-size: 26rpx;
+          color:#999;
+        }
+      }
+      .item-right{
+        display: flex;
+        align-items: center;
+        .type_add{
+          font-size: 60rpx;
+          color:#108ee9;
+        }
+        .type_sub{
+          font-size: 60rpx;
+          color:#eb3c2b;
+        }
+        .point{
+          font-size: 50rpx;
+        }
+      }
+    }
+  }
 }
 .middel-num{
   font-size: 34rpx;
@@ -439,15 +502,14 @@ page{
 .bottom{
   flex-wrap: nowrap;
   position: absolute;
-  top: 300rpx;
-  width: 100%;
-  left: 80rpx;
+  top: 280rpx;
   display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
 }
 .bottom-title{
-  width: 90%;
-  margin: 0 8%;
-  font-size: 26rpx;
+  font-size: 30rpx;
   color: #ffedeb;
 }
 .exchange{
@@ -503,6 +565,7 @@ page{
 		width: 90%;
     margin: 0 5%;
 		font-size: 36rpx;
+    color:#ff6b5d;
 	}
 	.time{
 		width: 90%;
@@ -553,6 +616,9 @@ page{
     font-weight: 600;
   }
   .unit{
+    font-size:20rpx;
+  }
+  .unit_yuan{
     font-size: 24rpx;
     margin-top: 5rpx;
   }

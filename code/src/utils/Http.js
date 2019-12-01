@@ -63,7 +63,9 @@ export default class http {
         //异步请求
         return new Promise((resolve, reject) => {
             wepy.request(param).then(res => {
-                //200
+                if (debug) {
+                    console.log(res.data);
+                }
                 if (this.isSuccess(res)) {
                     if (res.data.data == undefined) {
                         resolve(res.data);

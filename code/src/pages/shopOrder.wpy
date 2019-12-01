@@ -120,7 +120,7 @@ export default class shopOrder extends wepy.page{
                     }
                 })
             }else{
-                http.get(api.Refund,{actual_price:price,order_sn:orderSn,refund_desc:desc}).then(res=>{
+                http.get(api.Refund,{actual_price:price,order_sn:orderSn,refund_desc:desc},true).then(res=>{
                     if(res.msg){
                         wx.showToast({
                             title:res.msg,

@@ -514,7 +514,7 @@ export default class Cart extends wepy.page{
         number:number,
         shop_id:shopId,
         user_id:wx.getStorageSync('userInfoInServer').id
-      }).then(res=>{
+      },false,false).then(res=>{
         console.log(res);
         if(res.code == 201){
           wx.showModal({

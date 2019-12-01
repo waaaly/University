@@ -32,7 +32,7 @@
               <text >订单编号:{{item.order_sn}}</text> 
               <text >下单时间:{{item.add_time}}</text>
             </view> 
-            <view class="total">总计：{{item.goods_price}}元</view>
+            <view class="total">支付：{{item.actual_price}}元</view>
           </view>
         </navigator>
 
