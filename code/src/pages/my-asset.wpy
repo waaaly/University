@@ -24,7 +24,7 @@
             <view class="rule-title-text" >积分兑换</view>
             <view class="line"></view>
           </view>
-          <view class="rule-duihuan">积分可用于兑换卡劵，同一张卡券仅能持有一张，详细兑换规则可在“领券中心”查看</view>
+          <view class="rule-duihuan">积分可用于兑换卡劵，详细兑换规则可在“领券中心”查看</view>
         </view>
       </view>
       <view class="integral-list" >
@@ -38,7 +38,7 @@
           <view class="bottom-title">累计消费：{{integral.user_get_points}}</view>
         </view>
       </view> 
-      <view class="recode-list">
+      <view wx:if="{{integral.user_point_record.length!=0}}" class="recode-list">
         <view class="recode-title">积分收支明细</view>
         <view class="recode-box">
           <view wx:for="{{integral.user_point_record}}" wx:for-item="pointItem" class="recode-item">
@@ -54,22 +54,24 @@
           </view>
         </view>
       </view>  
+      <view wx:else class='no-point'>暂无收支记录～</view>
     </swiper-item>
 
     <swiper-item>
-      <view wx:if="{{cardList==''}}" style="justify-content:center;margin-top:30rpx;display:flex;">暂无卡卷可兑换~</view>
+      <view wx:if="{{cardList==''}}" style="justify-content:center;margin-top:30%;display:flex;color:#ff6b5d;">暂无可兑换的卡券~</view>
         <view wx:else>
           <view class="card" wx:for="{{cardList}}" wx:for-item="item">
                 <view class="content">
                   <view class="left">
-                    <view class="title">
-                      {{item.name}}
+                    <view class="title" style="margin-bottom:10rpx;">
+                      {{item.name}}                   
                     </view>
-                    <view class="time" style="color:#ff6b5d;">
-                      使用期限:{{item.use_start_date}} ~ {{item.use_end_date}}
-                    </view>
-                    <view class="time">
+                    <view class="limit-num">最大可持有数:{{item.limit_num}}张</view>        
+                    <view class="time" >
                       领取时间:{{item.use_start_date}} ~ {{item.use_end_date}}
+                    </view>
+                    <view class="time" >
+                      使用期限:{{item.use_start_date}} ~ {{item.use_end_date}}
                     </view>
                     <view class="gap-top"></view>
                     <view class="gap-bottom"></view>
@@ -93,16 +95,16 @@
     </swiper-item>
 
     <swiper-item>
-      <view wx:if="{{couponList==''}}" style="justify-content:center;margin-top:50rpx;display:flex;">暂无更多卡卷~</view>
+      <view wx:if="{{couponList==''}}" style="justify-content:center;margin-top:30%;display:flex;color:#ff6b5d;">暂无已拥有的卡卷~</view>
       <view wx:else>
         <view class="card-list" wx:for="{{couponList}}" wx:for-item="row" wx:for-index="index" bindlongpress="deleteCard" data-index="{{index}}">
             <view class="card">
               <view class="content">
-                <view class="left">
+                <view class="left" style="padding:0rpx;justify-content: space-around;align-items: center;">
                   <view class="title">
                     {{row.name}}
                   </view>
-                  <view class="time">
+                  <view class="time" >
                     使用期限:{{row.start_time}} ~ {{row.end_time}}
                   </view>
                   <view class="gap-top"></view>
@@ -112,6 +114,7 @@
                 </view>
                 <view class="right">
                   <view class="ticket">
+                    <view class="unit_yuan">抵扣</view>
                     <view class="num">
                       {{row.type_money}}
                     </view>
@@ -217,11 +220,11 @@ export default class myAsset extends wepy.page{
   }
   methods = {
       // 滑动切换tab
-      bindchange: function(e){
-        var that = this;
-        that.currentTab = e.currentTab.dataset.current;
-        that.accessInterface(e.currentTab.dataset.current);
-        that.$apply();
+      changeTab: function(e){
+        console.log(e)
+        this.currentTab = e.detail.current;
+        this.accessInterface(e.detail.current);
+        this.$apply();
       },
       // 点击tab进行切换
       swichTab: function(e){
@@ -250,43 +253,23 @@ export default class myAsset extends wepy.page{
         http.post(api.GetCoupon,{
           user_id: wx.getStorageSync('userInfoInServer').id,
           coupon_id: this.cardList[index].id,
-        },true).then(res =>{
-          
+        },true).then(res =>{      
           if(res.msg){
             wx.showModal({
               title: '领券提示',
-              content: '您已持有此卡券！',
+              content: res.msg,
               showCancel:false,
             })
           }else{
             wx.showToast({
               icon:'none',
-              title: res.message,
+              title: res.msg,
             })
           }
         })
       },
 
-      //长按删除卡卷
-      deleteCard: function(e){
-        var that = this
-        var cardlist = that.data.cardList
-        var index = e.currentTarget.dataset.index
-        wx.showModal({
-          title: '提示',
-          content: '确定删除此卡卷？',
-          success: function(res){
-            if(res.confirm){
-              cardlist.splice(index,1);
-              that.$apply();
-            }else{
-              return false;
-            }
-            that.cardlist = that.cardlist;
-            that.$apply();
-          }
-        })
-      },
+
 
       //当从订单页跳转过来使用
       useCoupon: function(index){
@@ -442,6 +425,14 @@ page{
   z-index: 10;
   padding-top: 5rpx;
 }
+.no-point{
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color:#ff6b5d;
+}
 .recode-list{
   .recode-title{
     font-size: 34rpx;
@@ -558,21 +549,20 @@ page{
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    border-right: 1rpx dashed #fafafa;
+    border-right: 1px dashed #bbb;
+    padding: 10rpx;
 	}
 	.title{
-		padding-top: 3vw;
-		width: 90%;
-    margin: 0 5%;
 		font-size: 36rpx;
-    color:#ff6b5d;
+    color:#ff6b5d; 
 	}
+  .limit-num{
+    font-size:26rpx;
+    color:#999;
+  }
 	.time{
-		width: 90%;
-		margin: 0 5%;
 		font-size: 26rpx;
-		color: #999;
-    padding-bottom: 3vw;
+		color:#999;
 	}
 	.gap-top,.gap-bottom{
 		position: absolute;
@@ -602,7 +592,7 @@ page{
     -webkit-box-pack: center;
     -webkit-justify-content: center;
     -ms-flex-pack: center; 
-    margin-left:1px;  
+    margin-left:2px;  
   }
   .ticket{
     padding-top: 1vw;

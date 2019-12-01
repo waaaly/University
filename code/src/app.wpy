@@ -70,12 +70,12 @@ export default class extends wepy.app {
               "pagePath": "pages/tuangou/index",
               "text": "团购"
             },
-            {
-              "selectedIconPath": "/images/tabIcon/find-on.png",
-              "iconPath": "/images/tabIcon/find-off.png",
-              "pagePath": "pages/find",
-              "text": "发现"
-            },
+            // {
+            //   "selectedIconPath": "/images/tabIcon/find-on.png",
+            //   "iconPath": "/images/tabIcon/find-off.png",
+            //   "pagePath": "pages/find",
+            //   "text": "发现"
+            // },
             {
               "selectedIconPath": "/images/tabIcon/3-on.png",
               "iconPath": "/images/tabIcon/3-off.png",
