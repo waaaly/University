@@ -272,18 +272,18 @@ opacity: 0.9;
 
   .img-1{
     position: absolute;
-    top: 120rpx;
-    width: 300rpx;
-    height: 300rpx;
+    top: -70rpx;
+    width: 800rpx;
+    height: 800rpx;
     opacity: 1;
-    left: 200rpx;
+    left: -15rpx;
   }
   .img-2{
     position: absolute;
-    top: 500rpx;
-    right: 100rpx;
-    width: 300rpx;
-    height: 300rpx;
+    top: 340rpx;
+    right: -90rpx;
+    width: 800rpx;
+    height: 800rpx;
   }
 }
 .index-top{
