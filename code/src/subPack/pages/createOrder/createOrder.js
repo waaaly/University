@@ -8,9 +8,9 @@ Page({
         orderInfo: {},
         goodInfo: {},
         group_id: null,
+        discount: 0, //团购优惠
     },
     onLoad: function(e) {
-        console.log(e)
         var data = JSON.parse(e.orderInfo);
         console.log(data)
 
@@ -22,14 +22,21 @@ Page({
         for (let index in goodInfo) {
             this.modefiyGoodInfo(index, goodInfo[index]);
         }
+        //计算团购优惠
+        this.setData({
+            discount: ((goodInfo.market_price - goodInfo.retail_price) * goodInfo.number).toFixed(2),
+        })
+
         //记录团购id订单id，团购id作为字段名，订单id作为值
-        noPayOrder = wx.getStorageSync('noPayOrder');
-        if (!noPayOrder) {
-            noPayOrder = new Object();
+        if (!wx.getStorageSync('noPayOrder')) {
+            var noPayOrder = new Object();
+        } else {
+            var noPayOrder = wx.getStorageSync('noPayOrder');
+            console.log(noPayOrder);
         }
-        console.log(noPayOrder);
-        noPayOrder[this.group_id] = data.id;
+        noPayOrder[data.group_id] = data.id;
         wx.setStorageSync('noPayOrder', noPayOrder);
+
     },
 
     modefiyGoodInfo(name, value) {

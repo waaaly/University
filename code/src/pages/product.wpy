@@ -567,7 +567,7 @@
 						user_id:wx.getStorageSync('userInfoInServer').id,
 						address_id:wx.getStorageSync('userDefaultAddress').id,
 						type:2,//团购购买
-				}).then(order=>{
+				},true).then(order=>{
 					//console.log(order)
 						wx.showModal({
 							title:'拼团成功',

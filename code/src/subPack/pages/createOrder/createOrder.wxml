@@ -30,7 +30,7 @@
         <view data-event-opts="{{[['tap',[['toggleMask',['show']]]]]}}" class="yt-list-cell b-b" >
             <view class="cell-icon">券</view>
             <text class="cell-tit clamp">优惠券</text>
-            <text class="cell-tip active">暂无优惠券</text>
+            <text class="cell-tip active">团购商品无法使用优惠券</text>
             <text class="cell-more wanjia wanjia-gengduo-d"></text>
         </view>
         <!-- <view class="yt-list-cell b-b">
@@ -54,7 +54,7 @@
         </view>
         <view class="yt-list-cell b-b">
             <text class="cell-tit clamp">团购优惠</text>
-            <text class="cell-tip red">-￥{{(goodInfo.market_price - goodInfo.retail_price)*goodInfo.number}}</text>
+            <text class="cell-tip red">-￥{{discount}}</text>
         </view>
         <view class="yt-list-cell b-b">
             <text class="cell-tit clamp">运费</text>
