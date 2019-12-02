@@ -273,17 +273,17 @@ opacity: 0.9;
   .img-1{
     position: absolute;
     top: -70rpx;
-    width: 800rpx;
-    height: 800rpx;
+    width: 600rpx;
+    height: 900rpx;
     opacity: 1;
-    left: -15rpx;
+    left: 95rpx;
   }
   .img-2{
     position: absolute;
-    top: 340rpx;
-    right: -90rpx;
-    width: 800rpx;
-    height: 800rpx;
+    top: 330rpx;
+    right: 25rpx;
+    width: 600rpx;
+    height: 900rpx;
   }
 }
 .index-top{
