@@ -109,27 +109,35 @@ export default class orderCheck extends wepy.page{
         //修改页面标题
         wx.setNavigationBarTitle({
           title:'填写订单'
-        })
-        http.get(api.CartCheckout,{address_id:e.addressId,
-                  shop_id:e.shopId,
-                  user_id:wx.getStorageSync('userInfoInServer').id},true).then(res=>{
-            this.address = wx.getStorageSync('userDefaultAddress');
-            this.addressId = e.addressId;
-            this.shopId = e.shopId;
+        })   
+        this.shopId = e.shopId;
+       
+        this.$apply(); 
+    }
+    onShow(e){
+        this.address = wx.getStorageSync('userDefaultAddress');
+        if(wx.getStorageSync('useCoupon')){
+          this.coupon_id = wx.getStorageSync('useCoupon').coupon_id;
+          this.coupon = '-' + wx.getStorageSync('useCoupon').type_money;    
+        }else{
+          this.coupon_id =0;
+          this.coupon = '前往选择';    
+        }
+        http.get(api.CartCheckout,{address_id:wx.getStorageSync('userDefaultAddress').id,
+                  shop_id:this.shopId,
+                  user_id:wx.getStorageSync('userInfoInServer').id},true).then(res=>{      
+            this.addressId = wx.getStorageSync('userDefaultAddress').id;
             this.shopInfo = res.cartListInfo.shopInfo;
             this.orderGoodsInfos = res.cartListInfo.cartList;
             this.totalPrice =  res.cartListInfo.TotalPrice;
-            this.integral = parseInt(res.cartListInfo.TotalPrice);
+            if(this.coupon_id==0){
+              this.integral = parseInt(res.cartListInfo.TotalPrice);
+            }else{
+              this.integral = parseInt(res.cartListInfo.TotalPrice - this.coupon);
+            }         
             this.init = true;  
             this.$apply();        
         })
-    }
-    onShow(e){
-        if(wx.getStorageSync('useCoupon')){
-          this.coupon_id = wx.getStorageSync('useCoupon').coupon_id;
-          this.coupon = '-' + wx.getStorageSync('useCoupon').type_money;
-         
-        }
     }
     methods = {
       //修改收货地址

@@ -157,6 +157,7 @@ export default class Index extends wepy.page{
             })
       })
     })
+
   }
   watch = {
     //监听服务区域变动，刷新商品和商家列表
@@ -173,7 +174,8 @@ export default class Index extends wepy.page{
         //活动商品
         http.get(api.HotGood,{area_id:area.id},true).then(res=>{
           console.log(res)
-          if(res.msg == '当前无商家'){           
+          if(res.msg == '当前无商家'){ 
+            this.goodInit = true;          
             return; 
           }else{
             this.hotGoodList = res;
@@ -186,7 +188,7 @@ export default class Index extends wepy.page{
           console.log(res);
           if(res.status){
             wx.showToast({
-              iamge:`${ossUrl}+error.png`,
+              iamge:`${this.ossUrl}+error.png`,
               title:'当前无商家',
               icon:'none',
             })

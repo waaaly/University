@@ -23,6 +23,7 @@ export default class chooseArea extends wepy.page{
         areaList:[],//服务区域列表
         user_area:{},//用户选择的地区及校区，用于缓存
         exit:false,//用户拒绝授权退出小程序
+        accessLocation:false,//用户没有打开位置信息
     }
     onLoad(e){            
         var settingPromise, authPromise, mapPromise;
@@ -95,8 +96,15 @@ export default class chooseArea extends wepy.page{
                                     wx.setStorageSync('userArea',that.user_area);//缓存用户定位地区
                                     resolve();
                                 }),
-                                fail:(res=>{
-                                    reject(res);
+                                fail:(err=>{
+                                    console.log(err)
+                                    //用户没有打开位置信息
+                                    if(err.status == 1000){
+                                        this.bugInfo = err.message;
+                                        this.accessLocation = true;
+                                        this.$apply();
+                                    }             
+                                    reject(err);
                                 })
                             })
                         })
@@ -222,6 +230,13 @@ export default class chooseArea extends wepy.page{
                     }
                 })
             })
+        },
+        //用户忽略提示关闭窗口
+        colseAccess(){
+            this.accessLocation = false;
+            this.currentAddress = '小程序无法获取您当前位置!';
+            this.init = true;
+            this.$apply();
         }
     }
 }
@@ -264,7 +279,16 @@ export default class chooseArea extends wepy.page{
             </view> 
         </view>
     </view>
-
+    <view wx:if="{{accessLocation}}"  class="exit-back">
+        <view class="exit-box">
+            <view class="title">定位失败</view>
+            <view class="content">小程序检测到您的系统位置信息还未打开，请前往系统设置打开相关位置服务！</view>
+            <view class="btn">
+                <navigator class="cancle" open-type="exit" target="miniProgram">退出设置</navigator>
+                <button class="confirm" bindtap="colseAccess">忽略提醒</button>  
+            </view> 
+        </view>
+    </view>
 </view>
 </template>
 

@@ -95,9 +95,11 @@
     </swiper-item>
 
     <swiper-item>
-      <view wx:if="{{couponList==''}}" style="justify-content:center;margin-top:30%;display:flex;color:#ff6b5d;">暂无已拥有的卡卷~</view>
+      <view wx:if="{{couponList==''}}" style="justify-content:center;margin-top:30%;display:flex;color:#ff6b5d;">
+        {{isUse==1?'暂无可使用的卡卷呢~':'暂无已拥有的卡卷~'}}</view>
       <view wx:else>
-        <view class="card-list" wx:for="{{couponList}}" wx:for-item="row" wx:for-index="index" bindlongpress="deleteCard" data-index="{{index}}">
+        <view class="card-list" wx:for="{{couponList}}" wx:for-item="row" wx:for-index="couponIndex" 
+             data-index="{{couponIndex}}">
             <view class="card">
               <view class="content">
                 <view class="left" style="padding:0rpx;justify-content: space-around;align-items: center;">
@@ -124,7 +126,8 @@
                     满{{row.min_amount}}可用
                   </view>
                   <view wx:if="{{isUse==1}}">
-                    <view class="use" bindtap="useCoupon({{index}})">可使用</view>
+                    <view wx:if="{{curCouponId == couponIndex}}" class="use" >正在使用</view>
+                    <view wx:else class="use" bindtap="useCoupon({{couponIndex}})">可使用</view>
                   </view>
                   <view wx:else>
                     <navigator class="use" url="/pages/index" open-type="switchTab">去使用</navigator>
@@ -133,6 +136,7 @@
               </view>
             </view>
         </view>
+        <view class="clear-coupon" catchtap="clearCoupon">不使用优惠券，直接返回</view>
       </view>
     </swiper-item>
   </swiper>
@@ -152,6 +156,7 @@ export default class myAsset extends wepy.page{
 
     isUse: null,
     order_price:0,//订单金额
+    curCouponId:null,//当前我使用优惠券的id
     hasRule: false,
     cardList:[], //领卷中心
     integral:[], //我的积分
@@ -181,6 +186,12 @@ export default class myAsset extends wepy.page{
       }
       that.accessInterface(e.id);
     
+  }
+  onShow(){
+    if(this.isUse){
+      this.curCouponId = wx.getStorageSync('useCoupon').coupon_id;
+      this.$apply();
+    }
   }
   accessInterface(tab){
     const tab_int = parseInt(tab);
@@ -221,7 +232,6 @@ export default class myAsset extends wepy.page{
   methods = {
       // 滑动切换tab
       changeTab: function(e){
-        console.log(e)
         this.currentTab = e.detail.current;
         this.accessInterface(e.detail.current);
         this.$apply();
@@ -269,14 +279,12 @@ export default class myAsset extends wepy.page{
         })
       },
 
-
-
       //当从订单页跳转过来使用
       useCoupon: function(index){
         var that = this;
         wx.showModal({
           title: '提示',
-          content: '确定使用卡卷',
+          content: '确定使用此张卡券吗?',
           success: function(res){
             if(res.confirm){
               wx.setStorageSync('useCoupon',that.couponList[index]);
@@ -284,6 +292,25 @@ export default class myAsset extends wepy.page{
             }
           }
         })     
+      },
+      //放弃使用优惠券
+      clearCoupon(e){
+        if(this.curCouponId!=null){
+          wx.showModal({
+            title:'放弃使用',
+            content:'您确定放弃当前正在使用的卡券吗？',
+            success:(res=>{
+              if(res.confirm){
+                wx.removeStorageSync('useCoupon');
+                this.curCouponId = null;
+                this.$apply();
+                wx.navigateBack({});
+              }
+            })
+          })
+        }else{
+          wx.navigateBack({});
+        }
       }
   }
 
@@ -638,6 +665,16 @@ page{
     color: #ee827f;
     border-radius: 40rpx;
     padding: 0 10rpx;
+  }
+  .clear-coupon{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10% 20%;
+    background-color:  #ec625c;
+    color: #fff;
+    padding: 20rpx 0rpx;
+    border-radius: 5px;
   }
 </style>
 
