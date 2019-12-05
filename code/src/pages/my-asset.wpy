@@ -136,7 +136,7 @@
               </view>
             </view>
         </view>
-        <view class="clear-coupon" catchtap="clearCoupon">不使用优惠券，直接返回</view>
+        <view wx:if="{{isUse==1}}" class="clear-coupon" catchtap="clearCoupon">不使用优惠券，直接返回</view>
       </view>
     </swiper-item>
   </swiper>

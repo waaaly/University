@@ -44,7 +44,7 @@
               <view wx:for="{{['申请退款']}}" wx:for-item="actionItem" class='forItem' catchtap='action({{actionItem}},{{orderIndex}})'>{{actionItem}}</view>
             </block>
             <block wx:if="{{item.order_status == 32}}" >
-              <view wx:for="{{}}" wx:for-item="actionItem" class='forItem' catchtap='action({{actionItem}},{{orderIndex}})'>{{actionItem}}</view>
+              <!-- <view wx:for="{{}}" wx:for-item="actionItem" class='forItem' catchtap='action({{actionItem}},{{orderIndex}})'>{{actionItem}}</view> -->
             </block>
             <block wx:if="{{item.order_status == 40}}" >
               <view wx:for="{{['申请退款','前往评价']}}" wx:for-item="actionItem" class='forItem' catchtap='action({{actionItem}},{{orderIndex}})'>{{actionItem}}</view>

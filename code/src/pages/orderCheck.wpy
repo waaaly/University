@@ -1,7 +1,7 @@
 <template>
 
   <view class="comfire_order" wx:if="{{init}}">
-    <view class="address" @tap="goAddress">
+    <view class="address" bindtap="goAddress">
       <view class="address_info">
         <text class="defult" wx:if="{{address.is_default==1}}">[默认]</text>
         <view class="title">
@@ -19,7 +19,7 @@
     </view>
 
     <view class="spacing"/>
-    <view class="shop-box" @tap="goShop({{shopInfo.id}})">
+    <view class="shop-box" bindtap="goShop({{shopInfo.id}})">
       <image style="width:45rpx;height:45rpx;border-radius:50%;" src="{{imageUrl + shopInfo.shop_icon}}"/>
       <text class="sm" style='flex:9;'>{{shopInfo.shop_name}}</text>
       <view  style='color:#ff6b5d;'>></view>
@@ -29,7 +29,7 @@
     <view class="order-goods-list-container"  >
       <block wx:for="{{orderGoodsInfos}}" wx:for-index="index" wx:for-item="item" wx:key="goodsId">
         <view class="{{!order.orderId || index == 0 || expand[order.orderId] ? '' : 'order-goods-fold'}}">     
-          <view class="order-goods-container row-between" @tap="goodDetail({{item.goods_id}})">
+          <view class="order-goods-container row-between" bindtap="goodDetail({{item.goods_id}})">
             <!--商品图片-->
             <image class="order-goods-image" mode="aspectFill" src="{{imageUrl + item.primary_pic_url}}"/>
             <!--商品说明-->

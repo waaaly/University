@@ -569,6 +569,13 @@
 						type:2,//团购购买
 				},true).then(order=>{
 					//console.log(order)
+					if(order.msg){
+						wx.showToast({
+							title:order.msg,
+							icon:'none'
+						})
+						return;
+					}
 						wx.showModal({
 							title:'拼团成功',
 							content:'恭喜您成功加入拼团，快去前往支付吧~',

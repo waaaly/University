@@ -1,6 +1,6 @@
 import http from '../../../utils/Base';
 import api from '../../../utils/API';
-var noPayOrder;
+var noPayOrder = new Object();
 Page({
     data: {
         imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
@@ -29,9 +29,9 @@ Page({
 
         //记录团购id订单id，团购id作为字段名，订单id作为值
         if (!wx.getStorageSync('noPayOrder')) {
-            var noPayOrder = new Object();
+            noPayOrder = new Object();
         } else {
-            var noPayOrder = wx.getStorageSync('noPayOrder');
+            noPayOrder = wx.getStorageSync('noPayOrder');
             console.log(noPayOrder);
         }
         noPayOrder[data.group_id] = data.id;
@@ -72,7 +72,7 @@ Page({
                         confirmColor: "#ff6b5d",
                         content: "您已完成拼团支付～",
                         success: function(res2) {
-                            noPayOrder[that.group_id] = null;
+                            noPayOrder[that.data.group_id] = null;
                             wx.setStorageSync('noPayOrder', noPayOrder);
                             if (res2.confirm) {
                                 wx.reLaunch({
