@@ -97,33 +97,34 @@ export default class my extends wepy.page{
         shop_name:'',
         shop_id:'',
         userRole:0,//用户身份：0消费者，1：商家
+        //用于用户
         order: {
             text: '我的订单',
-                tabs: ['全部订单', '待付款', '待收货', '已完成'],
+                tabs: ['全部订单', '待付款', '待收货', '已送达','已完成'],
                 touch:true,
                 icon: StaticImgUrl + '我的订单/hear.png',
                 tips: '全部订单',
                 items: [
                     { text: '待付款', url: '/pages/my-order?id=1', icon: StaticImgUrl +'我的订单/待付款.png' },
-                    // { text: '待送货', url: '/pages/my-order?id=2', icon: StaticImgUrl +'我的订单/待审核.png' },
                     { text: '待收货', url: '/pages/my-order?id=2', icon: StaticImgUrl +'我的订单/待收货.png' },
-                    { text: '已完成', url: '/pages/my-order?id=3', icon: StaticImgUrl +'我的订单/待评价.png' },
+                    { text: '已送达', url: '/pages/my-order?id=3', icon: StaticImgUrl +'我的订单/待评价.png' },
+                    { text: '已完成', url: '/pages/my-order?id=4', icon: StaticImgUrl +'我的订单/已完成.png' },
                 ]
         },
         userInfoInServer: {},
         menuItems: {
-            order: {
-                
+            //用于商家
+            order: {         
                 text: '我的订单',
-                tabs: ['全部订单', '待付款', '待收货', '已完成'],
+                tabs: ['全部订单', '待付款', '待收货', '已送达','已完成'],
                 touch:true,
                 icon: StaticImgUrl + '我的订单/hear.png',
                 tips: '全部订单',
                 items: [
                     { text: '待付款', url: '/pages/my-order?id=1', icon: StaticImgUrl +'我的订单/待付款.png' },
-                    // { text: '待送货', url: '/pages/my-order?id=2', icon: StaticImgUrl +'我的订单/待审核.png' },
                     { text: '待收货', url: '/pages/my-order?id=2', icon: StaticImgUrl +'我的订单/待收货.png' },
-                    { text: '已完成', url: '/pages/my-order?id=3', icon: StaticImgUrl +'我的订单/待评价.png' },
+                    { text: '已送达', url: '/pages/my-order?id=3', icon: StaticImgUrl +'我的订单/待评价.png' },
+                    { text: '已完成', url: '/pages/my-order?id=4', icon: StaticImgUrl +'我的订单/已完成.png' },
                 ]
             },
             funcs: {
@@ -206,7 +207,7 @@ export default class my extends wepy.page{
                     this.init = true;
                     this.$apply();
                     //查看是否有新的订单
-                    http.get(api.NotifyOrder,{shop_id:result.id},false).then(res=>{
+                    http.get(api.NotifyOrder,{shop_id:result.id},false,false).then(res=>{
                         if(res){
                             this.haveOrder = true;
                             wepy.playBackgroundAudio({
@@ -269,19 +270,14 @@ export default class my extends wepy.page{
                             confirmText: "确定清除",
                             confirmColor: "#ff6b5d",
                             success: function(e) {
-                                if (e.cancel) {
-
-                                } else {
+                                if (e.confirm) {
                                     wx.showToast({
                                         title: '清除成功', //提示文字
                                         duration: 2000, //显示时长
                                         mask: true, //是否显示透明蒙层，防止触摸穿透，默认：false  
                                         icon: 'success', //图标，支持"success"、"loading"  
-                                        success: function() {}, //接口调用成功
-                                        fail: function() {}, //接口调用失败的回调函数  
-                                        complete: function() {} //接口调用结束的回调函数  
                                     })
-                                }
+                                } 
                             }
                         });
                         break;
@@ -291,7 +287,10 @@ export default class my extends wepy.page{
                             showCancel: false,
                             confirmText: "知道了",
                             confirmColor: "#ff6b5d",
-                            content: "V0.0.0.0",
+                            content: this.$parent.globalData.version,
+                            fail:(err=>{
+                                console.log(err)
+                            })
                         })
                         break;
                 }
@@ -446,18 +445,19 @@ color: transparent;
 
 .orderItem::after{
     content: "";
-    position:absolute;
-    top:25%;
-    left:80px;
-    width:2px ;
-    height:50%;
+    position: absolute;
+    top: 5%;
+    left: 60px;
+    width: 1px;
+    height: 50%;
     background-color:#eee;
 }
 
-.orderItem:last-child{
+.orderItem:last-child::after{
     border: none;
     outline: medium;
     border-radius: 0;
+    background-color:#fff;
 }
 
 .myShop{

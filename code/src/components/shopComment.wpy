@@ -16,14 +16,14 @@
               <view class="foot-pic" wx:if="{{item.list_pic_url.length!=0}}">
                 <image class="pic-item"  mode="widthtFix"  
                 wx:for={{item.list_pic_url}} wx:for-item="commentPicItem" wx:for-index="commentPicIndex"
-                src="{{OssUrl + commentPicItem}}" @tap="previewImg({{commentPicIndex}},{{item.list_pic_url}})"/>
+                src="{{ossUrl + commentPicItem}}" @tap="previewImg({{commentPicIndex}},{{item.list_pic_url}})"/>
               </view>
             </view>
               
             <view class='item-foot'>
               <view class="good-info" wx:for="{{item.orderInfo.order_goods}}" wx:for-item="goodItem">
                 <view class="good-item">
-                  <image class="good-img" mode="widthFix" src="{{OssUrl + goodItem.list_pic_url}}"/>
+                  <image class="good-img" mode="widthFix" src="{{ossUrl + goodItem.list_pic_url}}"/>
                   <text class="good-name">{{goodItem.goods_name}}</text>         
                 </view>               
                 <text class="good-num">X{{goodItem.number}}</text>

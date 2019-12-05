@@ -40,7 +40,7 @@
       </view> 
       <view wx:if="{{integral.user_point_record.length!=0}}" class="recode-list">
         <view class="recode-title">积分收支明细</view>
-        <view class="recode-box">
+        <scroll-view scroll-y="true" class="recode-box">
           <view wx:for="{{integral.user_point_record}}" wx:for-item="pointItem" class="recode-item">
             <view class="item-left">
               <view class="action">{{pointItem.action}}</view>
@@ -52,7 +52,7 @@
               <view class="point" style="{{pointItem.type=='获得'?'color:#108ee9':'color:#eb3c2b'}}">{{pointItem.points}}</view>
             </view>
           </view>
-        </view>
+        </scroll-view>
       </view>  
       <view wx:else class='no-point'>暂无收支记录～</view>
     </swiper-item>
@@ -472,11 +472,9 @@ page{
     color:#ff6b5d;
   }
   .recode-box{
-    display: flex;
-    flex-direction: column;
-    padding: 0 20rpx;
+    height:780rpx;
     .recode-item{
-      padding:10rpx 0rpx;
+      padding:10rpx 20rpx;
       display: flex;
       align-items: center;
       border-bottom:1rpx #eee solid;
@@ -485,6 +483,7 @@ page{
         flex-direction: column;
         flex:1;
         .action{
+          color:#262626;
           font-size: 30rpx;
         }
         .add_time{
