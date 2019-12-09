@@ -75,6 +75,8 @@ export default class http {
                 } else {
                     console.log(res);
                     if (wx.getStorageSync("showPopup")) {
+                        Tips.loadDone();
+                        wx.setStorageSync("showPopup", 0);
                         return;
                     }
                     if (res.data.message == '用户openid没有获取到') {

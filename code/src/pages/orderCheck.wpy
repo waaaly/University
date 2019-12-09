@@ -139,6 +139,12 @@ export default class orderCheck extends wepy.page{
             this.$apply();        
         })
     }
+    onUnload(){
+      //离开页面前把优惠券清除
+      if(wx.getStorageSync('useCopoun')){
+          wx.removeStorageSync('useCopoun');
+      }
+    }
     methods = {
       //修改收货地址
       goAddress(e){

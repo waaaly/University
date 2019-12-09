@@ -192,7 +192,7 @@ export default class my extends wepy.page{
             })
         })
     }
-    onShow(e){
+    onShow(){
         //读取本地用户信息查看是否已经登录授权
         this.getUserInfo().then(res=>{
             var userInfo = wx.getStorageSync("userInfoInServer");
@@ -265,21 +265,27 @@ export default class my extends wepy.page{
                     case 2:
                         wx.showModal({
                             title: '提示',
-                            content: "确定清除系统全部缓存？",
+                            content: "确定清除系统全部缓存？清除完成之后您需要重新登录小程序，才可正常使用！",
                             cancelText: "下次再说",
                             confirmText: "确定清除",
                             confirmColor: "#ff6b5d",
-                            success: function(e) {
-                                if (e.confirm) {
-                                    wx.showToast({
-                                        title: '清除成功', //提示文字
-                                        duration: 2000, //显示时长
-                                        mask: true, //是否显示透明蒙层，防止触摸穿透，默认：false  
-                                        icon: 'success', //图标，支持"success"、"loading"  
-                                    })
-                                } 
-                            }
-                        });
+                            success:(modal=>{
+                                if (modal.confirm) {
+                                    wx.clearStorage({
+                                        success:(res=>{
+                                            this.login = false;
+                                            this.$apply();
+                                            wx.showToast({
+                                                title: '清除成功', //提示文字
+                                                duration: 2000, //显示时长
+                                                mask: true, //是否显示透明蒙层，防止触摸穿透，默认：false  
+                                                icon: 'success', //图标，支持"success"、"loading"  
+                                            })
+                                        })
+                                    });                             
+                                }
+                            })
+                        })       
                         break;
                     case 3:
                         wx.showModal({
@@ -301,21 +307,8 @@ export default class my extends wepy.page{
             })
             }
         },
-        //预览二维码
-        previewImg(e){
-            wx.previewImage({
-                urls:["https://tse4-mm.cn.bing.net/th?id=OIP.TwdA5X1c0ShqBqcGudgjTwHaHa&w=200&h=200&c=7&o=5&dpr=1.5&pid=1.7"],
-                current: "https://tse4-mm.cn.bing.net/th?id=OIP.TwdA5X1c0ShqBqcGudgjTwHaHa&w=200&h=200&c=7&o=5&dpr=1.5&pid=1.7",     //当前图片地址
-                success: function(res) {},
-                fail: function(res) {},
-                complete: function(res) {},
-            })
-        },
-        cerateCode(e){
-            http.get(api.QRcode,{}).then(res=>{
-                console.log(res);
-            })
-        }
+
+
     }
   
 }

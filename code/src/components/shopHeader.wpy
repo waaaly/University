@@ -16,7 +16,7 @@ export default class shopHeader extends wepy.component{
     imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
   }
   onLoad(e){  
-    console.log(this.shopInfo);
+
   }
   methods = {
     showDetail(e){

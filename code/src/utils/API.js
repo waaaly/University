@@ -99,5 +99,5 @@ module.exports = {
     GetCoupon: ApiRootUrl + "get-coupon", //兑换卡卷
     ChooseCoupon: ApiRootUrl + "choose-coupon", //筛选可用卡券
 
-
+    test: ApiRootUrl + "test", //筛选可用卡券
 }

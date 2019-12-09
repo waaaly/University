@@ -126,7 +126,7 @@
                     满{{row.min_amount}}可用
                   </view>
                   <view wx:if="{{isUse==1}}">
-                    <view wx:if="{{curCouponId == couponIndex}}" class="use" >正在使用</view>
+                    <view wx:if="{{curCouponId == couponIndex}}" class="use" >{{couponIndex}}正在使用</view>
                     <view wx:else class="use" bindtap="useCoupon({{couponIndex}})">可使用</view>
                   </view>
                   <view wx:else>

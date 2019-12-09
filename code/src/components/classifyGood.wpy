@@ -187,6 +187,7 @@ export default class classifyGood extends wepy.component{
         }
     }
     events = {
+        //商家商品
         'shoperGoodList': (shoper, $event) => {
             this.ready = true;          
             var goodItem = new Object();
@@ -206,11 +207,13 @@ export default class classifyGood extends wepy.component{
             this.collectList = [];
             this.$apply();                    
         },
+        //分类商品
         'classifyGoodList':(classify,$event)=>{
             this.goodList = classify.goodList;  
             this.collectList = [];                   
             this.$apply();                  
         },
+        //收藏商品
         'collectGoodList':(List,$event)=>{
             
             var good = new Object();
