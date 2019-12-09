@@ -71,12 +71,12 @@ export default class extends wepy.app {
               "pagePath": "pages/tuangou/index",
               "text": "团购"
             },
-            // {
-            //   "selectedIconPath": "/images/tabIcon/find-on.png",
-            //   "iconPath": "/images/tabIcon/find-off.png",
-            //   "pagePath": "pages/find",
-            //   "text": "发现"
-            // },
+            {
+              "selectedIconPath": "/images/tabIcon/find-on.png",
+              "iconPath": "/images/tabIcon/find-off.png",
+              "pagePath": "pages/find",
+              "text": "发现"
+            },
             {
               "selectedIconPath": "/images/tabIcon/3-on.png",
               "iconPath": "/images/tabIcon/3-off.png",
@@ -109,11 +109,13 @@ export default class extends wepy.app {
     userInfo:{},
     friendsId:null,
     ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
-    version:'V0.2.4',
+    version:'V0.2.5',
     /**
      * V0.2.4
      * 1、修复评论商品图片不可见；2、新增我的页面版本号提示;3、修改订单分类，已送达、已完成，
      * 以及订单组件样式；4、修复版本更新管理器
+     * V0.2.5
+     * 1、新增用户选完规格后加入购物车，2、开放发现模块
      */
   }
 

@@ -89,8 +89,8 @@
 
 		<view class="xiding">
 			<view @tap="changeSwiper('scroll_0')" class="xiding-item" style="{{current_scroll_id=='scroll_0'?'color:#ff6b5d;':''}}">商品详情</view>
-			<view class="split"></view>
-			<view @tap="changeSwiper('scroll_1')" class="xiding-item" style="{{current_scroll_id=='scroll_1'?'color:#ff6b5d;':''}}">宝贝评价</view>
+			<!-- <view class="split"></view>
+			<view @tap="changeSwiper('scroll_1')" class="xiding-item" style="{{current_scroll_id=='scroll_1'?'color:#ff6b5d;':''}}">宝贝评价</view> -->
 		</view>
 
 		<scroll-view scroll-x="true" class="scroll-view-x" 
@@ -104,7 +104,7 @@
 				</view>	
 			</view>
 			<!--商品评价-->
-			<view id='scroll_1' style='display:inline-block;width:100%;position:absolute;top:-18px;'>
+			<!-- <view id='scroll_1' style='display:inline-block;width:100%;position:absolute;top:-18px;'>
 				<view class="eva-section">
 					<view @tap='allComment' class="e-header">
 						<text class="tit">评价</text>
@@ -124,7 +124,7 @@
 						</view>
 					</view>
 				</view>
-			</view>
+			</view> -->
 		</scroll-view>
 
 		<!-- 规格-模态层弹窗 -->
@@ -151,9 +151,9 @@
 				<view class="numberBox">
 					<view>数量</view>
 					<view class="numberRight"> 
-						<text @tap.stop="numberDown" class="yticon icon--jianhao"></text>
+						<text catchtap="numberDown" class="yticon icon--jianhao"></text>
 						<text class="number">{{number}}</text>
-						<text @tap.stop="numberUp" class="yticon icon-jia1"></text>
+						<text catchtap="numberUp" class="yticon icon-jia1"></text>
 					</view>
 				</view>
 				<view wx:for="{{specInfo}}"  wx:for-item='item'  wx:for-index='index' class="attr-list">
@@ -162,7 +162,7 @@
 						<text 
 							wx:for="{{item.items}}"  wx:for-item='childItem' wx:for-index='childIndex'
 							class="tit {{specSelected[index][childIndex]==childItem.sp_item_name?'selected':''}}"					
-							@tap.stop="selectSpec({{index}},{{childIndex}},{{childItem.sp_item_name}})"><!--规格值-->
+							catchtap="selectSpec({{index}},{{childIndex}},{{childItem.sp_item_name}})"><!--规格值-->
 							{{childItem.sp_item_name}}
 						</text>
 					</view>
@@ -198,10 +198,10 @@
 				<view class="panel">
 					<view class="text">添加团长微信，任何团购上的问题都能向他咨询哟～</view>
 					<view style="margin:20rpx">-----------------------------</view>
-					<image @tap.stop="previewQR" style="width:250rpx;height:250rpx;" mode="FixWidth" src="{{imageUrl+productInfo.code_pic}}"/>
+					<image catchtap="previewQR" style="width:250rpx;height:250rpx;" mode="FixWidth" src="{{imageUrl+productInfo.code_pic}}"/>
 					<view style="margin-top:20rpx" class="text">点击上方图片，长按二维码添加好友</view>
 				</view>
-				<view class="qiut" @tap.stop="showQR">X</view>
+				<view class="qiut" catchtap="showQR">X</view>
 			</view>
 		</view>
 	</view>

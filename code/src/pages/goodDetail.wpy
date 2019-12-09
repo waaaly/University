@@ -40,7 +40,7 @@
 
     <!-- 规格-模态层弹窗 -->
 		<view 	class="popup {{specClass}}" >			
-			<view class="mask"></view>
+			<view class="mask"  @tap="toggleSpec"></view>
 			<view class="layer attr-content">
 				<view class="a-t">
 					<image src="{{imageUrl+goodInfo.primary_pic_url}}"/>
@@ -78,7 +78,7 @@
 						</text>
 					</view>
 				</view>
-				<button class="btn" @tap="toggleSpec">完成</button>
+				<button class="btn" @tap="specAdd">加入购物车</button>
 			</view>
 		</view>
 
@@ -105,7 +105,7 @@
 				  <text style="color:#606266;margin-top:-15rpx;">分享</text>
 			</button> 
 			<view class="action-btn-group">
-				  <button @tap='addcart' type="primary" class=" action-btn no-border buy-now-btn" >加入购物车</button>
+				  <button @tap='addCart' type="primary" class=" action-btn no-border buy-now-btn" >加入购物车</button>
 				  <button @tap='toCart' type="primary" class=" action-btn no-border add-cart-btn">前往购物车</button>
 			</view>
 		</view>
@@ -186,8 +186,10 @@ export default class goodDetail extends wepy.page{
          
         })     
     }
+	/**
+	 * 	//获取当前选中规格 规格名id 规格值
+	 */
 
-	//获取当前选中规格 规格名id 规格值
 	getCurSpecId(){
 		var specNameStr = '';
 		var specValueStr = '';
@@ -212,8 +214,10 @@ export default class goodDetail extends wepy.page{
 		}
 		return spec;
 	}
+	/**
+	 * 	//将规格提交到后台
+	 */
 
-	//将规格提交到后台
 	submitSpec(goods_id){
     //获取规格id
 
@@ -225,7 +229,7 @@ export default class goodDetail extends wepy.page{
               shop_id: this.shopInfo.id,
 							goods_id:goods_id,
 							spec_ids:spec.spec_ids,
-							spec_item_ids:spec.spec_item_ids}).then(res=>{
+							spec_item_ids:spec.spec_item_ids},false,false).then(res=>{
         console.log(res);
         this.product_id = res.product_id;
         this.goodInfo.goods_number = res.stock;
@@ -233,7 +237,52 @@ export default class goodDetail extends wepy.page{
         this.$apply();
 		})
 	}
-		//设置分享副标题、路径
+	/**
+	 * 	//规格弹窗开关
+	 */
+
+	$toggleSpec() {
+		if(this.specClass === 'show'){
+			this.specClass = 'hide';
+			this.submitSpec(this.goodInfo.id);
+			setTimeout(() => {
+				this.specClass = 'none';
+			}, 250);
+		}else if(this.specClass === 'none'){
+			this.specClass = 'show';
+		}
+	}
+
+	/**
+	 * 加入购物车
+	 */
+	$addCart(e){
+      new Promise((resolve,reject)=>{
+          http.post(api.CartAdd,{
+              product_id:this.product_id,
+              goods_id:this.goodInfo.id,   
+              shop_id:this.shopInfo.id,  
+              number:this.number,
+              type:1,//平台购买
+              user_id:wx.getStorageSync('userInfoInServer').id,
+          },true,false).then(res =>{
+              if(res.msg){
+                wx.showToast({
+                  title: res.msg,
+                  icon: 'none'
+                })
+              }else{
+                  wx.showToast({
+                  title: '添加成功！',
+                })
+              }              
+          })
+      })
+    }
+	/**
+	 * 		//设置分享副标题、路径
+	 */
+
 	onShareAppMessage (res) {
 		var goods_id = this.goodInfo.id;
 		var shop_id = this.shopInfo.id;
@@ -242,23 +291,21 @@ export default class goodDetail extends wepy.page{
 			path:`/pages/goodDetail?goodId=${goods_id}&shopId=${shop_id}`,
     }
   }
-    methods = {
+  methods = {
       imgLoaded(e){
           if(this.swiper_H == 0){
             this.swiper_H = e.detail.height * (this.swiper_W/e.detail.width) +20;
           }
       },
-      //规格弹窗开关
-		toggleSpec() {
-			if(this.specClass === 'show'){
-        this.specClass = 'hide';
-        this.submitSpec(this.goodInfo.id);
-				setTimeout(() => {
-					this.specClass = 'none';
-				}, 250);
-			}else if(this.specClass === 'none'){
-				this.specClass = 'show';
-			}
+		 //规格视窗
+		 toggleSpec(){
+			 this.$toggleSpec();
+		 }, 
+		 
+		//选完规格直接加入购物车
+		specAdd(){
+			this.$toggleSpec();
+			this.$addCart();
 		},
 		//选择规格 规格名键值，规格值键值，规格值
 		selectSpec(spNameIndex,spValueIndex, spValue){
@@ -302,30 +349,9 @@ export default class goodDetail extends wepy.page{
           })
       }) 
     },
-    addcart(e){
-      new Promise((resolve,reject)=>{
-          http.post(api.CartAdd,{
-              product_id:this.product_id,
-              goods_id:this.goodInfo.id,   
-              shop_id:this.shopInfo.id,  
-              number:this.number,
-              type:1,//平台购买
-              user_id:wx.getStorageSync('userInfoInServer').id,
-          },true).then(res =>{
-              console.log(res)
-              if(res.msg){
-                wx.showToast({
-                  title: res.msg,
-                  icon: 'none'
-                })
-              }else{
-                  wx.showToast({
-                  title: '添加成功！',
-                })
-              }              
-          })
-      })
-    },
+    addCart(){
+			this.$addCart();
+		},
     toCart(e){
       wepy.reLaunch({
         url: '/pages/cart',
