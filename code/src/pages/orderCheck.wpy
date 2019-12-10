@@ -520,11 +520,7 @@ color:#fff;
 }
 
 .pay_box {
-    position:absolute;
-    bottom:50rpx;
-    left: 50rpx;
-    right: 50rpx;
-
+  margin: 25px;
 }
 
 .dk-jf {
