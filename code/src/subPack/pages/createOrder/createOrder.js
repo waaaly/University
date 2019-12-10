@@ -9,6 +9,7 @@ Page({
         goodInfo: {},
         group_id: null,
         discount: 0, //团购优惠
+        integral: 0, //积分
     },
     onLoad: function(e) {
         var data = JSON.parse(e.orderInfo);
@@ -24,10 +25,13 @@ Page({
         }
         //计算团购优惠
         this.setData({
-            discount: ((goodInfo.market_price - goodInfo.retail_price) * goodInfo.number).toFixed(2),
-        })
-
-        //记录团购id订单id，团购id作为字段名，订单id作为值
+                discount: ((goodInfo.market_price - goodInfo.retail_price) * goodInfo.number).toFixed(2),
+            })
+            //计算积分
+        this.setData({
+                integral: parseInt(data.actual_price),
+            })
+            //记录团购id订单id，团购id作为字段名，订单id作为值
         if (!wx.getStorageSync('noPayOrder')) {
             noPayOrder = new Object();
         } else {

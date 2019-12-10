@@ -2,7 +2,7 @@
 <view>
     <shopHeader :shopInfo.sync='shopInfo'></shopHeader>
     <view class="tab" >
-        <view class="tab-item {{currentTab==index?'tab-item-active':''}}" wx:for="{{['商品','评论','联系商家']}}" @tap="touchTab({{index}})">
+        <view class="tab-item {{currentTab==index?'tab-item-active':''}}" wx:for="{{['商品','评论','联系商家']}}" bindtap="touchTab({{index}})">
             <view class="tab-font">{{item}}</view>     
         </view>
     </view>
@@ -82,7 +82,7 @@ export default class Shoper extends wepy.page {
         color:rgb(77,85,93);
     }
     .tab-item-active{
-        color:rgb(240, 152, 20);
+        color:#108ee9;
     }
     .tab-font{
         display: block;

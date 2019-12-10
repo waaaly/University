@@ -71,7 +71,7 @@
 			</view>
 			<view class="c-row b-b">
 				<text class="tit">优惠券</text>
-				<text class="con t-r red" style="color: ##606266;">暂无相关优惠券，敬请期待～</text>
+				<text class="con t-r red" style="color: #606266;">团购商品无法使用优惠券</text>
 				<text class="yticon icon-you"></text>
 			</view>
 			<view class="c-row b-b">
@@ -187,7 +187,7 @@
 			</view> 
 			<view class="action-btn-group">
 				<button wx:if="{{haveOrder}}" type="primary" class=" action-btn no-border buy-now-btn" @tap="payment">立即支付</button>
-				<button wx:else type="primary" class=" action-btn no-border buy-now-btn" @tap="buy">立即购买</button>
+				<button wx:else type="primary" class=" action-btn no-border buy-now-btn" @tap="buy">立即拼团</button>
 			</view>
 		</view>
 		<view class="opacity" style="{{showQR?'opacity:0.9;z-index:10;':'opacity:0;z-index:-10;'}}" >
@@ -724,6 +724,7 @@
 	margin-top:20rpx;
 	display:flex;
 	align-items:center;
+	justify-content: center;
 	position: relative;
 	padding:10px;
 	color:#666;

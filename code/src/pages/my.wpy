@@ -50,9 +50,9 @@
         <navigator @tap="login" url="/pages/authorize" style="z-index:1;padding:5px;color:#fff;border:1px solid #fff;border-radius:5px;">登陆/注册</navigator> 
     </view>
   
-    <block  wx:for="{{menuItems}}" wx:for-index="itemIndex">
+    <block  wx:for="{{menuItems}}" wx:for-index="index">
         <view class="wrapperItem" >
-            <view bindtap="naviTo" data-itemname="{{itemIndex}}" class="weui-cell weui-cell_access" >
+            <view bindtap="naviTo(index)"  class="weui-cell weui-cell_access" >
                 <view class="itemtext">
                     <image src="{{item.icon}}" class="image"/>
                     {{item.text}}
@@ -96,7 +96,6 @@ export default class my extends wepy.page{
         imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
         shop_name:'',
         shop_id:'',
-        userRole:0,//用户身份：0消费者，1：商家
         //用于用户
         order: {
             text: '我的订单',
@@ -112,22 +111,8 @@ export default class my extends wepy.page{
                 ]
         },
         userInfoInServer: {},
-        menuItems: {
-            //用于商家
-            order: {         
-                text: '我的订单',
-                tabs: ['全部订单', '待付款', '待收货', '已送达','已完成'],
-                touch:true,
-                icon: StaticImgUrl + '我的订单/hear.png',
-                tips: '全部订单',
-                items: [
-                    { text: '待付款', url: '/pages/my-order?id=1', icon: StaticImgUrl +'我的订单/待付款.png' },
-                    { text: '待收货', url: '/pages/my-order?id=2', icon: StaticImgUrl +'我的订单/待收货.png' },
-                    { text: '已送达', url: '/pages/my-order?id=3', icon: StaticImgUrl +'我的订单/待评价.png' },
-                    { text: '已完成', url: '/pages/my-order?id=4', icon: StaticImgUrl +'我的订单/已完成.png' },
-                ]
-            },
-            funcs: {
+        menuItems:[
+            {
                 
                 text: '常用功能',
                 tabs: ['我的收藏', "我的地址",  "意见反馈"],
@@ -140,7 +125,7 @@ export default class my extends wepy.page{
                     { text: '意见反馈', url: '/pages/my-func?id=2', icon: StaticImgUrl +'常用功能/问题反馈.png' },
                 ]
             },
-            property: {
+            {
                 
                 text: '我的资产',
                 tabs: ['我的积分', '领券中心','我的卡券'],
@@ -153,7 +138,7 @@ export default class my extends wepy.page{
                     { text: '我的卡券', url: '/pages/my-asset?id=2', icon: StaticImgUrl +'我的资产/我的卡券.png' },
                 ]
             },
-            setting: {
+            {
                 
                 text: '系统设置',
                 tabs: ['使用指引', '清除缓存', '版本信息'],
@@ -167,7 +152,7 @@ export default class my extends wepy.page{
                 ]
             },
             
-        },
+        ],
     }
     onLoad(){
         //显示转发按钮
@@ -193,12 +178,13 @@ export default class my extends wepy.page{
         })
     }
     onShow(){
-        //读取本地用户信息查看是否已经登录授权
+        //读取本地用户信息查看是否已经登录授权 
         this.getUserInfo().then(res=>{
             var userInfo = wx.getStorageSync("userInfoInServer");
-             //判断用户是否商家，获取商家信息
+             //判断用户是商家，获取商家信息
             if(userInfo.role){
-                 this.menuItems['order'] = this.order;
+                this.menuItems.length==3?this.menuItems.unshift( this.order):'';
+                 
                  http.get(api.MyShop,{bind_phone:userInfo.phone}).then(result =>{ 
                     this.shop_name = result.shop_name;
                     userInfo['shop_name'] = result.shop_name;
@@ -221,10 +207,11 @@ export default class my extends wepy.page{
                     })   
                  })
             }else{
-                delete this.menuItems.order;
+               this.menuItems.length==4?this.menuItems.splice(0,1):'';
             }
             this.$apply();
         }).catch(res=>{
+            this.menuItems.length==3?this.menuItems.unshift( this.order):'';
             this.init = true;
             this.$apply();
         })
@@ -244,9 +231,8 @@ export default class my extends wepy.page{
             })  
         },
         //展开子列表
-       naviTo: function(e) {
-            var name = e.currentTarget.dataset.itemname;
-            this.menuItems[name].touch = !this.menuItems[name].touch ; 
+       naviTo: function(index) {
+            this.menuItems[index].touch = !this.menuItems[index].touch ; 
             this.$apply();
         },
 
@@ -263,6 +249,13 @@ export default class my extends wepy.page{
                         })
                         break;
                     case 2:
+                        if(!this.login){
+                            wx.showToast({
+                                title:'当前尚未登录！',
+                                icon:'none',
+                            })
+                            return;
+                        }
                         wx.showModal({
                             title: '提示',
                             content: "确定清除系统全部缓存？清除完成之后您需要重新登录小程序，才可正常使用！",
@@ -273,6 +266,11 @@ export default class my extends wepy.page{
                                 if (modal.confirm) {
                                     wx.clearStorage({
                                         success:(res=>{
+                                            if(this.userInfoInServer.role){
+                                                this.menuItems.length==4?this.menuItems.splice(0,1):'';
+                                            }else{
+                                                this.menuItems.length==3?this.menuItems.unshift( this.order):'';
+                                            }                          
                                             this.login = false;
                                             this.$apply();
                                             wx.showToast({

@@ -120,7 +120,7 @@ export default class Index extends wepy.page{
     hotGoodList:[],//首页活动热门商品
 
     shopList:[],// 首页推荐商家表
-
+    userDefaultAddress:null,//用户保存的默认地址
   }
 
   onLoad(e){
@@ -138,28 +138,50 @@ export default class Index extends wepy.page{
     })  
 
   }  
-  onShow(e){
-    //从缓存中读取服务区域
+  onShow(){
+    //先读默认地址
     wx.getStorage({
-      key:'userChooseArea',
+      key:'userDefaultAddress',
       success:(res=>{
-        this.area = res.data;
-        this.$apply();
+        this.userDefaultAddress = res.data;
       }),
-      //用户没有使用过小程序，扫码进入
-      fail:(err=>{
-        http.get(api.GetShopArea,{district:'智趣社区'}).then(res=>{
-              this.area = res[0];
-              wx.setStorageSync('userChooseArea',res[0]);
-              var userArea = {address_name:"未知",school_id:null,school_name:"未知"}
-              wx.setStorageSync('userArea',userArea);
-              this.$apply();
-            })
+      complete:(res=>{
+        //再读取服务区域
+        wx.getStorage({
+          key:'userChooseArea',
+          success:(res=>{
+            this.area = res.data;
+            this.$apply();
+          }),
+          //用户没有使用过小程序，扫码进入
+          fail:(err=>{
+            http.get(api.GetShopArea,{district:'智趣社区'}).then(res=>{
+                  this.area = res[0];
+                  wx.setStorageSync('userChooseArea',res[0]);
+                  var userArea = {address_name:"未知",school_id:null,school_name:"未知"}
+                  wx.setStorageSync('userArea',userArea);
+                  this.$apply();
+                })
+          })
+        })
       })
     })
-
   }
   watch = {
+    //监听默认地址，改变服务区域
+    userDefaultAddress(address,old){
+      var userChooseArea = {
+          id:address.area_id,
+          area_name:address.area_name
+        },
+        userArea = {
+          address_name:'未知',
+          school_id:'未知',
+          school_name:address.tabs_name
+        }
+        wx.setStorageSync('userChooseArea',userChooseArea);
+        wx.setStorageSync('userArea',userArea);
+    },
     //监听服务区域变动，刷新商品和商家列表
     area(area,old){
       console.log(area)

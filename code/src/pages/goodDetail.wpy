@@ -160,8 +160,7 @@ export default class goodDetail extends wepy.page{
         this.windowHeight = systemInfo.windowHeight;
         
         var spValue = new Object;
-        http.get(api.GoodsDetail,{gid:good.goodId,shop_id:good.shopId}).then(res=>{
-            console.log(res)
+        http.get(api.GoodsDetail,{gid:good.goodId,shop_id:good.shopId},true).then(res=>{
             this.goodInfo = res.shopGoods;
             this.shopInfo = res.shopInfo;              
             this.$apply();
@@ -210,7 +209,7 @@ export default class goodDetail extends wepy.page{
     }
 		var spec = {
 			spec_ids:specNameStr.slice(0,specNameStr.length-1),//规格名id
-			spec_item_ids:specValueStr.slice(0,specValueStr.length-1)//规格值id
+		    	spec_item_ids:specValueStr.slice(0,specValueStr.length-1)//规格值id
 		}
 		return spec;
 	}
@@ -222,19 +221,18 @@ export default class goodDetail extends wepy.page{
     //获取规格id
 
     var spec = this.getCurSpecId();
-    console.log(goods_id)
-    console.log(spec)
-    //console.log(this.shopInfo)
+//     console.log(goods_id)
+//     console.log(spec)
+//     console.log(this.shopInfo)
 		http.get(api.GroupProduct,{
-              shop_id: this.shopInfo.id,
-							goods_id:goods_id,
-							spec_ids:spec.spec_ids,
-							spec_item_ids:spec.spec_item_ids},false,false).then(res=>{
-        console.log(res);
-        this.product_id = res.product_id;
-        this.goodInfo.goods_number = res.stock;
-        this.goodInfo.retail_price = res.price;
-        this.$apply();
+			shop_id: this.shopInfo.id,
+			goods_id:goods_id,
+			spec_ids:spec.spec_ids,
+			spec_item_ids:spec.spec_item_ids},true,false).then(res=>{
+			this.product_id = res.product_id;
+			this.goodInfo.goods_number = res.stock;
+			this.goodInfo.retail_price = res.price;
+			this.$apply();
 		})
 	}
 	/**
