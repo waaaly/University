@@ -21,7 +21,7 @@
             <view >
               <image wx:for="{{content.imgList}}" 
                 catchtap="previewImage({{content.imgList}},{{item}})"
-                mode="aspectFit"  src="{{item}}"/>
+                mode="widthFix"  src="{{item}}"/>
             </view>
         </view>
         <view class="tabs">

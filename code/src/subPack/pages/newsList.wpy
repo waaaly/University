@@ -1,8 +1,7 @@
 <template>
     <view style="position:relative;">
-        <scroll-view  scroll-y="true" class="posts-his" 
-              style="height:{{scrollH}}px;transform:translateX({{x0}}px);"  catchtap="changeCurPost({{null}})"
-              >
+        <scroll-view  scroll-y="true" class="posts-his" style="height:{{scrollH}}px;transform:translateX({{x0}}px);"  catchtap="changeCurPost({{null}})">
+            <view wx:if="{{postList.length==0}}" class="no-data">您还未发布任何贴子呢～</view>
             <view  class="posts-record" wx:for="{{postList}}" wx:for-item="post" wx:for-index="postIndex" bindtap="goDetail({{post}})">
               <view class="time-like">
                 <view class="time">{{post.postTime}}</view>
@@ -46,9 +45,8 @@
             </view>
         </scroll-view>
 
-        <scroll-view  scroll-y="true" class="reply" bindscroll="hisScroll" 
-              style="height:{{scrollH}}px;transform:translateX({{x1}}px);"
-              >
+        <scroll-view  scroll-y="true" class="reply" bindscroll="hisScroll" style="height:{{scrollH}}px;transform:translateX({{x1}}px);">
+            <view wx:if="{{replyList.length==0}}" class="no-data">暂时还没有人评论/回复您哟～</view>
             <view class="reply-record" wx:for="{{replyList}}" wx:for-item="reply" 
                   wx:for-index="replyIndex"  bindtap="goDetail({{reply}})">
               <view class="user-info">
@@ -76,6 +74,7 @@
         </view>
 
         <scroll-view  scroll-y="true" class="chat" style="height:{{scrollH}}px;transform:translateX({{x2}}px);" >
+            <view wx:if="{{conversations.length==0}}" class="no-data">这里什么都没有快去找个TA丢纸条吧～</view>
             <view class="chat-record" wx:for="{{conversations}}" wx:for-item="chat" bindtap="goChat({{chat}})" bindlongpress="delete" >
               <image class="avatar" src="{{chat.avatar}}"/>
               <view class="name-cnt">
@@ -89,7 +88,6 @@
                 </block>
               </view>
               <view class="chat-time">{{chat.time}}</view>
-              <!-- <view wx:if="{{chat.unReadNum != 0}}" class="unread-dot">{{chat.unReadNum}}</view> -->
             </view>
         </scroll-view>
 
@@ -105,9 +103,9 @@
               <view class="{{curTab==1?'text-on':'text-off'}}">回复我</view>
             </view>
             <view class="item" bindtap='changeTab(2)'>
-              <image wx:if="{{curTab==2}}" class="icon" src="{{ossUrl+'zhitiao-on.png'}}"/>
-              <image wx:else class="icon" src="{{ossUrl+'zhitiao-off.png'}}"/>
-              <view class="{{curTab==2?'text-on':'text-off'}}">丢纸条</view>
+              <image wx:if="{{curTab==2}}" class="icon" src="{{ossUrl+'diuzhitiao-on.png'}}"/>
+              <image wx:else class="icon" src="{{ossUrl+'diuzhitiao-off.png'}}"/>
+              <view class="{{curTab==2?'text-on':'text-off'}}">丢纸条</view>           
             </view>
         </view>
     </view>
@@ -424,6 +422,13 @@
 }
 </script>
 <style lang='scss'>
+.no-data{
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: #108ee9;
+}
 // 历史贴
 .posts-his{
   position: absolute;

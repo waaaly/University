@@ -46,13 +46,13 @@
                                 <image  wx:for="{{item.content.imgList}}" 
                                     wx:for-item='imgItem' lazy-load='true' 
                                     catchtap="previewImage({{item.content.imgList}},{{imgItem}})"
-                                    mode='aspectFit' src="{{imgItem}}"/>
+                                    mode='widthFix' src="{{imgItem}}"/>
                             </view>
                             <view wx:else class="imageList">
                                 <image  wx:for="{{item.content.imgList}}" 
                                     wx:for-item='imgItem' lazy-load='true' 
                                     catchtap="previewImage({{item.content.imgList}},{{imgItem}})"
-                                    mode='center' src="{{imgItem}}"/>
+                                    mode='aspectFit' src="{{imgItem}}"/>
                             </view>
                         </block>         
                     </view>
@@ -211,7 +211,6 @@ export default class find extends wepy.page {
     }
     watch = {
         scrollTop(_new,old){
-            console.log(_new - old);
             if(_new - old > 20){
                 this.showMenu = false;
                 this.$apply();
@@ -336,10 +335,11 @@ page{
             flex-direction: row;  // 横向布局
             flex-wrap: wrap; // 超出自动换行
             image{
-                width: 32%;
+                width: 31%;
                 height: 32vw;
-                margin:5rpx;
+                margin: 5rpx;
                 border-radius: 10rpx;
+                border: 1rpx solid #ededed;
             }
         }    
     }

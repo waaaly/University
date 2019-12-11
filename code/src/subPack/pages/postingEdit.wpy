@@ -12,7 +12,7 @@
       <image bindtap="chooseimage" class="moment_img" src="{{ossUrl+'add.jpg'}}"/>
     </view>
   </view>
-</view>border-radius: 5px
+</view>
 
  <view class="section">
     <picker class="section_pic" bindchange="bindPickerChange" 
