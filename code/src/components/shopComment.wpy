@@ -16,14 +16,14 @@
               <view class="foot-pic" wx:if="{{item.list_pic_url.length!=0}}">
                 <image class="pic-item"  mode="widthtFix"  
                 wx:for={{item.list_pic_url}} wx:for-item="commentPicItem" wx:for-index="commentPicIndex"
-                src="{{ossUrl + commentPicItem}}" @tap="previewImg({{commentPicIndex}},{{item.list_pic_url}})"/>
+                src="{{ossUrl + commentPicItem}}" bindtap="previewImg({{commentPicIndex}},{{item.list_pic_url}})"/>
               </view>
             </view>
               
             <view class='item-foot'>
               <view class="good-info" wx:for="{{item.orderInfo.order_goods}}" wx:for-item="goodItem">
                 <view class="good-item">
-                  <image class="good-img" mode="widthFix" src="{{ossUrl + goodItem.list_pic_url}}"/>
+                  <image class="good-img" mode="widthFix" src="{{goodItem.list_pic_url}}"/>
                   <text class="good-name">{{goodItem.goods_name}}</text>         
                 </view>               
                 <text class="good-num">X{{goodItem.number}}</text>
@@ -95,11 +95,10 @@ export default class shopComment extends wepy.component{
       shopInfo(_new,old){
         //更新组建当前数据
         this.shopId = _new.id;
-        http.get(api.CommentList,{shop_id:_new.id}).then(res=>{
+        http.get(api.CommentList,{shop_id:_new.id},true).then(res=>{
             this.curNum = res.current_page;
             this.totalNum = res.last_page;
             this.commentList = res.data;
-            console.log(this.data);
             this.$apply();
         })
       }

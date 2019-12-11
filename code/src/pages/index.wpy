@@ -50,7 +50,7 @@
       <view wx:else class="good-list">
         <block wx:for="{{hotGoodList}}">
           <view class="{{item.class}}" bindtap="goHotGood" data-goodid="{{item.goodsInfo.id}}"  data-shopid="{{item.shopInfo.id}}">
-          <image  mode="widthFix" src='{{imageUrl + item.goodsInfo.hot_pic_url}}'/>
+          <image lazy-load mode="widthFix"  src='{{imageUrl + item.goodsInfo.hot_pic_url}}'/>
           <view class="info">
             <view class="name">{{item.goodsInfo.goods_name}}</view>
             <view class="desc">{{item.goodsInfo.goods_desc}}</view>
@@ -282,9 +282,7 @@ export default class Index extends wepy.page{
 }
 </script>
 <style lang="scss">
-page{
-  background-color:#fff;
-}
+
 .guide{
 position: fixed;
 top: 0;
@@ -465,7 +463,6 @@ opacity: 0.8;
   .shop{
     width: 47%;
     border-radius: 20rpx;
-    background-color: #fff;
     padding:8rpx;
     margin: 20rpx 0 15rpx 0;
     box-shadow: 0rpx 5rpx 25rpx rgba(0, 0, 0, 0.1);
