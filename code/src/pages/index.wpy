@@ -292,7 +292,7 @@ width: 100%;
 height: 100%;
 background-color: #111;
 z-index: 10;
-opacity: 0.9;
+opacity: 0.8;
 
   .img-1{
     position: absolute;
@@ -304,10 +304,10 @@ opacity: 0.9;
   }
   .img-2{
     position: absolute;
-    top: 330rpx;
-    right: 25rpx;
-    width: 600rpx;
-    height: 900rpx;
+    top: 290rpx;
+    right: 20rpx;
+    width: 700rpx;
+    height: 895rpx;
   }
 }
 .index-top{
