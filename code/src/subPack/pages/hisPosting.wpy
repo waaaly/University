@@ -1,0 +1,327 @@
+<template>
+    <block>
+      <blcok wx:if='{{init}}'>
+          <view wx:if="{{postList.length==0}}" class="no-data">您还未发布任何贴子呢～</view>
+          <view  class="posts-record" wx:for="{{postList}}" wx:for-item="post" wx:for-index="postIndex" bindtap="goDetail({{post}})">
+          
+              <view class="time-like">
+                  <view class="time">{{post.postTime}}</view>
+                  <view class="like" catchtap="changeILike({{postIndex}},{{post.likeNum}})">
+                        <view wx:if="{{post.likeNum==0}}" class="text">抢首赞</view>
+                        <view wx:else class="text">{{post.likeNum}}</view>
+                        <image class="icon" wx:if="{{post.iLike}}" src="{{ossUrl+'like-on.png'}}"/>
+                        <image class="icon" wx:else src="{{ossUrl+'like-off.png'}}"/>
+                  </view>
+              </view>
+
+              <view class="content">
+                  <view class="cnt">{{post.content.text}}</view>
+                  <block wx:if="{{post.content.imgList.length!=0}}">
+                      <view wx:if="{{post.content.imgList.length==1}}" class="singleImg">
+                      <image  wx:for="{{post.content.imgList}}" 
+                              wx:for-item='imgItem' lazy-load='true' 
+                              catchtap="previewImage({{post.content.imgList}},{{imgItem}})"
+                              mode='aspectFit' src="{{imgItem}}"/>
+                      </view>
+                      <view wx:else class="imageList">
+                      <image  wx:for="{{post.content.imgList}}" 
+                              wx:for-item='imgItem' lazy-load='true' 
+                              catchtap="previewImage({{post.content.imgList}},{{imgItem}})"
+                              mode='center' src="{{imgItem}}"/>
+                      </view>
+                  </block>
+              </view>
+              
+              <view class="can-see-box">
+                  <view class="can-see">{{post.enableView}}</view>
+                  <view class="dot-box" catchtap="changeCurPost({{postIndex}})">
+                      <view class="dot" >
+                          <view wx:if="{{curPostIndex == postIndex}}" class="tips">
+                              <picker bindchange="changeEnableView" range-key="value" range="{{enableViewList}}" >
+                                  <text class="tips-item" >可见权限</text>
+                              </picker>         
+                              <view class="tips-item" catchtap="delePost({{postIndex}})">删除</view>
+                          </view>
+                      </view>
+                  </view>             
+              </view>
+
+          </view>
+      </blcok>
+      <TabBar :selected.sync='tabSelected'></TabBar>      
+    </block>
+</template>
+
+<script>
+  import wepy from 'wepy';
+  import http from '../../utils/Base';
+  import api from '../../utils/API';
+  import TabBar from '../../components/tab-bar';
+  export default class hisPosting extends wepy.page {
+    config = {
+      navigationBarTitleText: '我的历史贴',
+      navigationBarBackgroundColor:'#108ee9'
+    }
+    components = {
+        TabBar:TabBar
+    }
+    data = {
+      ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
+      init:false,
+      tabSelected:3,
+      postList:[],//历史贴
+      curPostIndex:null,//当前操作的帖子
+      enableViewList:[],//可见标签数组，用于picker   
+    }
+
+
+    onLoad(option) {
+      //获取可见标签数组
+      http.get(api.ArticleTab,{
+          user_id:wx.getStorageSync('userInfoInServer')?
+          wx.getStorageSync('userInfoInServer').id:'',
+        }).then(res=>{
+          this.enableViewList = res.enableViewList;
+          this.enableViewList[0].value = '全部可见';
+          this.$apply();
+      })
+      //获取历史贴
+      http.get(api.ArticleHis,{
+          user_id:wx.getStorageSync('userInfoInServer').id,
+        },true).then(res=>{
+          for(let item of res){
+            this.postList.push(item.postList);
+          }
+          this.init = true;
+          this.$apply();
+      })      
+    }
+
+    onShow(){
+       wx.hideHomeButton();
+    }  
+
+    methods={
+      //帖子详情页
+      goDetail(posting){
+        console.log(posting)
+          wx.navigateTo({
+              url: `./postingDetail?posting_id=${posting.articleId}`,
+          })
+      },
+      //预览图片
+      previewImage (imgList,curImg) {
+          wx.previewImage({
+              current: curImg, // 当前显示图片的http链接  
+              urls: imgList// 需要预览的图片http链接列表  
+          })
+      },
+      //切换当前操作的帖子
+      changeCurPost(postIndex){
+        this.curPostIndex = postIndex;
+      },
+      //改变点赞
+      changeILike(postIndex,isLike){
+        http.post(api.ArticleLike,{
+            user_id:wx.getStorageSync("userInfoInServer").id,
+            article_id:this.postList[postIndex].articleId,
+        },false,false).then(res=>{
+            this.postList[postIndex].iLike = res.state?1:0;
+            this.postList[postIndex].likeNum = res.state?
+            this.postList[postIndex].likeNum+1:
+            this.postList[postIndex].likeNum-1;
+            this.$apply();
+        })   
+      },
+      //删除帖子
+      delePost(postIndex){
+        wx.showModal({
+          title:'删除帖子',
+          content:'您确定将当前帖子删除吗？',
+          success:(res=>{
+            if(res.confirm){
+              http.post(api.ArticleDelete,{id:this.postList[postIndex].articleId},true).then(res=>{
+                console.log(res);
+                this.postList.splice(postIndex,1);
+                wx.showToast({title:"删除成功！"});
+                this.curPostIndex = null;
+                this.$apply();
+              })      
+            }else{
+              this.curPostIndex = null;
+              this.$apply();
+            }
+          })
+        })
+      },
+      //修改帖子可见 ,e.detail.value为下标值
+      changeEnableView(e){
+        this.postList[this.curPostIndex].enableView = this.enableViewList[e.detail.value].value;
+        this.curPostIndex = null;
+        this.$apply();
+      },
+      //历史屏滚动
+      hisScroll(){
+        this.replyInputShow = false;  
+        this.curReplyIndex = null; 
+        this.replyTo = "";
+        this.$apply();
+      }
+    }
+       
+}
+</script>
+<style lang='scss'>
+.no-data{
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: #108ee9;
+}
+
+.posts-record{
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 20rpx;
+  margin: 10rpx;
+  border-radius: 10rpx;
+  border:1px solid #eee;
+  margin-bottom: 40rpx;
+  margin-left: 40rpx;
+  .time-like{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .time{
+      color:#999;
+      font-size: 24rpx;
+    }   
+    .like{
+      display: flex;
+      align-items:center;
+      .icon{
+          width: 40rpx;
+          height: 40rpx;
+      }
+      .text{
+          color:#999;
+          font-size: 24rpx;
+          margin-right:10rpx;
+      }
+    }   
+  }
+  .content{
+    display: flex;
+    flex-direction: column;
+    margin: 10rpx 0rpx;
+    .cnt{
+      margin:20rpx 0;
+      font-size:28rpx;
+      color:#333;
+      line-height: 40rpx;
+      letter-spacing: 3rpx;
+    }
+    .imageList{
+        display: flex;
+        flex-direction: row;  // 横向布局
+        flex-wrap: wrap; // 超出自动换行
+        image{
+            width: 32%;
+            height: 32vw;
+            margin:5rpx;
+            border-radius: 10rpx;
+        }
+    }
+  }
+  .can-see-box{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .can-see{
+      background-color: #dedede;
+      color:#999;
+      padding:10rpx;
+      border-radius: 24rpx;
+      font-size: 24rpx;
+      width:fit-content;
+    }
+    .dot-box{
+      width: 50rpx;
+      height: 50rpx;
+      margin-right: 6rpx;
+      position: relative;
+      .dot{
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        background: #999;
+        border-radius: 50%;
+        right: 0;
+        bottom: 18rpx;
+
+        .tips{
+          background-color: #fff;
+          display: flex;
+          flex-direction: column;
+          padding: 10rpx;
+          z-index: 10;
+          position: absolute;
+          left: -101px;
+          width: 80px;
+          height: 50px;
+          align-items: center;
+          justify-content: space-between;
+          top: -20px;
+          border:1px solid #eee;
+          .tips-item{
+            color:#999;
+            font-size:26rpx;
+          }
+        }
+      }
+      .dot::before {
+          content: '';
+          position: absolute;
+          top: -7px;
+          background: #999;
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+      }
+      .dot::after {
+          content: '';
+          position: absolute;
+          bottom: -7px;
+          background:  #999;
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+      }
+    } 
+  }
+}
+.posts-record::before{
+  position: absolute;
+  content: "";
+  top: 30px;
+  left: -20px;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 8px solid transparent;
+  border-right: 11px solid #eee;
+
+}
+
+
+
+
+
+/*隐藏滚动条*/
+// ::-webkit-scrollbar {
+//   width: 0;
+//   height: 0;
+//   color: transparent;
+// }
+</style>

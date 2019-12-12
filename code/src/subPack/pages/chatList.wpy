@@ -1,0 +1,464 @@
+<template>
+    <block>
+        <block wx:if="{{init}}">
+            <view wx:if="{{conversations.length==0}}" class="no-data">这里什么都没有快去找个TA丢纸条吧～</view>
+
+            <view class="chat-record" wx:for="{{conversations}}" wx:for-item="chat" bindtap="goChat({{chat}})" bindlongpress="delete" >
+                  <image class="avatar" src="{{chat.avatar}}"/>
+                  <view class="name-cnt">
+                    <view class="name">{{chat.sender_name}}</view>
+                    <block wx:if="{{chat.type=='text'}}">
+                      <view class="chat-cnt">{{chat.content}}</view>
+                    </block>
+                    <block wx:else>
+                      <view wx:if="{{chat.type=='image'}}" class="chat-cnt">[图片]</view>
+                      <view wx:if="{{chat.type=='voice'}}" class="chat-cnt">[语音]</view>
+                    </block>
+                  </view>
+                  <view class="chat-time">{{chat.time}}</view>
+            </view>
+        </block>
+        <TabBar :selected.sync='tabSelected'></TabBar>
+    </block>
+</template>
+
+<script>
+  import wepy from 'wepy';
+  import http from '../../utils/Base';
+  import api from '../../utils/API';
+  import TabBar from '../../components/tab-bar';
+  export default class NewsList extends wepy.page {
+    config = {
+      navigationBarTitleText: '纸条列表',
+      navigationBarBackgroundColor:'#108ee9'
+    }
+    components = {
+        TabBar:TabBar
+    }
+    data = {
+      ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
+      tabSelected:2,
+      init:false,
+      conversations:[],//会话列表
+    }
+    onLoad(option) {
+           
+    }
+
+    onShow(){
+      wx.hideHomeButton(); 
+       //获取会话列表
+      http.get(api.MessageList,{
+          user_id:wx.getStorageSync('userInfoInServer').id,
+        },true).then(res=>{
+          this.conversations = res;
+          this.init = true;
+          this.$apply();
+      })
+      //设置监听会话列表更新
+      this.$parent.getIMHandler().setOnReceiveMessageListener({
+          listener: (msg) => {              
+            var isNew = true;
+            for(let item of this.conversations){
+              if(item.sender_id == msg.friendId){
+                console.log('更新会话', msg);
+                item['time'] = msg.time;
+                item['avatar'] = msg.headUrl;
+                isNew = false;
+                this.$apply();
+                return;
+              }
+            }
+
+            if(isNew){
+              console.log('插入新会话', msg);
+              var chatItem = {
+                sender_id: msg.friendId,
+                sender_name: msg.friendName,
+                content: msg.content,
+                time: msg.time,
+                avatar: msg.headUrl,
+              }             
+              this.conversations.unshift(chatItem);
+              this.$apply();
+            }                                   
+          }
+      })
+    }  
+
+    /**
+     * 
+     */
+    getConversationsItem(item) {
+        let {latestMsg, ...msg} = item;
+        return Object.assign(msg, JSON.parse(latestMsg));
+    }
+    methods={
+      //前往聊天页
+      goChat(chat){
+        console.log(chat)
+        //不需要content字段
+        delete chat.content;
+        wx.navigateTo({
+            url: `./IM/chat?friend=${JSON.stringify(chat)}`
+        });
+      },
+      //删除聊天
+      delete: function(e){
+        var that = this;
+        var chatlist = that.data.conversations
+        var index = e.currentTarget.dataset.index;
+        wx.showModal({
+          title: '提示', //提示的标题,
+          content: '确定删除此聊天', //提示的内容,
+          success: function(res){
+            if(res.confirm){
+              chatlist.splice(index,1);
+            }else if(res){
+              return false;
+            }
+            that.conversations = chatlist;
+          }
+        });
+        
+      },
+
+    }
+       
+}
+</script>
+<style lang='scss'>
+.no-data{
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: #108ee9;
+}
+// 历史贴
+.posts-his{
+  position: absolute;
+  width: 100%;
+  display: inline-block;
+  overflow: hidden;
+  .posts-record{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 20rpx;
+    margin: 10rpx;
+    border-radius: 10rpx;
+    border:1px solid #eee;
+    margin-bottom: 40rpx;
+    margin-left: 40rpx;
+    .time-like{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      .time{
+        color:#999;
+        font-size: 24rpx;
+      }   
+      .like{
+        display: flex;
+        align-items:center;
+        .icon{
+            width: 40rpx;
+            height: 40rpx;
+        }
+        .text{
+            color:#999;
+            font-size: 24rpx;
+            margin-right:10rpx;
+        }
+      }   
+    }
+    .content{
+      display: flex;
+      flex-direction: column;
+      margin: 10rpx 0rpx;
+      .cnt{
+        margin:20rpx 0;
+        font-size:28rpx;
+        color:#333;
+        line-height: 40rpx;
+        letter-spacing: 3rpx;
+      }
+      .imageList{
+          display: flex;
+          flex-direction: row;  // 横向布局
+          flex-wrap: wrap; // 超出自动换行
+          image{
+              width: 32%;
+              height: 32vw;
+              margin:5rpx;
+              border-radius: 10rpx;
+          }
+      }
+    }
+    .can-see-box{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      .can-see{
+        background-color: #dedede;
+        color:#999;
+        padding:10rpx;
+        border-radius: 24rpx;
+        font-size: 24rpx;
+        width:fit-content;
+      }
+      .dot-box{
+        width: 50rpx;
+        height: 50rpx;
+        margin-right: 6rpx;
+        position: relative;
+        .dot{
+          position: absolute;
+          width: 5px;
+          height: 5px;
+          background: #999;
+          border-radius: 50%;
+          right: 0;
+          bottom: 18rpx;
+
+          .tips{
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            padding: 10rpx;
+            z-index: 10;
+            position: absolute;
+            left: -101px;
+            width: 80px;
+            height: 50px;
+            align-items: center;
+            justify-content: space-between;
+            top: -20px;
+            border:1px solid #eee;
+            .tips-item{
+              color:#999;
+              font-size:26rpx;
+            }
+          }
+        }
+        .dot::before {
+            content: '';
+            position: absolute;
+            top: -7px;
+            background: #999;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+        }
+        .dot::after {
+            content: '';
+            position: absolute;
+            bottom: -7px;
+            background:  #999;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+        }
+      } 
+    }
+  }
+  .posts-record::before{
+    position: absolute;
+    content: "";
+    top: 30px;
+    left: -20px;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-left: 8px solid transparent;
+    border-right: 11px solid #eee;
+
+  }
+}
+//回复我
+.reply{
+  position: absolute;
+  width: 100%;
+  display: inline-block;
+  overflow: hidden;
+  .reply-record{
+    position: relative;
+    padding:20rpx;
+    display: flex;
+    flex-direction: column;
+    .user-info{
+      display: flex;
+      align-items: center;
+      .avatar{
+        width: 80rpx;
+        height: 80rpx;
+        border-radius: 50%;
+        margin-right: 30rpx;
+      }
+      .name-time{
+        flex:1;
+        display: flex;
+        align-items: baseline;
+        .name{
+          flex:1;
+          font-size: 28rpx;
+          color:#108ee9;
+        }
+        .time{
+          font-size: 23rpx;
+          color:#999;
+        }
+      }
+    }
+    .reply-box{
+      margin-left:110rpx;
+      position: relative;
+      margin-bottom:20rpx;
+      display: flex;
+      flex-direction: column;
+      .reply-cnt{
+        margin-bottom:10rpx;
+        .cnt{
+          font-size: 28rpx;
+          color:#333;
+          float: left;
+        }
+      }
+      .reply-btn{
+        display: flex;
+        justify-content: flex-end;
+        .btn{
+          float: right;
+          background-color: #dedede;
+          color:#999;
+          padding:10rpx;
+          border-radius: 10rpx;
+          font-size: 22rpx;
+          width:fit-content;
+        }
+      }    
+    }
+    .i-say{
+      margin-left:110rpx;
+      border-radius: 5rpx;
+      background-color: #ededed;
+      padding:15rpx 10rpx;
+      font-size: 26rpx;
+      color:#666;
+
+    }
+  }
+  .reply-record::after{
+     content: '';
+    right: 0rpx;
+    bottom: 0rpx;
+    border-bottom: 1rpx solid #eee;
+    position: absolute;
+    left: 130rpx;
+  }
+  
+}
+.reply-bottom{
+    position: fixed;
+    display: flex;
+    z-index:10;
+    left: 0rpx;
+    right:0rpx;
+    align-items: center;
+    justify-content: space-between;
+    padding:10rpx;
+    background-color:#eaeaea;
+    .input{
+        padding: 10rpx;
+        display: flex;
+        align-items: center;
+        border-radius: 5rpx;
+        background-color: #fff;
+        flex:1;
+        margin-right:10rpx;
+    }
+    .send-off{
+        border-radius: 5rpx;
+        padding:10rpx;
+        background-color: #eaeaea;
+        color:#bbb;
+        border:1rpx solid #bbb;
+        text-align: center;
+        width: 10%;
+    }
+    .send-on{
+        border-radius: 5rpx;
+        padding:10rpx;
+        background-color: #108ee9;
+        color:#fff;
+        text-align: center;
+        width: 10%;
+    }
+        
+  }
+//丢纸条
+.chat-record{
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding:10rpx 20rpx; 
+  height: 9vh;
+  .avatar{
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: 50%;
+    margin-right: 30rpx;
+  }
+  .name-cnt{
+    display: flex;
+    flex-direction: column;
+    flex:1;
+    .name{
+      font-weight:bold;
+      color:#333;
+      font-size: 28rpx;
+    }
+    .chat-cnt{
+      margin-top:10rpx;
+      font-size: 23rpx;
+      color:#999;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 1;
+      text-align: justify;
+      overflow: hidden;
+    }
+  }
+  .chat-time{
+    font-size: 23rpx;
+    color:#999;
+  }
+}
+.chat-record::after{
+  content: '';
+  right: 0rpx;
+  bottom: 0rpx;
+  border-bottom: 1rpx solid #eee;
+  position: absolute;
+  left: 130rpx;
+}
+
+.unread-dot {
+  float: right;
+  width: 16px;
+  height: 16px;
+  background-color: red;
+  border-radius: 50%;
+  margin-top: -35px;
+  font-size:10rpx;
+  color:#fff;
+}
+
+
+/*隐藏滚动条*/
+// ::-webkit-scrollbar {
+//   width: 0;
+//   height: 0;
+//   color: transparent;
+// }
+</style>

@@ -73,7 +73,7 @@
         <image src="{{imageUrl+'zq/noneServer.png'}}"/>
       </view>
       <view wx:else class='shop-list'>
-        <view class="shop"  wx:for="{{shopList}}" @tap="goShoper({{item.id}})">
+        <view class="shop"  wx:for="{{shopList}}" bindtap="goShoper({{item.id}})">
           <image src='{{imageUrl+item.shop_icon}}' mode="widthFix"/>
           <view class="content">
             <view class="name">{{item.shop_name}}</view>
@@ -124,6 +124,7 @@ export default class Index extends wepy.page{
   }
 
   onLoad(e){
+    
     //显示转发按钮
     wx.showShareMenu({
       withShareTicket: true
@@ -132,13 +133,13 @@ export default class Index extends wepy.page{
     //轮播图
     new Promise((resolve,reject)=>{
        http.get(api.Swiper,{}).then(res=>{
-        // console.log(res);
         this.imgUrls = res;
       })
     })  
 
   }  
   onShow(){
+    wx.showTabBar();
     //先读默认地址
     wx.getStorage({
       key:'userDefaultAddress',
@@ -184,7 +185,6 @@ export default class Index extends wepy.page{
     },
     //监听服务区域变动，刷新商品和商家列表
     area(area,old){
-      console.log(area)
       this.hotGoodList = [];
       this.shopList = [];
       this.goodInit = false;
@@ -195,7 +195,6 @@ export default class Index extends wepy.page{
       }
         //活动商品
         http.get(api.HotGood,{area_id:area.id},true).then(res=>{
-          console.log(res)
           if(res.msg == '当前无商家'){ 
             this.goodInit = true;          
             return; 
@@ -207,7 +206,6 @@ export default class Index extends wepy.page{
         })
         //推荐商家 
         http.get(api.ShopList,{area_id:area.id}).then(res =>{
-          console.log(res);
           if(res.status){
             wx.showToast({
               iamge:`${this.ossUrl}+error.png`,
@@ -483,12 +481,6 @@ opacity: 0.8;
         font-size:23rpx;
         color:#108ee9;
         margin: 10rpx 0;
-        .sale{
-
-        }
-        .time{
-
-        }
       }
       .summary{
         display: -webkit-box;

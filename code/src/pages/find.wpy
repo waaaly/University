@@ -1,103 +1,108 @@
 
 
 <template>
-    <view wx:if="{{init}}" >
-        <swiper style="height:200px;background-color:#fff;" 
-              indicator-dots="{{true}}" 
-              autoplay="{{true}}" 
-              interval="{{3000}}"  
-              circular="{{true}}"  
-              indicator-active-color='#108ee9'
-              >
-            <block wx:for="{{swiperImg}}" wx:key="key">
-                <swiper-item>
-                    <image src="{{item}}" style="width:100%;" mode="widthFix"  />
-                </swiper-item>
-            </block>
-        </swiper>
-        <scroll-view scroll-y="true" class="scroll-box" style="height: {{enableViewH}}rpx;">
-            <view  class="flex-box" >
-                <block wx:for="{{enableViewList}}">
-                    <view class="{{enableViewId==item.id?'item-active':'item'}}"
-                        bindtap="changeId({{item.id}})">{{item.value}}</view>
-                </block>             
-            </view>      
-        </scroll-view>
+    <blcok>
+        <TabBar :selected.sync='tabSelected'></TabBar>
+        <view wx:if="{{init}}" >
+            <swiper style="height:200px;background-color:#fff;" 
+                indicator-dots="{{true}}" 
+                autoplay="{{true}}" 
+                interval="{{3000}}"  
+                circular="{{true}}"  
+                indicator-active-color='#108ee9'
+                >
+                <block wx:for="{{swiperImg}}" wx:key="key">
+                    <swiper-item>
+                        <image src="{{item}}" style="width:100%;" mode="widthFix"  />
+                    </swiper-item>
+                </block>
+            </swiper>
+            <scroll-view scroll-y="true" class="scroll-box" style="height: {{enableViewH}}rpx;">
+                <view  class="flex-box" >
+                    <block wx:for="{{enableViewList}}">
+                        <view class="{{enableViewId==item.id?'item-active':'item'}}"
+                            bindtap="changeId({{item.id}})">{{item.value}}</view>
+                    </block>             
+                </view>      
+            </scroll-view>
 
-        <view class="icon-box" bindtap="changeHight">
-            <image wx:if="{{enableViewH==240}}" class="icon-up" src="{{toRightIcon}}"/>
-            <image wx:else class="icon-down" src="{{toRightIcon}}"/>
-        </view>
+            <view class="icon-box" bindtap="changeHight">
+                <image wx:if="{{enableViewH==240}}" class="icon-up" src="{{toRightIcon}}"/>
+                <image wx:else class="icon-down" src="{{toRightIcon}}"/>
+            </view>
 
-        <view class="posting-box"  wx:if="{{postingList.length!=0}}">
-            <block wx:for="{{postingList}}">
-                <view class="posting" bindtap="goDetail({{item}})" >
-                    <view class="userInfo">
-                        <image src="{{item.userInfo.avatar}}"/>
-                        <view class="name-time">
-                            <view class="name">{{item.userInfo.name}}</view>
-                            <view class="time">{{item.postTime}}</view>
-                        </view>
-                    </view>
-                    <view class="content">
-                        <view class="cnt-text">{{item.content.text}}</view>
-                        <block wx:if="{{item.content.imgList.length!=0}}">
-                            <view wx:if="{{item.content.imgList.length==1}}" class="singleImg">
-                                <image  wx:for="{{item.content.imgList}}" 
-                                    wx:for-item='imgItem' lazy-load='true' 
-                                    catchtap="previewImage({{item.content.imgList}},{{imgItem}})"
-                                    mode='widthFix' src="{{imgItem}}"/>
+            <view class="posting-box"  wx:if="{{postingList.length!=0}}">
+                <block wx:for="{{postingList}}">
+                    <view class="posting" bindtap="goDetail({{item}})" >
+                        <view class="userInfo">
+                            <image src="{{item.userInfo.avatar}}"/>
+                            <view class="name-time">
+                                <view class="name">{{item.userInfo.name}}</view>
+                                <view class="time">{{item.postTime}}</view>
                             </view>
-                            <view wx:else class="imageList">
-                                <image  wx:for="{{item.content.imgList}}" 
-                                    wx:for-item='imgItem' lazy-load='true' 
-                                    catchtap="previewImage({{item.content.imgList}},{{imgItem}})"
-                                    mode='aspectFit' src="{{imgItem}}"/>
+                        </view>
+                        <view class="content">
+                            <view class="cnt-text">{{item.content.text}}</view>
+                            <block wx:if="{{item.content.imgList.length!=0}}">
+                                <view wx:if="{{item.content.imgList.length==1}}" class="singleImg">
+                                    <image  wx:for="{{item.content.imgList}}" 
+                                        wx:for-item='imgItem' lazy-load='true' 
+                                        catchtap="previewImage({{item.content.imgList}},{{imgItem}})"
+                                        mode='widthFix' src="{{imgItem}}"/>
+                                </view>
+                                <view wx:else class="imageList">
+                                    <image  wx:for="{{item.content.imgList}}" 
+                                        wx:for-item='imgItem' lazy-load='true' 
+                                        catchtap="previewImage({{item.content.imgList}},{{imgItem}})"
+                                        mode='aspectFit' src="{{imgItem}}"/>
+                                </view>
+                            </block>         
+                        </view>
+                        <view class="tabs">
+                            <view class="item">
+                                <image src="{{ossUrl+'comment.png'}}" style="margin-right:10rpx;"/>
+                                <view wx:if="{{item.commentNum==0}}" class="num">评论</view>
+                                <view wx:else class="num">{{item.commentNum}}</view>
                             </view>
-                        </block>         
-                    </view>
-                    <view class="tabs">
-                        <view class="item">
-                            <image src="{{ossUrl+'comment.png'}}" style="margin-right:10rpx;"/>
-                            <view wx:if="{{item.commentNum==0}}" class="num">评论</view>
-                            <view wx:else class="num">{{item.commentNum}}</view>
-                        </view>
-                        <view class="item" catchtap="changeLike({{item}},{{index}})">                           
-                            <view wx:if="{{item.likeNum==0}}" class="num">抢首赞</view>
-                            <view wx:else class="num">{{item.likeNum}}</view>
-                            <image wx:if="{{item.iLike}}" src="{{ossUrl+'like-on.png'}}"/>
-                            <image wx:else src="{{ossUrl+'like-off.png'}}"/>
+                            <view class="item" catchtap="changeLike({{item}},{{index}})">                           
+                                <view wx:if="{{item.likeNum==0}}" class="num">抢首赞</view>
+                                <view wx:else class="num">{{item.likeNum}}</view>
+                                <image wx:if="{{item.iLike}}" src="{{ossUrl+'like-on.png'}}"/>
+                                <image wx:else src="{{ossUrl+'like-off.png'}}"/>
+                            </view>
                         </view>
                     </view>
-                </view>
-            </block>
+                </block>
+            </view>
+            <view class='no-posting' wx:else>
+                <image src='https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/noPosting.png' mode='aspectFit'/>
+            </view>
+            <view class="{{showMenu?'show-menu':'hide-menu'}}">
+                <menu></menu>
+            </view>       
         </view>
-        <view class='no-posting' wx:else>
-            <image src='https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/noPosting.png' mode='aspectFit'/>
-        </view>
-        <view class="{{showMenu?'show-menu':'hide-menu'}}">
-            <menu></menu>
-        </view>       
-    </view>
+    </blcok>
 </template>
-
 
 <script>
 import wepy from 'wepy';
 import http from '../utils/Base';
 import api from '../utils/API';
 import menu from '../components/popupMenu';
+import TabBar from '../components/tab-bar';
 export default class find extends wepy.page {
     config = {
         "navigationBarTitleText": "社区中心",
         "enablePullDownRefresh": true,
     }
     components = {
-        menu:menu
+        menu:menu,
+        TabBar:TabBar
     }
 
     data = {
         init:false,
+        tabSelected:0,
         showMenu:true,
         scrollTop:0,//页面滚动距离
         ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
@@ -118,6 +123,7 @@ export default class find extends wepy.page {
     }
 
     onLoad() {
+        
         //获取可见标签组
         http.get(api.ArticleTab,{
             user_id:wx.getStorageSync('userInfoInServer')?
@@ -126,11 +132,13 @@ export default class find extends wepy.page {
            console.log(res)
            this.enableViewList = res.enableViewList;
            this.$apply();
-        })
-        
+        })    
     }
 
     onShow() {
+        wx.hideTabBar();
+        this.$broadcast('tabSelected', this.tabSelected);
+        this.$apply();
         //获取帖子
         http.get(api.ArticleList,{
             tabs_id:this.enableViewId,
@@ -384,5 +392,10 @@ page{
     display: flex;
     align-items: center;
     justify-content: center;
+}
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  color: transparent;
 }
 </style>

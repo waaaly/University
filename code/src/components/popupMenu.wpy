@@ -1,5 +1,5 @@
 <template>
-    <view style="position:fixed;right:-10px;bottom:-10px;">
+    <view style="position:fixed;right:-10px;bottom:30px;">
         <image src="{{ossUrl+'xietie.png'}}" class="img-style" animation="{{animTranspond}}" bindtap="idea"/>
         <image src="{{ossUrl+'xiaoxi.png'}}" class="img-style" animation="{{animInput}}" bindtap="answer"/>
         <image src="{{ossUrl+'menu.png'}}" class="img-plus-style" animation="{{animPlus}}" bindtap="plus"/>
@@ -29,16 +29,46 @@ import wepy from 'wepy';
 export default class popupMenu extends wepy.component{
     data={
         isPopping: false,//是否已经弹出
-        animPlus: {},//旋转动画
-        animCollect: {},//item位移,透明度
-        animTranspond: {},//item位移,透明度
-        animInput: {},//item位移,透明度
+        // animPlus: {},//旋转动画
+        // animCollect: {},//item位移,透明度
+        // animTranspond: {},//item位移,透明度
+        // animInput: {},//item位移,透明度
         ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
     }
     methods={
-        //提问
-        question(){
-
+          //点击弹出
+        plus: function () {
+            //点击加号直接前往发帖
+            if(!wx.getStorageSync("userInfoInServer")){
+                wx.showModal({
+                    title: '提示',
+                    content: '您当前尚未登陆无法发布帖子哟～',
+                    confirmColor: '#ff6b5d',
+                    confirmText: '前往登陆',
+                    success: (res => {
+                        if (res.confirm) {
+                            wx.navigateTo({
+                                url: '/pages/authorize',
+                            })
+                        }
+                    }),
+                })
+            }else{
+                wx.navigateTo({
+                    url: '../subPack/pages/postingEdit',
+                })
+            }
+            // if (this.data.isPopping) {
+            //     //缩回动画
+            //     this.takeback();
+            //     this.data.isPopping=false;
+            //     this.$apply();
+            // } else  {
+            //     //弹出动画            
+            //     this.popp();
+            //     this.data.isPopping=true;
+            //     this.$apply();
+            // }
         },
         //发帖
         idea(){
@@ -90,20 +120,7 @@ export default class popupMenu extends wepy.component{
             this.data.isPopping=false;
             this.$apply();
         },
-        //点击弹出
-        plus: function () {
-            if (this.data.isPopping) {
-                //缩回动画
-                this.takeback();
-                this.data.isPopping=false;
-                this.$apply();
-            } else  {
-                //弹出动画            
-                this.popp();
-                this.data.isPopping=true;
-                this.$apply();
-            }
-        },
+      
     }
           //弹出动画
     popp () {

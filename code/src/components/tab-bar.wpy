@@ -1,0 +1,119 @@
+
+<template>
+        <cover-view class="tab-bar">
+                <cover-view class="tab-bar-border">
+        </cover-view>
+        <cover-view wx:for="{{list}}" wx:key="index" class="tab-bar-item"  bindtap="switchTab({{index}})">
+                <cover-image src="{{selected === index ? item.selectedIconPath : item.iconPath}}"></cover-image>
+                <cover-view style="color: {{selected === index ? selectedColor : color}}">{{item.text}}</cover-view>
+        </cover-view>
+        </cover-view>
+</template>
+
+
+<script>
+import wepy from "wepy";
+
+export default class star extends wepy.component{
+        props = {
+              selected: {
+                      type:Number,
+                      default:0,
+              }  
+        }
+     data = {
+        color: "#a9b7b7",
+        selectedColor: "#108ee9",
+        list: [{
+                pagePath: "/pages/find",
+                selectedIconPath: "/images/tabIcon/find-on.png",
+                iconPath: "/images/tabIcon/find-off.png",
+                text: "发现"
+        }, 
+        {
+                pagePath: "/subPack/pages/news",
+                selectedIconPath: "/images/subTab/xiaoxi-on.png",
+                iconPath: "/images/subTab/xiaoxi-off.png",
+                text: "消息"
+        },
+        {
+                pagePath: "/subPack/pages/chatList",
+                selectedIconPath: "/images/subTab/zhitiao-on.png",
+                iconPath: "/images/subTab/zhitiao-off.png",
+                text: "纸条"
+        },
+        {
+                pagePath: "/subPack/pages/hisPosting",
+                selectedIconPath: "/images/subTab/lishi-on.png",
+                iconPath: "/images/subTab/lishi-off.png",
+                text: "历史贴"
+        },
+        {
+                pagePath: "/pages/index",
+                selectedIconPath: "/images/subTab/index-on.png",
+                iconPath: "/images/subTab/index-off.png",
+                text: "商城"
+        },]
+     } 
+     methods = {
+        switchTab(index) {
+                const data = this.list[index];
+                const url = data.pagePath;
+                this.selected = index;
+                if(index == 4 ){
+                        wx.switchTab({url});
+                        return;
+                }
+                wx.reLaunch({url});
+         }
+     } 
+      events = {
+              'tabSelected':(tab,$event)=>{
+                      this.selected = 0;
+                      this.$apply();
+              }
+      }
+}
+</script>
+
+<style>
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: white;
+  display: flex;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tab-bar-border {
+  background-color: rgba(0, 0, 0, 0.33);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 1px;
+  transform: scaleY(0.5);
+}
+
+.tab-bar-item {
+  flex: 1;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.tab-bar-item cover-image {
+  width: 27px;
+  height: 27px;
+}
+
+.tab-bar-item cover-view {
+  font-size: 10px;
+}
+
+</style>

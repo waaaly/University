@@ -1,0 +1,284 @@
+<template>
+    <block>
+        <block wx:if="{{init}}">
+            <view wx:if="{{replyList.length==0}}" class="no-data">暂时还没有人评论/回复您哟～</view>
+
+            <view class="reply-record" wx:for="{{replyList}}" wx:for-item="reply" wx:for-index="replyIndex"  bindtap="goDetail({{reply}})">
+                <view class="user-info">
+                    <image class="avatar" src="{{reply.userInfo.avatar}}"/>
+                    <view class="name-time">
+                      <view class="name">{{reply.userInfo.name}}</view>
+                      <view class="time">{{reply.replyTime}}</view>
+                    </view>
+                </view>
+                <view class="reply-box">
+                  <view class="reply-cnt">
+                    <text class="cnt">回复到：{{reply.replyCnt}}</text>
+                  </view>
+                  <view class="reply-btn" catchtap="isShowInput({{true}},{{replyIndex}})" >
+                    <text class="btn">点击回复</text>
+                  </view>
+                </view>
+                <view class="i-say">我：{{reply.iSay}}</view> 
+            </view>
+
+            <view wx:if="{{replyInputShow}}" wx:for-index="replyIndex" class="reply-bottom" style="bottom:{{inputBottomH}}px">
+                <input class="input"  placeholder="回复{{replyTo}}"  bindinput="replyInput" value="{{replyText}}"
+                  focus="true" maxlength='-1' cursor-spacing='10'  bindfocus="replyInputFocus" bindblur="replyInputBlur"/> 
+                <view catchtap="sendReply" class="{{replyText.length==0?'send-off':'send-on'}}" >回复</view>
+            </view> 
+      </block>
+      <TabBar :selected.sync='tabSelected'></TabBar>  
+    </block>
+</template>
+
+<script>
+  import wepy from 'wepy';
+  import http from '../../utils/Base';
+  import api from '../../utils/API';
+  import TabBar from '../../components/tab-bar';
+  export default class news extends wepy.page {
+    config = {
+      navigationBarTitleText: '消息中心',
+      navigationBarBackgroundColor:'#108ee9'
+    }
+    components = {
+        TabBar:TabBar
+    }
+    data = {
+      ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
+      tabSelected:1,
+      init:false,
+      replyList:[],//回复列表
+      replyInputShow:false,//回复输入框
+      replyTo:"",//输入框的占位符，回复谁
+      curReplyIndex:null,//当前操作的回复
+      replyText:'',//回复内容
+      inputBottomH:0,//输入框底部偏移量
+      bottomTabShow:true,//底部tab
+    }
+
+
+    onLoad(option) {    
+       //获取回复列表
+      http.get(api.ReplyList,{
+          user_id:wx.getStorageSync('userInfoInServer').id,
+        },true).then(res=>{
+          for(let item of res){
+            this.replyList.push(item.replyList);
+          }
+          this.init = true;
+          this.$apply();
+      })     
+    }
+
+    onShow(){
+        wx.hideHomeButton();
+    }  
+      
+    methods={
+
+      //历史屏滚动
+      hisScroll(){
+        this.replyInputShow = false;  
+        this.curReplyIndex = null; 
+        this.replyTo = "";
+        this.$apply();
+      },
+      //回复框显示/隐藏
+      isShowInput(status,index){
+        this.replyInputShow = status;  
+        this.curReplyIndex = index; 
+        index?this.replyTo = this.replyList[index].userInfo.name:this.replyTo = "";
+        this.$apply();  
+      },
+      //回复框取得焦点
+      replyInputFocus(e){
+        this.bottomTabShow = false;
+        this.$apply();
+      },
+      //回复框失去焦点
+      replyInputBlur(e){
+        this.replyInputShow = false; 
+        this.inputBottomH = this.tabH + 5;
+        this.bottomTabShow = true;
+        this.$apply();  
+      },
+      //回复框输入事件
+      replyInput(e){
+        this.replyText = e.detail.value;
+        this.$apply();
+      },
+      //快速回复
+      sendReply(){  
+        http.post(api.ArticleComment,{
+            parent_id:              this.replyList[this.curReplyIndex].parentId,//回复
+            be_reply_comment_id:    this.replyList[this.curReplyIndex].commentId,
+            article_id:             this.replyList[this.curReplyIndex].articleId,//帖子id
+            article_author_uid:     this.replyList[this.curReplyIndex].articleAuthorUid,//帖子作者id
+            replyer_user_id:        wx.getStorageSync('userInfoInServer').id,   //回复者id       
+            replyer_user_name:      wx.getStorageSync('userInfoInServer').name,//回复者名字
+            be_replyer_user_id:     this.replyList[this.curReplyIndex].userInfo.user_id,//被回复者id
+            be_replyer_user_name:   this.replyList[this.curReplyIndex].userInfo.name,  //被回复者名字                    
+            reply_to:               this.replyList[this.curReplyIndex].userInfo.name,//是否显示回复者的名字 
+            content:                this.replyText,
+        },true,false).then(res=>{
+            console.log(res)
+            if(res.code==200){
+                wx.showToast({title:'回复成功！'});
+            }else{
+                wx.showToast({title:res.msg});
+            }
+        })
+      },
+    }    
+}
+</script>
+<style lang='scss'>
+.no-data{
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: #108ee9;
+}
+
+//回复我
+
+.reply-record{
+  position: relative;
+  padding:20rpx;
+  display: flex;
+  flex-direction: column;
+  .user-info{
+    display: flex;
+    align-items: center;
+    .avatar{
+      width: 80rpx;
+      height: 80rpx;
+      border-radius: 50%;
+      margin-right: 30rpx;
+    }
+    .name-time{
+      flex:1;
+      display: flex;
+      align-items: baseline;
+      .name{
+        flex:1;
+        font-size: 28rpx;
+        color:#108ee9;
+      }
+      .time{
+        font-size: 23rpx;
+        color:#999;
+      }
+    }
+  }
+  .reply-box{
+    margin-left:110rpx;
+    position: relative;
+    margin-bottom:20rpx;
+    display: flex;
+    flex-direction: column;
+    .reply-cnt{
+      margin-bottom:10rpx;
+      .cnt{
+        font-size: 28rpx;
+        color:#333;
+        float: left;
+      }
+    }
+    .reply-btn{
+      display: flex;
+      justify-content: flex-end;
+      .btn{
+        float: right;
+        background-color: #dedede;
+        color:#999;
+        padding:10rpx;
+        border-radius: 10rpx;
+        font-size: 22rpx;
+        width:fit-content;
+      }
+    }    
+  }
+  .i-say{
+    margin-left:110rpx;
+    border-radius: 5rpx;
+    background-color: #ededed;
+    padding:15rpx 10rpx;
+    font-size: 26rpx;
+    color:#666;
+
+  }
+}
+.reply-record::after{
+    content: '';
+  right: 0rpx;
+  bottom: 0rpx;
+  border-bottom: 1rpx solid #eee;
+  position: absolute;
+  left: 130rpx;
+}
+  
+
+.reply-bottom{
+    position: fixed;
+    display: flex;
+    z-index:10;
+    left: 0rpx;
+    right:0rpx;
+    align-items: center;
+    justify-content: space-between;
+    padding:10rpx;
+    background-color:#eaeaea;
+    .input{
+        padding: 10rpx;
+        display: flex;
+        align-items: center;
+        border-radius: 5rpx;
+        background-color: #fff;
+        flex:1;
+        margin-right:10rpx;
+    }
+    .send-off{
+        border-radius: 5rpx;
+        padding:10rpx;
+        background-color: #eaeaea;
+        color:#bbb;
+        border:1rpx solid #bbb;
+        text-align: center;
+        width: 10%;
+    }
+    .send-on{
+        border-radius: 5rpx;
+        padding:10rpx;
+        background-color: #108ee9;
+        color:#fff;
+        text-align: center;
+        width: 10%;
+    }
+        
+  }
+
+
+
+.unread-dot {
+  float: right;
+  width: 16px;
+  height: 16px;
+  background-color: red;
+  border-radius: 50%;
+  margin-top: -35px;
+  font-size:10rpx;
+  color:#fff;
+}
+
+
+/*隐藏滚动条*/
+// ::-webkit-scrollbar {
+//   width: 0;
+//   height: 0;
+//   color: transparent;
+// }
+</style>
