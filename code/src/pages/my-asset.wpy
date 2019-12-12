@@ -30,7 +30,6 @@
       <view class="integral-list" >
         <view class="top">
           <view class="top-title">当前积分</view>
-          <image src="{{ossUrl+'yuan.png'}}" style="width:90px;height:90px;position:absolute;top:48rpx;left:290rpx;" />
           <view class="top-num"><text>{{integral.user_points}}</text></view>
         </view>
         <view class="bottom">
@@ -38,7 +37,34 @@
           <view class="bottom-title">累计消费：{{integral.user_get_points}}</view>
         </view>
       </view> 
-      <view wx:if="{{integral.user_point_record.length!=0}}" class="recode-list">
+      <view class="sign-in">
+        <view class="sign-in-title">每日签到</view>
+        <view class="new-week" >
+          <view class="we-mod">
+            <view class="mo-line">
+             <block wx:for="{{isNewSignList}}"  wx:for-item="v" wx:key="k">
+                <label class="q {{v.isSigned?'hover':''}}"></label>
+             </block>
+            </view>
+            <view class="mo-ri">
+              <block wx:for="{{isNewSignList}}"  wx:for-item="v" wx:key="k">
+                <label class="t">{{v.day}}</label>
+              </block>
+            </view>
+          </view>
+        </view>
+        <view class="sign-in-bottom">
+          <view class="sign-time">已连续签到{{newSignNum}}天</view>
+          <!--未签到 -->
+          <view wx:if="{{!newSignBtn}}" class="sign-qiu sign-qiu-no" bindtap='signNewFn' data-num="{{newSignNum}}">
+            <image class="sign-in-img" src="{{ossUrl+'sign-in-on.png'}}" />
+          </view>
+          <view wx:if="{{newSignBtn}}" class="sign-qiu sign-qiu-yes">
+            <image class="sign-in-img" src="{{ossUrl+'sign-in-off.png'}}" />
+          </view>
+        </view>
+      </view>
+      <view wx:if="{{integral.user_point_record.length!=0}}" class="recode-list" style="margin-top:10rpx;">
         <view class="recode-title">积分收支明细</view>
         <scroll-view scroll-y="true" class="recode-box">
           <view wx:for="{{integral.user_point_record}}" wx:for-item="pointItem" class="recode-item">
@@ -153,6 +179,8 @@ export default class myAsset extends wepy.page{
     winHeight: 0,
     winWidth: 0,
     currentTab: null,
+    newSignNum: 0, //签到天数
+    newSignBtn: false, //控制签到
 
     isUse: null,
     order_price:0,//订单金额
@@ -161,6 +189,16 @@ export default class myAsset extends wepy.page{
     cardList:[], //领卷中心
     integral:[], //我的积分
     couponList: [], //我的卡卷
+
+    isNewSignList:[   //isSigned 是否已签到
+      {"day":"日","isSigned":false},
+      {"day":"一","isSigned":false},
+      {"day":"二","isSigned":false},
+      {"day":"三","isSigned":false},
+      {"day":"四","isSigned":false},
+      {"day":"五","isSigned":false},
+      {"day":"六","isSigned":false},
+    ],
   }
   
   onLoad(e){
@@ -429,7 +467,7 @@ page{
 }
 .integral-list{
   width: 100%;
-  height: 340rpx;
+  height: 180rpx;
   background-color: #eb3c2b;
   flex-direction: column;
   position: relative;
@@ -468,6 +506,7 @@ page{
     align-items: center;
     justify-content: center;
     border-bottom: 1rpx solid #eee;
+    border-top: 10rpx solid #eee;
     padding:20rpx 0rpx;
     color:#ff6b5d;
   }
@@ -519,7 +558,8 @@ page{
 .bottom{
   flex-wrap: nowrap;
   position: absolute;
-  top: 280rpx;
+  top: 135rpx;
+  left: 20rpx;
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -675,5 +715,105 @@ page{
     padding: 20rpx 0rpx;
     border-radius: 5px;
   }
+
+
+  // 每日签到
+.sign-in-title{
+  font-size: 34rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1rpx solid #eee;
+  padding: 20rpx 0rpx;
+  color: #ff6b5d;
+
+}
+.sign-time{
+  font-size: 14px;
+  color: #999;
+  margin-top: 60rpx;
+  margin-left: 40rpx;
+}
+.new-week{ 
+  width: auto;
+  height:auto; 
+  overflow: hidden; 
+  margin-top: 30rpx; 
+}
+.we-mod{ width: 100%; }
+.mo-fen{ 
+  width: 100%; 
+  overflow: hidden; 
+  position: relative; 
+  margin-bottom: 10rpx; 
+}
+.mo-fen .f{ 
+  height: 34rpx; 
+  line-height: 34rpx; 
+  padding: 0 14rpx; 
+  border-radius: 20rpx;
+  background-color: #ffcc51;
+  font-size: 24rpx;  
+  color: #fff;  
+  text-align: center;  
+}
+.mo-fen .f.f1{ 
+  margin-left: 0;
+}
+.mo-fen .f.f2{ 
+  margin-left:41%;
+  }
+.mo-line{ 
+  height: 26rpx; 
+  width: auto; 
+  margin:0 40rpx; 
+  position: relative; 
+  margin-bottom: 15rpx; 
+}
+.mo-line::after{ 
+  content: ""; 
+  width: 100%; 
+  height: 8rpx; 
+  background-color: #eaeaea; 
+  position: absolute; 
+  left: 0; 
+  top:9rpx; 
+}
+.mo-line .q{ 
+  width: 26rpx; 
+  height: 26rpx; 
+  border-radius: 100%; 
+  background-color: #eaeaea;
+  position: absolute; 
+  left: 0; 
+  top: 0; 
+  z-index: 1;
+}
+.mo-line .q:first-of-type{ left:0;}
+.mo-line .q:nth-of-type(2){ left: 14.5%;}
+.mo-line .q:nth-of-type(3){ left: 30%;}
+.mo-line .q:nth-of-type(4){ left: 47%;}
+.mo-line .q:nth-of-type(5){ left: 64%;}
+.mo-line .q:nth-of-type(6){ left: 80%;}
+.mo-line .q:last-of-type{ left: auto; right: 0;}
+.mo-line .q.hover{ background-color: #4680db; }
+.mo-ri{ width: auto; height: 30rpx; margin:0 40rpx; position: relative;  }
+.mo-ri .t{ height: 30rpx; font-size: 24rpx; color: #999; position: absolute; left: 0; top: 0; z-index: 1;}
+.mo-ri .t:first-of-type{ left:0;}
+.mo-ri .t:nth-of-type(2){ left: 14.5%;}
+.mo-ri .t:nth-of-type(3){ left: 30%;}
+.mo-ri .t:nth-of-type(4){ left: 47%;}
+.mo-ri .t:nth-of-type(5){ left: 64%;}
+.mo-ri .t:nth-of-type(6){ left: 80%;}
+.mo-ri .t:last-of-type{ left: auto; right: 2rpx;}
+.sign-in-bottom{
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+.sign-in-img{
+  width: 200rpx;
+  height: 200rpx;
+}
 </style>
 
