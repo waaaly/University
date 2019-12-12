@@ -75,7 +75,7 @@
 
         <scroll-view  scroll-y="true" class="chat" style="height:{{scrollH}}px;transform:translateX({{x2}}px);" >
             <view wx:if="{{conversations.length==0}}" class="no-data">这里什么都没有快去找个TA丢纸条吧～</view>
-            <view class="chat-record" wx:for="{{conversations}}" wx:for-item="chat" bindtap="goChat({{chat}})" bindlongpress="delete" >
+            <view class="chat-record" wx:for="{{conversations}}" wx:for-item="chat" data-index="{{index}}" bindtap="goChat({{chat}})" bindlongpress="delete" >
               <image class="avatar" src="{{chat.avatar}}"/>
               <view class="name-cnt">
                 <view class="name">{{chat.sender_name}}</view>
@@ -393,10 +393,12 @@
           success: function(res){
             if(res.confirm){
               chatlist.splice(index,1);
+              that.$apply();
             }else if(res){
               return false;
             }
             that.conversations = chatlist;
+            that.$apply();
           }
         });
         
