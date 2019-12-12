@@ -3,7 +3,7 @@
 <template>
     <blcok>
         <TabBar :selected.sync='tabSelected'></TabBar>
-        <view wx:if="{{init}}" >
+        <view wx:if="{{init}}" style="margin-bottom: 50px;">
             <swiper style="height:200px;background-color:#fff;" 
                 indicator-dots="{{true}}" 
                 autoplay="{{true}}" 
@@ -34,7 +34,7 @@
             <view class="posting-box"  wx:if="{{postingList.length!=0}}">
                 <block wx:for="{{postingList}}">
                     <view class="posting" bindtap="goDetail({{item}})" >
-                        <view class="userInfo">
+                        <view class="userInfo" catchtap="goUserInfo({{item.userInfo.user_id}})">
                             <image src="{{item.userInfo.avatar}}"/>
                             <view class="name-time">
                                 <view class="name">{{item.userInfo.name}}</view>
@@ -168,6 +168,15 @@ export default class find extends wepy.page {
     }
 
     methods = {
+        //前往查看用户信息
+        goUserInfo(user_id){
+            if(user_id==wx.getStorageSync('userInfoInServer').id){
+                return;
+            }
+            wx.navigateTo({
+                url: `/pages/myInfo?user_id=${user_id}&visit=true`,
+            })
+        },
         //前往详情页
         goDetail(posting){
             wx.navigateTo({

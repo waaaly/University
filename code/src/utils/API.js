@@ -3,6 +3,9 @@ const ApiRootUrl = "https://college.mingrui-gz.com/api/";
 module.exports = {
     AuthLoginByWeixin: ApiRootUrl + "login", //登录接口
     UserInfo: ApiRootUrl + "user-info", //获取用户身份信息
+    UserInfoUpdate: ApiRootUrl + "user-info-update", //更改用户信息
+
+
     Swiper: ApiRootUrl + "index-carousel", //轮播图数据
     HotGood: ApiRootUrl + "goods-hot", //活动专区图片
     ShopList: ApiRootUrl + "shop-list", //首页推荐商家

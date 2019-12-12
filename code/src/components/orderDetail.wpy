@@ -36,10 +36,6 @@
         }
         methods = {
           tel(phone) {
-            //用户不能给自己打电话
-            if(!this.isShopOrder){
-              return;
-            }
             wx.makePhoneCall({
               phoneNumber: phone,
             })

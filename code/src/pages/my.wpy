@@ -227,7 +227,7 @@ export default class my extends wepy.page{
         //个人信息
         goMyInfo(e){
             wx.navigateTo({
-                url: '/pages/myInfo?newOrder='+this.haveOrder,
+                url: '/pages/myInfo?newOrder='+this.haveOrder+'&user_id='+wx.getStorageSync('userInfoInServer').id,
             })  
         },
         //展开子列表

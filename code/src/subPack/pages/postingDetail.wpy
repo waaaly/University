@@ -2,8 +2,8 @@
     <view class="page" bindtap="hideTips" wx:if="{{init}}" id='page'>
         <view class="posting">
             <view class="user-info">
-                <image  src="{{posting.userInfo.avatar}}"/>
-                <view class="name-time">
+                <image  catchtap="goUserInfo({{posting.userInfo.user_id}})" src="{{posting.userInfo.avatar}}"/>
+                <view catchtap="goUserInfo({{posting.userInfo.user_id}})" class="name-time">
                     <view class="name" bindlongpress="longPress({{posting.userInfo.name}},{{posting.userInfo.user_id}},{{posting.userInfo.avatar}})" 
                     >{{posting.userInfo.name}}</view>
                     <view class="time">{{posting.postTime}}</view>
@@ -33,8 +33,8 @@
             </view>
             <view class="comment" wx:for="{{commentList}}" wx:for-item="comment" wx:for-index="commentIndex">
                 <view class="commenter-info">
-                    <image src="{{comment.commenter.avatar}}"/>
-                    <view class="commenter">
+                    <image catchtap="goUserInfo({{comment.commenter.user_id}})" src="{{comment.commenter.avatar}}"/>
+                    <view catchtap="goUserInfo({{comment.commenter.user_id}})" class="commenter">
                         <view class="name" bindlongpress="longPress({{comment.commenter.name}},{{comment.commenter.user_id}},{{comment.commenter.avatar}})">{{comment.commenter.name}}</view>
                         <view class="floor-time">
                             <view class="floor">{{comment.floor}}楼</view>
@@ -135,6 +135,15 @@
         this.$apply();
     }
     methods={
+         //前往查看用户信息
+        goUserInfo(user_id){
+            if(user_id==wx.getStorageSync('userInfoInServer').id){
+                return;
+            }
+            wx.navigateTo({
+                url: `/pages/myInfo?user_id=${user_id}&visit=true`,
+            })
+        },
         //预览图片
         previewImage (imgList,curImg) {
             wx.previewImage({

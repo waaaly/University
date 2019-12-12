@@ -1,10 +1,10 @@
 <template>
     <block>
-        <block wx:if="{{init}}">
+        <block wx:if="{{init}}" style="margin-bottom: 50px;">
             <view wx:if="{{replyList.length==0}}" class="no-data">暂时还没有人评论/回复您哟～</view>
 
             <view class="reply-record" wx:for="{{replyList}}" wx:for-item="reply" wx:for-index="replyIndex"  bindtap="goDetail({{reply}})">
-                <view class="user-info">
+                <view  catchtap="goUserInfo({{reply.userInfo.user_id}})" class="user-info">
                     <image class="avatar" src="{{reply.userInfo.avatar}}"/>
                     <view class="name-time">
                       <view class="name">{{reply.userInfo.name}}</view>
@@ -131,6 +131,15 @@
             }
         })
       },
+      //前往用户资料
+      goUserInfo(user_id){
+        if(user_id==wx.getStorageSync('userInfoInServer').id){
+              return;
+          }
+          wx.navigateTo({
+              url: `/pages/myInfo?user_id=${user_id}&visit=true`,
+          })
+      }
     }    
 }
 </script>

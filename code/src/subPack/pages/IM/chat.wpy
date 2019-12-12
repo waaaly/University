@@ -54,6 +54,7 @@
       friend:null,
     }
     onLoad(options){
+        console.log(options);
         this.friend = JSON.parse(options.friend);
         wx.setNavigationBarTitle({
             title: this.friend.sender_name,
@@ -66,8 +67,7 @@
         
         //获取聊天记录
          http.get(api.MessageDetail,{user_id:wx.getStorageSync('userInfoInServer').id,
-         sender_id:this.friend.sender_id}).then(res=>{
-             console.log(res);
+         sender_id:this.friend.sender_id},true).then(res=>{
              this.chatItems = res;
              this.scrollTopVal = res.length * 999;
              this.$apply();
