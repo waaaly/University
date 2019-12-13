@@ -4,7 +4,7 @@
             <view class='item-left '>
                 <text class='text'>头像</text>
             </view>
-            <view class='item-right'>
+            <view class='item-right' bindtap="previewAvatar({{userInfo.avatar}})">
                 <image src='{{userInfo.avatar}}' style='width:100rpx;height:100rpx;border-radius:50%;' mode='aspectFit'/>
                 <image src="{{ossUrl+'right.png'}}" class='icon-right' mode='aspectFit'/>
             </view>
@@ -14,18 +14,20 @@
             <view class='item-left '>
                 <text class='text'>昵称</text>
             </view>
-            <view class='item-right'>
+            <view class='item-right' bindtap="showInput('修改昵称','10')">
                 <text class='text'>{{user_name}}</text>
                 <image src="{{ossUrl+'right.png'}}" class='icon-right' mode='aspectFit'/>
             </view>
         </view>
         
         <view class='flex-wrp-row item'>
-            <view class='item-left '>
-                <text class='text'>性别</text>
+            <view class='item-left '>              
+                <text class='text'>性别</text>              
             </view>
             <view class='item-right'>
-                <text class='text'>{{user_sex}}</text>
+                <picker bindchange="sexChange" disabled="{{visit}}"  range="{{sexList}}">
+                    <text class='text'>{{user_sex}}</text>
+                </picker>
                 <image src="{{ossUrl+'right.png'}}" class='icon-right' mode='aspectFit'/>
             </view>
         </view>
@@ -35,7 +37,7 @@
             <view class='item-left '>
                 <text class='text'>签名</text>
             </view>
-            <view class='item-right'>
+            <view class='item-right' bindtap="showInput('修改签名','30')">
                 <text class='text'>{{user_desc}}</text>
                 <image src="{{ossUrl+'right.png'}}" class='icon-right' mode='aspectFit'/>
             </view>
@@ -131,11 +133,8 @@
                 <button bindtap="goChat">给TA丢纸条</button>
             </view>
         </block>
-        <!-- <block wx:if="{{!visit}}">
-            <view class="zhitiao">
-                <button bindtap="saveInfo">保存更改</button>
-            </view>
-        </block> -->
+
+        <InputModal></InputModal>
     </view>
 </template>
 
@@ -143,6 +142,7 @@
 import wepy from 'wepy';
 import http from '../utils/Base';
 import api from '../utils/API';
+import InputModal from '../components/input-modal';
 export default class myInfo extends wepy.page {
     data={
         ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
@@ -150,7 +150,8 @@ export default class myInfo extends wepy.page {
         user_name:'',//可以更改的信息
         user_desc:'',//签名
         user_sex:'',//性别
-
+        user_sex_index:0,//性别下标
+        sexList:['保密','男生','女生'],
         userInfo:{},//用户资料
 
         shopName:'',//商铺名称
@@ -160,6 +161,9 @@ export default class myInfo extends wepy.page {
         showColonel:false,//团长审核通知
 
         visit:false,//其他用户浏览模式
+    }
+    components = {
+        InputModal:InputModal,
     }
     config = {
       navigationBarTitleText: '个人详细信息',
@@ -174,10 +178,10 @@ export default class myInfo extends wepy.page {
         http.get(api.UserInfo,{user_id:e.user_id},true).then((res)=>{
             this.userInfo = res;
             this.user_name = res.name;
-            this.user_desc = res.user_desc;
-            if(res.user_sex==0) this.user_sex = '保密';
-            if(res.user_sex==1) this.user_sex = '男生';
-            if(res.user_sex==2) this.user_sex = '女生';
+            this.user_desc = res.user_desc?res.user_desc:"未设置";
+            if(res.sex==0) {this.user_sex = '保密',this.user_sex_index = 0;}
+            if(res.sex==1) {this.user_sex = '男生',this.user_sex_index = 1;}
+            if(res.sex==2) {this.user_sex = '女生',this.user_sex_index = 2;}
             this.$apply();
         })
     }
@@ -193,7 +197,48 @@ export default class myInfo extends wepy.page {
             this.$apply();
         })
     }
+    //变更用户资料
+    saveInfo(){
+        http.post(api.UserInfoUpdate,{user_id:wx.getStorageSync('userInfoInServer').id,
+            sex:this.user_sex_index,name:this.user_name,user_desc:this.user_desc,
+            },true).then(res=>{
+                wx.showToast({title:'修改成功！'})
+            })
+    }
+    events = {
+        "changeDesc":(desc,$event)=>{
+            this.user_desc = desc;
+            this.$apply();
+            this.saveInfo();
+        },
+        "changeName":(name,$event)=>{
+            this.user_name = name;
+            this.$apply();
+            this.saveInfo();
+        },
+    }
     methods={
+        //预览头像
+        previewAvatar(url){
+            wx.previewImage({
+                current: url, // 当前显示图片的http链接  
+                urls: url// 需要预览的图片http链接列表  
+            })
+        },
+        //更改性别
+        sexChange(e){
+            this.user_sex = this.sexList[e.detail.value];
+            this.user_sex_index = e.detail.value;
+            this.$apply();
+            this.saveInfo();
+        },
+        //更改昵称和签名
+        showInput(changeType,maxLength){
+            if(this.visit){
+                return;
+            }
+            this.$invoke('InputModal', 'showInput', changeType,maxLength);
+        },
         //
         colseColonel(e){
             this.showColonel = false;
@@ -247,14 +292,7 @@ export default class myInfo extends wepy.page {
                 url: `/subPack/pages/IM/chat?friend=${JSON.stringify(friend)}`
             });      
         },
-        //变更用户资料
-        saveInfo(){
-            http.post(api.UserInfoUpdate,{user_id:wx.getStorageSync('userInfoInServer').id,
-                sex:sex,name:name,user_desc:desc
-                },true),then(res=>{
-
-                })
-        }
+        
     }
 }
 </script>
@@ -334,4 +372,7 @@ page{
         height: 20px;
     }
 }
+
+
+
 </style>

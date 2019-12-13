@@ -160,29 +160,29 @@ export default class goodDetail extends wepy.page{
         this.windowHeight = systemInfo.windowHeight;
         
         var spValue = new Object;
-        http.get(api.GoodsDetail,{gid:good.goodId,shop_id:good.shopId},true).then(res=>{
-            this.goodInfo = res.shopGoods;
-            this.shopInfo = res.shopInfo;              
-            this.$apply();
-            if(res.shopGoods.specInfo.length != 0){
-              this.specInfo = res.shopGoods.specInfo;//获取商品规格
-              this.specSelected = new Object();
-              //默认选择规格的首项 按键值进行访问
-              for(let index in res.shopGoods.specInfo){												//规格名列表
-                for(let childIndex in res.shopGoods.specInfo[index].items){		//规格值列表
-                  //index:规格名数组下标 childIndex：规格值键值
-                  spValue = {};
-                  spValue[childIndex] = res.shopGoods.specInfo[index].items[childIndex].sp_item_name;//存储规格名
-                  this.specSelected[index]=spValue;
-                  break;
-                }
-              }
-               //根据默认规格获取产品id
-              this.submitSpec(this.goodInfo.id);
-            }else{
-              this.specInfo = [];
-            }
-         
+	http.get(api.GoodsDetail,{gid:good.goodId,shop_id:good.shopId,
+		user_id:wx.getStorageSync('userInfoInServer')?wx.getStorageSync('userInfoInServer').id:null},true).then(res=>{
+		this.goodInfo = res.shopGoods;
+		this.shopInfo = res.shopInfo;              
+		this.$apply();
+		if(res.shopGoods.specInfo.length != 0){
+		this.specInfo = res.shopGoods.specInfo;//获取商品规格
+		this.specSelected = new Object();
+		//默认选择规格的首项 按键值进行访问
+		for(let index in res.shopGoods.specInfo){												//规格名列表
+			for(let childIndex in res.shopGoods.specInfo[index].items){		//规格值列表
+			//index:规格名数组下标 childIndex：规格值键值
+			spValue = {};
+			spValue[childIndex] = res.shopGoods.specInfo[index].items[childIndex].sp_item_name;//存储规格名
+			this.specSelected[index]=spValue;
+			break;
+			}
+		}
+		//根据默认规格获取产品id
+		this.submitSpec(this.goodInfo.id);
+		}else{
+		this.specInfo = [];
+		}         
         })     
     }
 	/**

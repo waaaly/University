@@ -428,7 +428,7 @@ export default class ChatInput extends wepy.component{
             });
         },
         /**
-         * input发送按钮事件
+         * input右侧自定义发送按钮事件
          */
         _chatInput_send_text_message02() {
             if(this.textMessage.length==0){
@@ -439,7 +439,6 @@ export default class ChatInput extends wepy.component{
                 this.inputValueEventTemp = '';
             }
             this.textMessage = '';
-            this.inputFoucs = false;
             this.$apply();
         },
         /**
@@ -546,7 +545,7 @@ export default class ChatInput extends wepy.component{
     margin-bottom: 13rpx;
     padding:10rpx;
     min-height: 51rpx;
-    background-color: #EFEFEF;
+    background-color: #fff;
     flex:1;
 }
 

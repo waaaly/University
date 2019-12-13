@@ -1,6 +1,6 @@
 <template>
     <block>
-        <block wx:if="{{init}}" style="margin-bottom: 50px;">>
+        <block wx:if="{{init}}" style="margin-bottom: 50px;">
             <view wx:if="{{conversations.length==0}}" class="no-data">这里什么都没有快去找个TA丢纸条吧～</view>
 
             <view class="chat-record" wx:for="{{conversations}}" wx:for-item="chat" bindtap="goChat({{chat}})" bindlongpress="delete" >

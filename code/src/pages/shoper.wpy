@@ -55,7 +55,8 @@ export default class Shoper extends wepy.page {
         }
 
         //获取商品
-        http.get(api.ShopDetail,{shop_id:shopId},true).then(res =>{   
+        http.get(api.ShopDetail,{shop_id:shopId,
+            user_id:wx.getStorageSync('userInfoInServer')?wx.getStorageSync('userInfoInServer').id:null},true).then(res =>{   
             this.shopInfo = res.shop_info;
             this.$broadcast('shoperGoodList', res);    
             this.$apply();       

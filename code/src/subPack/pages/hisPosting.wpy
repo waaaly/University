@@ -1,6 +1,6 @@
 <template>
     <block>
-      <blcok wx:if='{{init}}' style="margin-bottom: 50px;">>
+      <blcok wx:if='{{init}}' style="margin-bottom: 50px;">
           <view wx:if="{{postList.length==0}}" class="no-data">您还未发布任何贴子呢～</view>
           <view  class="posts-record" wx:for="{{postList}}" wx:for-item="post" wx:for-index="postIndex" bindtap="goDetail({{post}})">
           

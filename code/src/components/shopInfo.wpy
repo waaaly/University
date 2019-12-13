@@ -35,9 +35,9 @@
         </view>
         
         <view class=" bulletin">
-          <view class=" title border-1px">公告与活动</view>
+          <view class=" title border-1px">商家公告</view>
           <view class=" content-wrapper border-1px">
-            <view class=" content">目前暂无相关公告</view>
+            <view class=" content">{{shopInfo.shop_summary}}</view>
           </view>
           <view wx:if="{{seller.supports}}" class=" supports">
             <view class="support-item border-1px" wx:key="item.index" key="{{item.index}}" wx:for="{{seller.supports}}" wx:for-index="index" wx:for-item="item">
@@ -47,7 +47,7 @@
           </view>
         </view>
        
-        <view class=" pics">
+        <!-- <view class=" pics">
           <view class=" title border-1px">商家实景</view>
           <view class=" pic-wrapper" ref="picWrapper">
             <scroll-view scroll-x class="_scroll-view ">
@@ -58,7 +58,7 @@
               </view>
             </scroll-view>
           </view>
-        </view>
+        </view> -->
         
         <view class=" info">
           <view class=" title border-1px" style="color: #07111b;">商家信息</view>
@@ -67,9 +67,9 @@
               <text>商家码：</text>
               <image src="{{shopInfo.qrcode}}"/>
             </view>
-            <view class="shopQR" bindtap="previewQR({{imageUrl}}+{{shopInfo.code_pic}})">
+            <view class="shopQR" bindtap="previewQR({{shopInfo.code_pic}})">
               <text>商家微信：</text>
-              <image src="{{imageUrl+shopInfo.code_pic}}"/>
+              <image src="{{shopInfo.code_pic}}"/>
             </view>
             <view class="info-item" bindtap="tel({{shopInfo.phone}})">联系方式：{{shopInfo.phone}}</view>
             <view class="info-item" >营业时间：{{shopInfo.business_start_time}}-{{shopInfo.business_end_time}}</view>

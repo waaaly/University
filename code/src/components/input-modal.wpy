@@ -1,0 +1,171 @@
+<style>
+
+.input-box{
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        justify-content: center;
+        padding: 20rpx 10rpx;
+
+}
+
+.title{
+        text-align: center;
+        font-size: 40rpx;
+        line-height: 40rpx;
+        font-weight: 100;
+        color:#108ee9;
+        flex: 1;
+        margin-bottom:-50rpx;
+}
+
+.input-line{
+        display: flex;
+        align-items: center;
+        flex: 1;
+        border-top:1rpx solid #eee;
+        border-bottom:1rpx solid #eee;
+}
+
+._input{
+        flex: 1;
+        margin: 50rpx;
+        font-size: 32rpx;
+        border-bottom:1px solid #108ee9;
+}
+
+.num{
+color: #108ee9;
+margin-right: 25px;
+font-size: 40rpx;
+margin-top: 20rpx;
+
+}
+.input-btn{
+        display: flex;
+        align-items: center;
+        flex: 1;
+        font-size: 40rpx;
+        font-weight: 100;
+}
+.cancle{
+        color:darkgrey;
+        position: relative;
+        text-align: center;
+        flex: 1;
+}
+.cancle::after{
+        content: "";
+        position: absolute;
+        top: -18px;
+        left: 100px;
+        width: 1rpx;
+        height: 50px;
+        background-color: #eee;
+
+}
+.confirm{
+        color:#108ee9;
+        flex: 1;
+        text-align: center;
+}
+.zan-dialog__mask {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10;
+        background: rgba(0, 0, 0, 0); /*设置阴影半透明背景如： background: rgba(0, 0, 0, 0.4); */
+        display: none;
+}
+ 
+.zan-dialog__container {
+        position: fixed;
+        bottom: 500rpx;
+        width: 650rpx; /* 弹窗布局宽 */
+        height: 350rpx; /* 弹窗布局高，与下面弹出距离transform有关 */
+        margin-left: 50rpx;
+        background: #fff;
+        transform: translateY(300%); /*弹框弹出距离，与弹框布局高度有关，如300%表示弹起距离为3倍弹窗高度 */
+        transition: all 0.4s ease;
+        z-index: 12;
+        border-radius: 20rpx;
+        box-shadow: 0px 3px 3px 2px gainsboro; /* 弹框的悬浮阴影效果，如不需要可注释该行 */
+}
+ 
+.zan-dialog--show .zan-dialog__container {
+ transform: translateY(0);
+}
+ 
+.zan-dialog--show .zan-dialog__mask {
+ display: block;
+}
+</style>
+
+
+<script>
+import wepy from 'wepy';
+import http from '../utils/Base';
+import api from '../utils/API'; 
+
+export default class inputModal extends wepy.component{
+        data = {
+                showDialog: false,
+                title:'',
+                maxLength:0,
+                inputText:'',
+                curTextLength:0,
+        }
+        toggleDialog() {
+                this.showDialog = !this.showDialog;     
+        }
+        methods = {             
+                showInput(title,maxLength){
+                        this.title = title;
+                        this.maxLength = maxLength;
+                        this.$apply();
+                        this.toggleDialog();
+                },
+                inputEvent(e){
+                        this.inputText = e.detail.value;
+                        this.curTextLength = e.detail.value.length;
+                        this.$apply();
+                },
+                cancle(){
+                        this.toggleDialog();
+                },
+                confirm(){
+                        if(this.curTextLength == 0){
+                                wx.showToast({title:'内容不能为空！',icon:'none'});
+                        }
+                        if(this.title == '修改签名'){
+                                this.$emit('changeDesc',this.inputText);
+                        }else{
+                                this.$emit('changeName',this.inputText);
+                        }
+                        this.toggleDialog();
+                }
+        }
+}
+</script>
+<template>
+        <view class="zan-dialog {{ showDialog ? 'zan-dialog--show' : '' }}">
+        <view class="zan-dialog__mask" >
+        <view class="zan-dialog__container">
+                <view class="input-box">
+                        <view class="title">{{title}}</view>
+                        <view class="input-line">
+                                <input class="_input" maxlength="{{maxLength}}" placeholder="请输入内容"  bindinput="inputEvent"/>
+                                <text class="num">{{maxLength-curTextLength}}</text>
+                        </view>
+                        <view class="input-btn">
+                                <view class="cancle" bindtap="cancle">取消</view>
+                                <view class="confirm" bindtap="confirm">确认</view>
+                        </view>
+                </view>
+        </view>
+        </view>
+</template>
+
+
