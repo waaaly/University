@@ -4,8 +4,14 @@
                 <cover-view class="tab-bar-border">
         </cover-view>
         <cover-view wx:for="{{list}}" wx:key="index" class="tab-bar-item"  bindtap="switchTab({{index}})">
-                <cover-image src="{{selected === index ? item.selectedIconPath : item.iconPath}}"></cover-image>
-                <cover-view style="color: {{selected === index ? selectedColor : color}}">{{item.text}}</cover-view>
+                <block wx:if="{{index === 2}}">
+                        <cover-image class="shop-icon" src="{{item.selectedIconPath}}"></cover-image>
+                </block>
+                <block wx:else>
+                        <cover-image class="cover-icon" src="{{selected === index ? item.selectedIconPath : item.iconPath}}"></cover-image>
+                        <cover-view style="color: {{selected === index ? selectedColor : color}}">{{item.text}}</cover-view>
+                        <view class="red-dot" wx:if="{{index == 4 && showDot}}"></view>
+                </block>        
         </cover-view>
         </cover-view>
 </template>
@@ -22,6 +28,7 @@ export default class star extends wepy.component{
               }  
         }
      data = {
+        showDot:false,
         color: "#a9b7b7",
         selectedColor: "#108ee9",
         list: [{
@@ -34,13 +41,13 @@ export default class star extends wepy.component{
                 pagePath: "/subPack/pages/news",
                 selectedIconPath: "/images/subTab/xiaoxi-on.png",
                 iconPath: "/images/subTab/xiaoxi-off.png",
-                text: "消息"
+                text: "回复我"
         },
         {
-                pagePath: "/subPack/pages/chatList",
-                selectedIconPath: "/images/subTab/zhitiao-on.png",
-                iconPath: "/images/subTab/zhitiao-off.png",
-                text: "纸条"
+                pagePath: "/pages/index",
+                selectedIconPath: "/images/subTab/shop-icon.png",
+                iconPath: "/images/subTab/shop-icon.png",
+                text: "商城"
         },
         {
                 pagePath: "/subPack/pages/hisPosting",
@@ -49,18 +56,19 @@ export default class star extends wepy.component{
                 text: "历史贴"
         },
         {
-                pagePath: "/pages/index",
-                selectedIconPath: "/images/subTab/index-on.png",
-                iconPath: "/images/subTab/index-off.png",
-                text: "商城"
-        },]
+                pagePath: "/subPack/pages/chatList",
+                selectedIconPath: "/images/subTab/zhitiao-on.png",
+                iconPath: "/images/subTab/zhitiao-off.png",
+                text: "纸条"
+        },
+        ]
      } 
      methods = {
         switchTab(index) {
                 const data = this.list[index];
                 const url = data.pagePath;
                 this.selected = index;
-                if(index == 4 ){
+                if(index == 2 ){
                         wx.switchTab({url});
                         return;
                 }
@@ -71,6 +79,10 @@ export default class star extends wepy.component{
               'tabSelected':(tab,$event)=>{
                       this.selected = 0;
                       this.$apply();
+              },
+              'showDot':(isShow,$event)=>{
+                      this.showDot = isShow;
+                        this.$apply();
               }
       }
 }
@@ -105,15 +117,30 @@ export default class star extends wepy.component{
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  position: relative;
+}
+.shop-icon{
+        position: absolute;
+        width: 40px;
+        height: 40px;
+}
+.cover-icon{
+        width: 27px;
+        height: 27px;
 }
 
-.tab-bar-item cover-image {
-  width: 27px;
-  height: 27px;
-}
 
 .tab-bar-item cover-view {
   font-size: 11px;
 }
 
+.red-dot{
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: red;
+        top: 5px;
+        right: 28px;
+}
 </style>

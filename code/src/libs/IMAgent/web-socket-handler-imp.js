@@ -99,6 +99,14 @@ export default class WebSocketHandlerImp extends IIMHandler {
                     break;
                 default:
                     msg = data.message;
+                    //自己发出的消息
+                    if (msg.isMy == 'false') {
+                        wx.playBackgroundAudio({
+                            dataUrl: 'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/voice/msg.mp3',
+                        });
+                        wx.vibrateLong();
+                        wx.showTabBarRedDot({ index: 2 });
+                    }
                     this._receiveListener && this._receiveListener(msg);
                     break;
             }

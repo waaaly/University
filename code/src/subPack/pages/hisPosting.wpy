@@ -1,8 +1,9 @@
 <template>
     <block>
-      <blcok wx:if='{{init}}' style="margin-bottom: 50px;">
+      <view wx:if='{{init}}' style="margin-bottom: 50px;">
           <view wx:if="{{postList.length==0}}" class="no-data">您还未发布任何贴子呢～</view>
-          <view  class="posts-record" wx:for="{{postList}}" wx:for-item="post" wx:for-index="postIndex" bindtap="goDetail({{post}})">
+          <view  class="posts-record" wx:for="{{postList}}" wx:for-item="post" wx:for-index="postIndex" 
+            bindtap="goDetail({{post}})">
           
               <view class="time-like">
                   <view class="time">{{post.postTime}}</view>
@@ -47,7 +48,7 @@
               </view>
 
           </view>
-      </blcok>
+      </view>
       <TabBar :selected.sync='tabSelected'></TabBar>      
     </block>
 </template>
@@ -99,6 +100,12 @@
 
     onShow(){
        wx.hideHomeButton();
+       //设置监听socket
+        this.$parent.getIMHandler().setOnReceiveMessageListener({
+            listener: (msg) => { 
+                   this.$broadcast('showDot', true);                         
+            }
+        })
     }  
 
     methods={

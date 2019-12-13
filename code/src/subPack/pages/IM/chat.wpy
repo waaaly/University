@@ -124,7 +124,7 @@
      */
     async sendMsg({content, itemIndex}) {
         try {
-            console.log('chat sendmsg',content);
+            console.log('sendmsg in chat ',content);
             const {msg} = await this.imOperator.onSimulateSendMsg({content})
             this.UI.updateViewWhenSendSuccess(msg, itemIndex);
             return {msg};

@@ -4,8 +4,7 @@
             <view class="user-info">
                 <image  catchtap="goUserInfo({{posting.userInfo.user_id}})" src="{{posting.userInfo.avatar}}"/>
                 <view catchtap="goUserInfo({{posting.userInfo.user_id}})" class="name-time">
-                    <view class="name" bindlongpress="longPress({{posting.userInfo.name}},{{posting.userInfo.user_id}},{{posting.userInfo.avatar}})" 
-                    >{{posting.userInfo.name}}</view>
+                    <view class="name" >{{posting.userInfo.name}}</view>
                     <view class="time">{{posting.postTime}}</view>
                 </view>
                 <view class="like" catchtap="changePostLike()">             
@@ -35,7 +34,7 @@
                 <view class="commenter-info">
                     <image catchtap="goUserInfo({{comment.commenter.user_id}})" src="{{comment.commenter.avatar}}"/>
                     <view catchtap="goUserInfo({{comment.commenter.user_id}})" class="commenter">
-                        <view class="name" bindlongpress="longPress({{comment.commenter.name}},{{comment.commenter.user_id}},{{comment.commenter.avatar}})">{{comment.commenter.name}}</view>
+                        <view class="name" >{{comment.commenter.name}}</view>
                         <view class="floor-time">
                             <view class="floor">{{comment.floor}}楼</view>
                             <view class="time">{{comment.commentTime}}</view>
@@ -51,10 +50,9 @@
                 <view class="comment-cnt" catchtap="changeHoldText({{commentIndex}},{{comment.commenter.name}},{{null}})">{{comment.commentText}}</view>
                 <view class="reply-list" wx:if="{{comment.replyList.length!=0}}">
                     <view class="reply-item" wx:for="{{comment.replyList}}" wx:for-item="reply" >
-                        <view class="replyer" bindlongpress="longPress({{reply.replyer.name}},{{reply.replyer.user_id}},{{reply.replyer.avatar}})">{{reply.replyer.name}}</view>
+                        <view class="replyer" >{{reply.replyer.name}}</view>
                         <view wx:if="{{reply.beReplyer}}" class="split">回复</view>
-                        <view wx:if="{{reply.beReplyer}}" class="be-replyer" 
-                        bindlongpress="longPress({{reply.beReplyer.name}},{{reply.beReplyer.user_id}},{{reply.beReplyer.avatar}})">{{reply.beReplyer.name}}</view>
+                        <view wx:if="{{reply.beReplyer}}" class="be-replyer" >{{reply.beReplyer.name}}</view>
                         <view class="split">:</view>
                         <view class="reply-cnt" catchtap="changeHoldText({{commentIndex}},{{reply.replyer.name}},{{reply.replyer.user_id}})">{{reply.replyText}}</view>
                     </view>
@@ -73,8 +71,6 @@
             <input class="input" maxlength='-1'  placeholder="评论帖子" cursor-spacing='10'  bindinput="commentInput" value="{{commentText}}"/>
             <view catchtap="sendComment" class="{{commentText.length==0?'send-off':'send-on'}}" >评论</view>
         </view>
-        <view wx:if="{{tipsShow}}" class="tips" style="top:{{tipsY}}px;left:{{tipsX}}px;"
-            bindtap="goChat">{{tips}}</view>
     </view>
 </template>
 
@@ -100,9 +96,7 @@
             sender_id:'',
             avatar:''
         },//丢纸条对象
-        tips:'丢纸条',
-        tipsX:0,
-        tipsY:0,
+
         content:{},
         posting:{},
         commentList:[]    
@@ -281,7 +275,6 @@
                 reply_to:               this.posting.userInfo.name,//被评论者名字 
                 content:                comment.commentText,//评论内容
             },true,false).then(res=>{
-                console.log(res)
                 if(res.code==200){
                     this.commentList.push(comment);
                     let relpyInput = new Object();
@@ -302,25 +295,6 @@
                     wx.showToast({title:res.msg});
                 }
             })
-        },
-        //长按用户名弹出操作框
-        longPress(name,id,avatar,e){
-            console.log(e)
-            if(id==wx.getStorageSync('userInfoInServer').id){
-                return;
-            }
-            this.friend['sender_name'] = name;
-            this.friend['sender_id'] = id;
-            this.friend['avatar'] = avatar;
-            this.tipsShow = true;
-            this.tipsX = e.currentTarget.offsetLeft;
-            this.tipsY = e.currentTarget.offsetTop + 20;
-            this.$apply();
-        },
-        //隐藏操作框
-        hideTips(){
-            this.tipsShow = false;
-            this.$apply();
         },
         //前往私聊
         goChat(){
@@ -492,31 +466,7 @@
                 .reply-cnt{
 
                 }
-            }
-            .open-tips {
-                display :inline-block;
-                position: relative;
-                width: 40rpx;
-                height: 30rpx;
-                margin-right: 20rpx;
-            }
-            .open-tips::after {
-                display: inline-block;
-                content: " ";
-                height: 18rpx;
-                width: 18rpx;
-                border-width: 0 2rpx 2rpx 0;
-                border-color: #999;
-                border-style: solid;
-                transform: matrix(0.71, 0.71, -0.71, 0.71, 0, 0);
-                transform-origin: center;
-                transition: transform .3s;
-                position: absolute;
-                top: 50%;
-                right: 10rpx;
-                margin-top: -10rpx;
-            }
-            
+            }                   
         }
         .reply-input{
             display: flex;
@@ -594,14 +544,5 @@
 .page{
     position: relative;
 }
-.tips{
-    padding:20rpx 10rpx 20rpx;
-    box-shadow: 3rpx 3rpx 3rpx 3rpx #ddd ;
-    background-color: #fff;
-    border:1rpx solid #eee;
-    font-size:26rpx;
-    position: absolute;
-    height: 20px;
-    z-index:10;
-}
+
 </style>

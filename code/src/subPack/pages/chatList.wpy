@@ -1,9 +1,13 @@
 <template>
     <block>
-        <block wx:if="{{init}}" style="margin-bottom: 50px;">
+        <view wx:if="{{init}}" style="margin-bottom: 50px;">
             <view wx:if="{{conversations.length==0}}" class="no-data">这里什么都没有快去找个TA丢纸条吧～</view>
 
             <view class="chat-record" wx:for="{{conversations}}" wx:for-item="chat" bindtap="goChat({{chat}})" bindlongpress="delete" >
+                  <block wx:if="{{chat.unReadNum!=0}}">
+                    <view class="unread-dot" wx:if="{{chat.unReadNum<99}}">{{chat.unReadNum}}</view>
+                    <view class="unread-dot" wx:else>99+</view>
+                  </block>
                   <image class="avatar" src="{{chat.avatar}}"/>
                   <view class="name-cnt">
                     <view class="name">{{chat.sender_name}}</view>
@@ -14,10 +18,10 @@
                       <view wx:if="{{chat.type=='image'}}" class="chat-cnt">[图片]</view>
                       <view wx:if="{{chat.type=='voice'}}" class="chat-cnt">[语音]</view>
                     </block>
-                  </view>
-                  <view class="chat-time">{{chat.time}}</view>
+                  </view>           
+                  <view class="chat-time">{{chat.timeStr}}</view>              
             </view>
-        </block>
+        </view>
         <TabBar :selected.sync='tabSelected'></TabBar>
     </block>
 </template>
@@ -37,7 +41,7 @@
     }
     data = {
       ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
-      tabSelected:2,
+      tabSelected:4,
       init:false,
       conversations:[],//会话列表
     }
@@ -47,6 +51,7 @@
 
     onShow(){
       wx.hideHomeButton(); 
+      this.$broadcast('showDot', false);
        //获取会话列表
       http.get(api.MessageList,{
           user_id:wx.getStorageSync('userInfoInServer').id,
@@ -57,14 +62,19 @@
       })
       //设置监听会话列表更新
       this.$parent.getIMHandler().setOnReceiveMessageListener({
-          listener: (msg) => {              
+          listener: (msg) => {                      
             var isNew = true;
-            for(let item of this.conversations){
+            for(let index in this.conversations){
+              const item = this.conversations[index];
               if(item.sender_id == msg.friendId){
                 console.log('更新会话', msg);
-                item['time'] = msg.time;
-                item['avatar'] = msg.headUrl;
+                item['timeStr'] = msg.timeStr;
+                item['content'] = msg.content;
+                item['type'] = msg.type;
+                item['unReadNum'] = item.unReadNum + 1;
                 isNew = false;
+                this.conversations.splice(index,1);
+                this.conversations.unshift(item);
                 this.$apply();
                 return;
               }
@@ -76,8 +86,9 @@
                 sender_id: msg.friendId,
                 sender_name: msg.friendName,
                 content: msg.content,
-                time: msg.time,
+                timeStr: msg.timeStr,
                 avatar: msg.headUrl,
+                unReadNum:msg.unReadNum
               }             
               this.conversations.unshift(chatItem);
               this.$apply();
@@ -444,21 +455,27 @@
 }
 
 .unread-dot {
-  float: right;
-  width: 16px;
-  height: 16px;
-  background-color: red;
-  border-radius: 50%;
-  margin-top: -35px;
-  font-size:10rpx;
-  color:#fff;
+float: right;
+background-color: red;
+border-radius: 40%;
+margin-top: -35px;
+font-size: 12px;
+color: #fff;
+position: absolute;
+top: 40px;
+right: 10px;
+padding: 0 2px;
+min-height: 16px;
+min-width: 27px;
+text-align: center;
+
 }
 
 
 /*隐藏滚动条*/
-// ::-webkit-scrollbar {
-//   width: 0;
-//   height: 0;
-//   color: transparent;
-// }
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  color: transparent;
+}
 </style>

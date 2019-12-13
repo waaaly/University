@@ -20,7 +20,10 @@
             </block>
             <input wx:elif="{{inputStatus==='text'}}"
                 class="chat-input-style" style="margin-left:{{showVoicePart?0:16}}rpx;"
-                maxlength="500" confirm-type="send" value="{{textMessage}}" bindconfirm="_chatInput_send_text_message" bindfocus="_chatInput_bind_focus_event" bindblur="_chatInput_bind_blur_event" bindinput="_chatInput_getValue_event"/>
+                maxlength="500" confirm-type="send" type="text" value="{{textMessage}}" focus ="true"
+                bindconfirm="_chatInput_send_text_message" confirm-hold = "true"
+                bindfocus="_chatInput_bind_focus_event" bindblur="_chatInput_bind_blur_event" 
+                bindinput="_chatInput_getValue_event"/>
             <view hover-class="press-style-opacity">
                 <view wx:if="{{inputFoucs}}" class="chat-input-send-button-style" 
                 style="{{textMessage.length!=0?'background-color: mediumseagreen;':'background-color: #dfdfdf;'}}" bindtap="_chatInput_send_text_message02">发送</view>

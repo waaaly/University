@@ -140,6 +140,7 @@ export default class Index extends wepy.page{
   }  
   onShow(){
     wx.showTabBar();
+    wx.hideTabBarRedDot({title:2});
     //先读默认地址
     wx.getStorage({
       key:'userDefaultAddress',

@@ -1,9 +1,10 @@
 <template>
     <block>
-        <block wx:if="{{init}}" style="margin-bottom: 50px;">
+        <view wx:if="{{init}}" style="margin-bottom: 50px;">
             <view wx:if="{{replyList.length==0}}" class="no-data">暂时还没有人评论/回复您哟～</view>
 
-            <view class="reply-record" wx:for="{{replyList}}" wx:for-item="reply" wx:for-index="replyIndex"  bindtap="goDetail({{reply}})">
+            <view class="reply-record" wx:for="{{replyList}}" wx:for-item="reply" wx:for-index="replyIndex"  
+                bindtap="goDetail({{reply.articleId}})">
                 <view  catchtap="goUserInfo({{reply.userInfo.user_id}})" class="user-info">
                     <image class="avatar" src="{{reply.userInfo.avatar}}"/>
                     <view class="name-time">
@@ -27,8 +28,8 @@
                   focus="true" maxlength='-1' cursor-spacing='10'  bindfocus="replyInputFocus" bindblur="replyInputBlur"/> 
                 <view catchtap="sendReply" class="{{replyText.length==0?'send-off':'send-on'}}" >回复</view>
             </view> 
-      </block>
-      <TabBar :selected.sync='tabSelected'></TabBar>  
+        </view>
+        <TabBar :selected.sync='tabSelected'></TabBar>  
     </block>
 </template>
 
@@ -74,10 +75,21 @@
 
     onShow(){
         wx.hideHomeButton();
+        //设置监听socket
+        this.$parent.getIMHandler().setOnReceiveMessageListener({
+            listener: (msg) => { 
+                   this.$broadcast('showDot', true);                         
+            }
+        })
     }  
       
     methods={
-
+      //帖子详情页
+      goDetail(articleId){
+          wx.navigateTo({
+              url: `./postingDetail?posting_id=${articleId}`,
+          })
+      },
       //历史屏滚动
       hisScroll(){
         this.replyInputShow = false;  

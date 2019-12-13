@@ -149,6 +149,12 @@ export default class find extends wepy.page {
             this.init = true;
             this.$apply();
         })
+        //设置监听socket
+        this.$parent.getIMHandler().setOnReceiveMessageListener({
+            listener: (msg) => { 
+                   this.$broadcast('showDot', true);                         
+            }
+        })
     }
     //上拉加载
     onReachBottom(){
@@ -407,4 +413,5 @@ page{
   height: 0;
   color: transparent;
 }
+
 </style>

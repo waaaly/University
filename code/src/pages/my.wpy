@@ -576,25 +576,12 @@ color: transparent;
   height: 20px;
 }
 
-/* .weui-cells{
-    position:relative;
+/*隐藏滚动栏*/
+::-webkit-scrollbar{
+width: 0;
+height: 0;
+color: transparent;
 }
-
-.weui-cells::after{
-    content: "";
-    position:absolute;
-    top:20%;
-    left:140px;
-    width:2px;
-    height:50%;
-    background-color:#eee;
-}
-
-.weui-cells:last-child{
-    border: none;
-    outline: medium;
-    border-radius: 0;
-} */
 
 
 </style>
