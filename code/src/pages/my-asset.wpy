@@ -39,23 +39,27 @@
       </view> 
       <view class="sign-in">
         <view class="sign-in-title">每日签到</view>
-        <view class="new-week" >
-          <view class="we-mod">
-            <view class="mo-line">
-             <block wx:for="{{isNewSignList}}"  wx:for-item="v" wx:key="k">
-                <label class="q {{v.isSigned?'hover':''}}"></label>
-             </block>
+        <view class='new-week' >
+          <view class='we-mod'>
+            <view class='mo-fen'>
+              <label class='f f1' wx:if='{{continuityDays7}}'>+7积分</label>
+              <label class='f f2' wx:if='{{continuityDays3}}'>+3积分</label>
             </view>
-            <view class="mo-ri">
-              <block wx:for="{{isNewSignList}}"  wx:for-item="v" wx:key="k">
+            <view class='mo-line'>
+              <block wx:for="{{isNewSignedArr}}"  wx:for-item="v" wx:key="k">
+                <label class="q {{v.isSigned?'hover':''}}"></label>
+              </block>
+            </view>
+            <view class='mo-ri'>
+              <block wx:for="{{isNewSignedArr}}"  wx:for-item="v" wx:key="k">
                 <label class="t">{{v.day}}</label>
               </block>
             </view>
           </view>
         </view>
         <view class="sign-in-bottom">
-          <view class="sign-time">已连续签到{{newSignNum}}天</view>
-          <!--未签到 -->
+          <view class="sign-time">已连续签到{{integral.sign_num}}天</view>
+          
           <view wx:if="{{!newSignBtn}}" class="sign-qiu sign-qiu-no" bindtap='signNewFn' data-num="{{newSignNum}}">
             <image class="sign-in-img" src="{{ossUrl+'sign-in-on.png'}}" />
           </view>
@@ -64,7 +68,7 @@
           </view>
         </view>
       </view>
-      <view wx:if="{{integral.user_point_record.length!=0}}" class="recode-list" style="margin-top:10rpx;">
+      <!-- <view wx:if="{{integral.user_point_record.length!=0}}" class="recode-list" style="margin-top:10rpx;">
         <view class="recode-title">积分收支明细</view>
         <scroll-view scroll-y="true" class="recode-box">
           <view wx:for="{{integral.user_point_record}}" wx:for-item="pointItem" class="recode-item">
@@ -80,7 +84,7 @@
           </view>
         </scroll-view>
       </view>  
-      <view wx:else class='no-point'>暂无收支记录～</view>
+      <view wx:else class='no-point'>暂无收支记录～</view> -->
     </swiper-item>
 
     <swiper-item>
@@ -167,6 +171,7 @@
     </swiper-item>
   </swiper>
 </view>
+
 </template>
 
 <script>
@@ -179,10 +184,16 @@ export default class myAsset extends wepy.page{
     winHeight: 0,
     winWidth: 0,
     currentTab: null,
+
+     
+    continuityDays7: false, //连续7天签到
+    continuityDays3: false, //连续3天签到
     newSignNum: 0, //签到天数
     newSignBtn: false, //控制签到
+    myToday: '',  //星期几
 
     isUse: null,
+    shopId: null,
     order_price:0,//订单金额
     curCouponId:null,//当前我使用优惠券的id
     hasRule: false,
@@ -190,14 +201,14 @@ export default class myAsset extends wepy.page{
     integral:[], //我的积分
     couponList: [], //我的卡卷
 
-    isNewSignList:[   //isSigned 是否已签到
-      {"day":"日","isSigned":false},
-      {"day":"一","isSigned":false},
-      {"day":"二","isSigned":false},
-      {"day":"三","isSigned":false},
-      {"day":"四","isSigned":false},
-      {"day":"五","isSigned":false},
-      {"day":"六","isSigned":false},
+    isNewSignedArr: [
+      {"day": "日","isSigned": false},
+      {"day": "一","isSigned": false},
+      {"day": "二","isSigned": false},
+      {"day": "三","isSigned": false},
+      {"day": "四","isSigned": false},
+      {"day": "五","isSigned": false},
+      {"day": "六","isSigned": false},
     ],
   }
   
@@ -222,10 +233,18 @@ export default class myAsset extends wepy.page{
       if(e.order_price){
         that.order_price = e.order_price;
       }
+      if(e.shopId){
+        that.shopId = e.shopId;
+      }
       that.accessInterface(e.id);
-    
+
+      
   }
   onShow(){
+      var myDate = new Date(),
+      myToday = myDate.getDay();  //周几   0 1 2 3 4 5 6
+      this.myToday = myToday;
+      console.log(myDate.getDay())
     if(this.isUse){
       this.curCouponId = wx.getStorageSync('useCoupon').coupon_id;
       this.$apply();
@@ -238,6 +257,7 @@ export default class myAsset extends wepy.page{
       case 0:
           http.get(api.UserPoints,{user_id:wx.getStorageSync('userInfoInServer').id},true).then(res =>{      
             this.integral = res;
+            console.log(res)
             this.$apply();
           })
         break;
@@ -252,7 +272,7 @@ export default class myAsset extends wepy.page{
         if(this.isUse){
           //获取可用卡券
           http.get(api.ChooseCoupon,{user_id:wx.getStorageSync('userInfoInServer').id,
-          order_total_price:this.order_price},true).then(res =>{
+          order_total_price:this.order_price,shop_id:this.shopId},true).then(res =>{
             this.couponList = res;
             this.$apply();
           })
@@ -265,6 +285,24 @@ export default class myAsset extends wepy.page{
         }       
         break;
       default:break;
+    }
+  }
+  //签到函数
+  signAddFen(e) {
+      var  oneIsSigned = this.data.isNewSignedArr[1].isSigned,
+          twoIsSigned = this.data.isNewSignedArr[2].isSigned,
+          threeIsSigned = this.data.isNewSignedArr[3].isSigned,
+          fourIsSigned = this.data.isNewSignedArr[4].isSigned,
+          fiveIsSigned = this.data.isNewSignedArr[5].isSigned,
+          sixIsSigned = this.data.isNewSignedArr[6].isSigned,
+          sevenIsSigned = this.data.isNewSignedArr[0].isSigne;
+    // 另外加分 周三+3 , 周日+7 黄色小框显示
+    if (oneIsSigned && twoIsSigned && this.data.myToday == 3) {
+      this.continuityDays3 = true;
+      this.$apply()
+    } else if (oneIsSigned && twoIsSigned && threeIsSigned && fourIsSigned && fiveIsSigned && sixIsSigned && this.data.myToday == 0) {
+      this.continuityDays7 = true;
+      this.$apply()
     }
   }
   methods = {
@@ -294,8 +332,7 @@ export default class myAsset extends wepy.page{
       closeRule(e){
         this.hasRule = false;
         this.$apply();
-      },
-      
+      },      
       //兑换卡卷
       exChange: function(item,index){
         http.post(api.GetCoupon,{
@@ -316,7 +353,6 @@ export default class myAsset extends wepy.page{
           }
         })
       },
-
       //当从订单页跳转过来使用
       useCoupon: function(index){
         var that = this;
@@ -349,7 +385,22 @@ export default class myAsset extends wepy.page{
         }else{
           wx.navigateBack({});
         }
-      }
+      },
+      //签到  
+      signNewFn (e) {
+        http.post(api.SignIn,{user_id:wx.getStorageSync('userInfoInServer').id},true).then(res=>{
+          console.log(res)
+        })
+        var signTime = this.integral.sign_time;
+        wx.setStorageSync('signtime',signTime)
+        const arr = [],
+        newSignArr = [...arr,...this.data.isNewSignedArr];
+        newSignArr[this.data.myToday].isSigned = true;
+        this.newSignBtn = true;
+        this.$apply();
+        this.signAddFen();
+        },
+        
   }
 
       
@@ -718,6 +769,14 @@ page{
 
 
   // 每日签到
+.sign-in{
+  border-radius: 10px;
+  width: 95%;
+  height: 25%;
+  margin-top: 30rpx;
+  background-color: white;
+  margin-left: 20rpx;
+}
 .sign-in-title{
   font-size: 34rpx;
   display: flex;
@@ -727,12 +786,6 @@ page{
   padding: 20rpx 0rpx;
   color: #ff6b5d;
 
-}
-.sign-time{
-  font-size: 14px;
-  color: #999;
-  margin-top: 60rpx;
-  margin-left: 40rpx;
 }
 .new-week{ 
   width: auto;
@@ -795,25 +848,57 @@ page{
 .mo-line .q:nth-of-type(4){ left: 47%;}
 .mo-line .q:nth-of-type(5){ left: 64%;}
 .mo-line .q:nth-of-type(6){ left: 80%;}
-.mo-line .q:last-of-type{ left: auto; right: 0;}
-.mo-line .q.hover{ background-color: #4680db; }
-.mo-ri{ width: auto; height: 30rpx; margin:0 40rpx; position: relative;  }
-.mo-ri .t{ height: 30rpx; font-size: 24rpx; color: #999; position: absolute; left: 0; top: 0; z-index: 1;}
+
+.mo-line .q:last-of-type{ 
+  left: auto; 
+  right: 0;
+}
+.mo-line .q.hover{ 
+  background-color: #4680db; 
+}
+.mo-ri{ 
+  width: auto; 
+  height: 30rpx; 
+  margin:0 40rpx; 
+  position: relative;  
+}
+.mo-ri .t{ 
+  height: 30rpx; 
+  font-size: 24rpx; 
+  color: #999; 
+  position: absolute; 
+  left: 0; 
+  top: 0; 
+  z-index: 1;
+}
+
 .mo-ri .t:first-of-type{ left:0;}
 .mo-ri .t:nth-of-type(2){ left: 14.5%;}
 .mo-ri .t:nth-of-type(3){ left: 30%;}
 .mo-ri .t:nth-of-type(4){ left: 47%;}
 .mo-ri .t:nth-of-type(5){ left: 64%;}
 .mo-ri .t:nth-of-type(6){ left: 80%;}
-.mo-ri .t:last-of-type{ left: auto; right: 2rpx;}
+
+.mo-ri .t:last-of-type{ 
+  left: auto; 
+  right: 2rpx;
+}
 .sign-in-bottom{
   display: flex;
   align-items: center;
   justify-content: space-around;
 }
+.sign-time{
+  font-size: 14px;
+  color: #999;
+  margin-top: 30rpx;
+  margin-left: 15rpx;
+}
 .sign-in-img{
-  width: 200rpx;
-  height: 200rpx;
+  width: 150rpx;
+  height: 50rpx;
+  margin-top: 30rpx;
+  margin-left: 300rpx;
 }
 </style>
 

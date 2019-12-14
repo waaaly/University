@@ -125,6 +125,7 @@ export default class Index extends wepy.page{
 
   onLoad(e){
     
+    
     //显示转发按钮
     wx.showShareMenu({
       withShareTicket: true
@@ -139,6 +140,48 @@ export default class Index extends wepy.page{
 
   }  
   onShow(){
+    var myDate = {
+      today: new Date().getDate().toString(),
+      singtime: wx.getStorage('singTime')
+    }
+    console.log(myDate)
+
+    wx.getStorage({
+      key: 'myDate',
+      success:(res=>{
+        if(res.data.today != myDate.today || res.data.singtime != myDate.singtime){
+          wx.showModal({
+            title: '提示',
+            content: '点击前往签到',
+            success:function(res){
+              if(res.confirm){
+                wx.setStorageSync('myDate',myDate)
+                wx.navigateTo({url: '/pages/my-asset'})
+              }else{
+                wx.setStorageSync('myDate',myDate)
+                console.log(wx.setStorageSync('myDate'))
+              }
+            }
+          })
+        }
+      }),
+      fail:(err=>{
+         wx.showModal({
+            title: '提示',
+            content: '点击前往签到',
+            success:function(res){
+              if(res.confirm){
+                wx.setStorageSync('myDate',myDate)
+                wx.navigateTo({url: '/pages/my-asset'})
+              }else{
+                wx.setStorageSync('myDate',myDate)
+              }
+            }
+          })
+      })
+    })
+    
+
     wx.showTabBar();
     wx.hideTabBarRedDot({title:2});
     //先读默认地址
@@ -170,6 +213,7 @@ export default class Index extends wepy.page{
     })
   }
   watch = {
+    
     //监听默认地址，改变服务区域
     userDefaultAddress(address,old){
       var userChooseArea = {
