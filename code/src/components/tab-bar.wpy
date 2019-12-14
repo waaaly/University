@@ -25,6 +25,7 @@ export default class star extends wepy.component{
               selected: {
                       type:Number,
                       default:0,
+                      twoWay: true
               }  
         }
      data = {
@@ -67,22 +68,29 @@ export default class star extends wepy.component{
         switchTab(index) {
                 const data = this.list[index];
                 const url = data.pagePath;
-                this.selected = index;
-                if(index == 2 ){
+                this.selected = index; 
+                if(index==2){
                         wx.switchTab({url});
                         return;
                 }
-                wx.reLaunch({url});
+                if(index>2){
+                        this.$emit('tabChange',index-1);
+                        return; 
+                }  
+                this.$emit('tabChange',index); 
          }
      } 
       events = {
-              'tabSelected':(tab,$event)=>{
-                      this.selected = 0;
-                      this.$apply();
+              'tabInit':(tab,$event)=>{
+                      this.selected = tab;
               },
               'showDot':(isShow,$event)=>{
                       this.showDot = isShow;
                         this.$apply();
+              },
+              'swiperChange':(tab,$event)=>{
+                       this.selected = tab;   
+                       this.$apply();
               }
       }
 }
@@ -94,7 +102,7 @@ export default class star extends wepy.component{
   bottom: 0;
   left: 0;
   right: 0;
-  height: 48px;
+  height: 50px;
   background: white;
   display: flex;
   padding-bottom: env(safe-area-inset-bottom);

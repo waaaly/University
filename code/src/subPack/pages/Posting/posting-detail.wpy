@@ -76,8 +76,8 @@
 
 <script>
   import wepy from 'wepy';
-  import http from '../../utils/Base';
-  import api from '../../utils/API';
+  import http from '../../../utils/Base';
+  import api from '../../../utils/API';
   export default class postingDetail extends wepy.page {
     config = {
       navigationBarTitleText: '帖子详情',
@@ -107,7 +107,12 @@
         http.get(api.ArticleDetail,{
                 id:option.posting_id,
                 user_id:wx.getStorageSync('userInfoInServer').id},true).then(res=>{
-            console.log(res)
+            if(res.code==402){
+                wx.showToast({title:res.msg,icon:'none'})
+                setTimeout(()=>{
+                    wx.navigateBack({});
+                },1500)     
+            }
             this.content = res.content;
             this.posting = res.posting;
             this.commentList = res.commentList;

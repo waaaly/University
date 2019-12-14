@@ -2,85 +2,38 @@
 
 <template>
     <blcok>
-        <TabBar :selected.sync='tabSelected'></TabBar>
-        <view wx:if="{{init}}" style="margin-bottom: 50px;">
-            <swiper style="height:200px;background-color:#fff;" 
-                indicator-dots="{{true}}" 
-                autoplay="{{true}}" 
-                interval="{{3000}}"  
-                circular="{{true}}"  
-                indicator-active-color='#108ee9'
-                >
-                <block wx:for="{{swiperImg}}" wx:key="key">
-                    <swiper-item>
-                        <image src="{{item}}" style="width:100%;" mode="widthFix"  />
-                    </swiper-item>
-                </block>
-            </swiper>
-            <scroll-view scroll-y="true" class="scroll-box" style="height: {{enableViewH}}rpx;">
-                <view  class="flex-box" >
-                    <block wx:for="{{enableViewList}}">
-                        <view class="{{enableViewId==item.id?'item-active':'item'}}"
-                            bindtap="changeId({{item.id}})">{{item.value}}</view>
-                    </block>             
-                </view>      
-            </scroll-view>
+        <TabBar></TabBar>
+        <swiper current="{{tabSelected}}" class="swiper-box" duration="300" style="height:{{scrollHeight}}px"  bindchange="changeTab">
+            <!--帖子首页-->
+            <swiper-item>
+                <scroll-view bindscrolltolower="loadMorePosting" 
+                bindscroll="postingScroll" scroll-y style="background-color:#f8f8f8;height:{{scrollHeight}}px">
+                    <PostingIndex></PostingIndex>
+                </scroll-view>
+            </swiper-item>
 
-            <view class="icon-box" bindtap="changeHight">
-                <image wx:if="{{enableViewH==240}}" class="icon-up" src="{{toRightIcon}}"/>
-                <image wx:else class="icon-down" src="{{toRightIcon}}"/>
-            </view>
+             <!--回复我-->
+            <swiper-item>
+                <scroll-view scroll-y style="background-color:#f8f8f8;height:{{scrollHeight}}px">
+                    <PostingNews></PostingNews>
+                </scroll-view>
+            </swiper-item> 
 
-            <view class="posting-box"  wx:if="{{postingList.length!=0}}">
-                <block wx:for="{{postingList}}">
-                    <view class="posting" bindtap="goDetail({{item}})" >
-                        <view class="userInfo" catchtap="goUserInfo({{item.userInfo.user_id}})">
-                            <image src="{{item.userInfo.avatar}}"/>
-                            <view class="name-time">
-                                <view class="name">{{item.userInfo.name}}</view>
-                                <view class="time">{{item.postTime}}</view>
-                            </view>
-                        </view>
-                        <view class="content">
-                            <view class="cnt-text">{{item.content.text}}</view>
-                            <block wx:if="{{item.content.imgList.length!=0}}">
-                                <view wx:if="{{item.content.imgList.length==1}}" class="singleImg">
-                                    <image  wx:for="{{item.content.imgList}}" 
-                                        wx:for-item='imgItem' lazy-load='true' 
-                                        catchtap="previewImage({{item.content.imgList}},{{imgItem}})"
-                                        mode='widthFix' src="{{imgItem}}"/>
-                                </view>
-                                <view wx:else class="imageList">
-                                    <image  wx:for="{{item.content.imgList}}" 
-                                        wx:for-item='imgItem' lazy-load='true' 
-                                        catchtap="previewImage({{item.content.imgList}},{{imgItem}})"
-                                        mode='aspectFit' src="{{imgItem}}"/>
-                                </view>
-                            </block>         
-                        </view>
-                        <view class="tabs">
-                            <view class="item">
-                                <image src="{{ossUrl+'comment.png'}}" style="margin-right:10rpx;"/>
-                                <view wx:if="{{item.commentNum==0}}" class="num">评论</view>
-                                <view wx:else class="num">{{item.commentNum}}</view>
-                            </view>
-                            <view class="item" catchtap="changeLike({{item}},{{index}})">                           
-                                <view wx:if="{{item.likeNum==0}}" class="num">抢首赞</view>
-                                <view wx:else class="num">{{item.likeNum}}</view>
-                                <image wx:if="{{item.iLike}}" src="{{ossUrl+'like-on.png'}}"/>
-                                <image wx:else src="{{ossUrl+'like-off.png'}}"/>
-                            </view>
-                        </view>
-                    </view>
-                </block>
-            </view>
-            <view class='no-posting' wx:else>
-                <image src='https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/noPosting.png' mode='aspectFit'/>
-            </view>
-            <view class="{{showMenu?'show-menu':'hide-menu'}}">
-                <menu></menu>
-            </view>       
-        </view>
+            <!--历史帖-->
+            <swiper-item>
+                <scroll-view scroll-y style="background-color:#f8f8f8;height:{{scrollHeight}}px">
+                    <PostingHis></PostingHis>
+                </scroll-view>
+            </swiper-item>
+
+            <!--纸条-->
+            <swiper-item>
+                <scroll-view scroll-y style="background-color:#f8f8f8;height:{{scrollHeight}}px">
+                    <ChatList></ChatList>
+                </scroll-view>
+            </swiper-item>
+        </swiper>
+
     </blcok>
 </template>
 
@@ -88,173 +41,102 @@
 import wepy from 'wepy';
 import http from '../utils/Base';
 import api from '../utils/API';
-import menu from '../components/popupMenu';
 import TabBar from '../components/tab-bar';
+import PostingIndex from '../components/posting-index';
+import PostingHis from '../components/posting-his';
+import PostingNews from '../components/posting-news';
+import ChatList from '../components/chat-list';
 export default class find extends wepy.page {
     config = {
         "navigationBarTitleText": "社区中心",
         "enablePullDownRefresh": true,
     }
     components = {
-        menu:menu,
+        PostingIndex:PostingIndex,
+        PostingHis:PostingHis,
+        PostingNews:PostingNews,
+        ChatList,ChatList,
         TabBar:TabBar
     }
 
     data = {
-        init:false,
         tabSelected:0,
-        showMenu:true,
-        scrollTop:0,//页面滚动距离
-        ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
-        imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
-        toRightIcon:'http://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/xiangyou.png',
-        swiperImg: [
-            "https://i0.hdslb.com/bfs/archive/7b919fed5884726fcc3b3b1ae3de3d12423ab82b.jpg@1100w_484h_1c_100q.jpg",
-            'https://i0.hdslb.com/bfs/sycp/creative_img/201911/a9ff04e2f70a2c307f12c47cb6811fee.jpg@1100w_484h_1c_100q.jpg',
-            'https://i0.hdslb.com/bfs/archive/741462a49e9e686ca14f622290c1172711d7c13f.jpg@1100w_484h_1c_100q.jpg',
-            'https://i0.hdslb.com/bfs/archive/dc70998dde9e3e29524a53ff11e6787ec23d42a6.jpg@1100w_484h_1c_100q.jpg',
-            'https://i0.hdslb.com/bfs/archive/319618d9ec19ebd7c5d94e47efc038b0d9a5ba10.jpg@1100w_484h_1c_100q.jpg',
-        ],
-        imgHeight:0,//帖子详情图片高度
-        enableViewH:150,//可见标签高度
-        enableViewId:0,//当前可见标签id
-        enableViewList:[],//可见区域列表
-        postingList:[],//帖子列表
+        scrollHeight:0,//swiper高度
     }
 
     onLoad() {
-        
-        //获取可见标签组
-        http.get(api.ArticleTab,{
-            user_id:wx.getStorageSync('userInfoInServer')?
-            wx.getStorageSync('userInfoInServer').id:'',
-        }).then(res=>{
-           console.log(res)
-           this.enableViewList = res.enableViewList;
-           this.$apply();
-        })    
+        this.scrollHeight = wx.getSystemInfoSync().windowHeight ;  
+        this.$broadcast('postingIndex');
+        this.$broadcast('chatList');
     }
-
     onShow() {
         wx.hideTabBar();
-        this.$broadcast('tabSelected', this.tabSelected);
-        this.$apply();
-        //获取帖子
-        http.get(api.ArticleList,{
-            tabs_id:this.enableViewId,
-            user_id:wx.getStorageSync('userInfoInServer')?
-            wx.getStorageSync('userInfoInServer').id:'',
-        }).then(res=>{
-            this.postingList = res;
-            this.init = true;
-            this.$apply();
-        })
+        this.updateTab(this.tabSelected);
+        
         //设置监听socket
         this.$parent.getIMHandler().setOnReceiveMessageListener({
             listener: (msg) => { 
-                   this.$broadcast('showDot', true);                         
+                   this.$broadcast('socketConversation', msg);                         
             }
         })
     }
-    //上拉加载
-    onReachBottom(){
-        //获取帖子
-        http.get(api.ArticleList,{tabs_id:this.enableViewId},true).then(res=>{
-            console.log(res)
-            if(res.length==this.postingList.length){
-                wx.showToast({title:'没有更多啦～',icon:'none'})
-                setTimeout(()=>{
-                    return;
-                },500)           
-            }else{
-                this.postingList = res;
-                this.$apply();
-            }
-        })
-    }
-
-    methods = {
-        //前往查看用户信息
-        goUserInfo(user_id){
-            if(user_id==wx.getStorageSync('userInfoInServer').id){
-                return;
-            }
-            wx.navigateTo({
-                url: `/pages/myInfo?user_id=${user_id}&visit=true`,
-            })
-        },
-        //前往详情页
-        goDetail(posting){
-            wx.navigateTo({
-                url: `../subPack/pages/postingDetail?posting_id=${posting.articleId}`,
-            })
-        },
-        //改变可见便签高度
-        changeHight(){
-            this.enableViewH = this.enableViewH==150?240:150;
-            this.$apply();
-        },
-        //改变可见标签id
-        changeId(id){
-            this.enableViewId = id;
-            http.get(api.ArticleList,{tabs_id:id},true).then(res=>{
-                if(res.length==0){
-                    wx.showToast({icon:'none',title:'暂无相关帖子信息'})
-                }
-                this.postingList = res; 
-                this.$apply()          
-            })
-        },
-        //预览图片
-        previewImage (imgList,curImg) {
-            wx.previewImage({
-                current: curImg, // 当前显示图片的http链接  
-                urls: imgList// 需要预览的图片http链接列表  
-            })
-        },
-        //改变点赞
-        changeLike(posting,index){
-            http.post(api.ArticleLike,{
-                user_id:wx.getStorageSync("userInfoInServer").id,
-                article_id:this.postingList[index].articleId,
-            },false,false).then(res=>{
-                console.log(res)
-                this.postingList[index].likeNum = res.state?
-                this.postingList[index].likeNum+1: this.postingList[index].likeNum-1;
-                this.postingList[index].iLike = res.state?1:0;
-                this.$apply();
-            })
-        },
-
-    }
-    //监听页面滚动
-    onPageScroll(e){
-        this.scrollTop = e.scrollTop;
-        this.$apply();
-    }
-    watch = {
-        scrollTop(_new,old){
-            if(_new - old > 20){
-                this.showMenu = false;
-                this.$apply();
-            }else if(_new - old < -20){
-                this.showMenu = true;
-                this.$apply();
-            }
+    updateTab(tab){
+        switch(tab){
+            //社区中心
+            case 0:
+                wx.setNavigationBarTitle({title: '社区中心'});
+                this.$broadcast('postingIndex');
+                this.$broadcast('swiperChange', 0); 
+                break;
+            //帖子消息
+            case 1:
+                wx.setNavigationBarTitle({title: '帖子消息'});
+                this.$broadcast('postingNews');
+                this.$broadcast('swiperChange', 1);
+                break;
+            //帖子管理
+            case 2:
+                wx.setNavigationBarTitle({title: '帖子管理'});
+                this.$broadcast('postingHis');
+                this.$broadcast('swiperChange', 3);
+                break;
+            //纸条列表
+            case 3:
+                wx.setNavigationBarTitle({title: '纸条列表'});
+                this.$broadcast('chatList');
+                this.$broadcast('swiperChange', 4);
+                break;
+            default:
+                break;   
         }
     }
-    computed = {
-
+    events = {
+        //接收点击子组件切换siwper
+        'tabChange':(tab,$event)=>{
+            this.tabSelected = tab;
+            this.$apply();
+        }
+    }
+    methods = {
+        changeTab(e){
+            this.tabSelected = e.detail.current;
+            this.$apply();
+            this.updateTab(e.detail.current);
+        },
+        //上拉加载更多帖子
+        loadMorePosting(){
+            this.$broadcast('onReachBottom');
+        },
+        //监听滚动
+        postingScroll(e){
+            this.$broadcast('onPostingScroll',e.detail.scrollTop);
+        }
     }
     
 }
 
 </script>
 <style lang="less">
-page{
-    background-color: #eee;
-}
-
 .show-menu{
     opacity: 1;
 }

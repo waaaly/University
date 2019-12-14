@@ -41,12 +41,9 @@ export default class extends wepy.app {
           root:'subPack',
           pages:[
             'pages/createOrder/createOrder',
-            'pages/hisPosting',
-            'pages/news',
-            'pages/chatList',
-            'pages/postingDetail',
-            'pages/postingEdit',
             'pages/IM/chat',
+            'pages/Posting/posting-detail',
+            'pages/Posting/posting-edit',
           ]
         }],
         window: {

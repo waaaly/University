@@ -1,6 +1,5 @@
 <template>
-    <block>
-      <view wx:if='{{init}}' style="margin-bottom: 50px;">
+      <view wx:if='{{init}}' >
           <view wx:if="{{postList.length==0}}" class="no-data">您还未发布任何贴子呢～</view>
           <view  class="posts-record" wx:for="{{postList}}" wx:for-item="post" wx:for-index="postIndex" 
             bindtap="goDetail({{post}})">
@@ -48,24 +47,16 @@
               </view>
 
           </view>
-      </view>
-      <TabBar :selected.sync='tabSelected'></TabBar>      
-    </block>
+      </view>    
 </template>
 
 <script>
   import wepy from 'wepy';
-  import http from '../../utils/Base';
-  import api from '../../utils/API';
-  import TabBar from '../../components/tab-bar';
-  export default class hisPosting extends wepy.page {
-    config = {
-      navigationBarTitleText: '我的历史贴',
-      navigationBarBackgroundColor:'#108ee9'
-    }
-    components = {
-        TabBar:TabBar
-    }
+  import http from '../utils/Base';
+  import api from '../utils/API';
+  export default class PostingHis extends wepy.component {
+
+
     data = {
       ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
       init:false,
@@ -75,45 +66,36 @@
       enableViewList:[],//可见标签数组，用于picker   
     }
 
-
-    onLoad(option) {
-      //获取可见标签数组
-      http.get(api.ArticleTab,{
-          user_id:wx.getStorageSync('userInfoInServer')?
-          wx.getStorageSync('userInfoInServer').id:'',
-        }).then(res=>{
-          this.enableViewList = res.enableViewList;
-          this.enableViewList[0].value = '全部可见';
-          this.$apply();
-      })
-      //获取历史贴
-      http.get(api.ArticleHis,{
-          user_id:wx.getStorageSync('userInfoInServer').id,
-        },true).then(res=>{
-          for(let item of res){
-            this.postList.push(item.postList);
-          }
-          this.init = true;
-          this.$apply();
-      })      
+    events = {
+        'postingHis':($evnet)=>{
+           //获取可见标签数组
+          http.get(api.ArticleTab,{
+              user_id:wx.getStorageSync('userInfoInServer')?
+              wx.getStorageSync('userInfoInServer').id:'',
+            }).then(res=>{
+              this.enableViewList = res.enableViewList;
+              this.enableViewList[0].value = '全部可见';
+              this.$apply();
+          })
+          //获取历史贴
+          http.get(api.ArticleHis,{
+              user_id:wx.getStorageSync('userInfoInServer').id,
+            },true).then(res=>{
+              this.postList = res;
+              this.init = true;
+              this.$apply();
+          }) 
+        }
     }
 
-    onShow(){
-       wx.hideHomeButton();
-       //设置监听socket
-        this.$parent.getIMHandler().setOnReceiveMessageListener({
-            listener: (msg) => { 
-                   this.$broadcast('showDot', true);                         
-            }
-        })
-    }  
+
 
     methods={
       //帖子详情页
       goDetail(posting){
         console.log(posting)
           wx.navigateTo({
-              url: `./postingDetail?posting_id=${posting.articleId}`,
+              url: `../subPack/pages/Posting/posting-detail?posting_id=${posting.articleId}`,
           })
       },
       //预览图片
@@ -197,6 +179,7 @@
   border:1px solid #eee;
   margin-bottom: 40rpx;
   margin-left: 40rpx;
+  background-color: #fff;
   .time-like{
     display: flex;
     justify-content: space-between;

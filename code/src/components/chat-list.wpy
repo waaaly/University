@@ -1,12 +1,16 @@
 <template>
     <block>
-        <view wx:if="{{init}}" style="margin-bottom: 50px;">
+        <view wx:if="{{init}}" >
             <view wx:if="{{conversations.length==0}}" class="no-data">这里什么都没有快去找个TA丢纸条吧～</view>
 
             <view class="chat-record" wx:for="{{conversations}}" wx:for-item="chat" bindtap="goChat({{chat}})" bindlongpress="delete" >
                   <block wx:if="{{chat.unReadNum!=0}}">
-                    <view class="unread-dot" wx:if="{{chat.unReadNum<99}}">{{chat.unReadNum}}</view>
-                    <view class="unread-dot" wx:else>99+</view>
+                    <view class="unread-dot" wx:if="{{chat.unReadNum<99}}">
+                      <text class="unread-dot-text">{{chat.unReadNum}}</text>
+                      </view>
+                    <view class="unread-dot" wx:else>
+                      <text class="unread-dot-text">99+</text>
+                    </view>
                   </block>
                   <image class="avatar" src="{{chat.avatar}}"/>
                   <view class="name-cnt">
@@ -22,51 +26,43 @@
                   <view class="chat-time">{{chat.timeStr}}</view>              
             </view>
         </view>
-        <TabBar :selected.sync='tabSelected'></TabBar>
+
     </block>
 </template>
 
 <script>
   import wepy from 'wepy';
-  import http from '../../utils/Base';
-  import api from '../../utils/API';
-  import TabBar from '../../components/tab-bar';
-  export default class NewsList extends wepy.page {
-    config = {
-      navigationBarTitleText: '纸条列表',
-      navigationBarBackgroundColor:'#108ee9'
-    }
-    components = {
-        TabBar:TabBar
-    }
+  import http from '../utils/Base';
+  import api from '../utils/API';
+
+  export default class ChatList extends wepy.component {
+
+
     data = {
       ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
       tabSelected:4,
       init:false,
       conversations:[],//会话列表
     }
-    onLoad(option) {
-           
-    }
 
-    onShow(){
-      wx.hideHomeButton(); 
-      this.$broadcast('showDot', false);
-       //获取会话列表
-      http.get(api.MessageList,{
-          user_id:wx.getStorageSync('userInfoInServer').id,
-        },true).then(res=>{
-          this.conversations = res;
-          this.init = true;
-          this.$apply();
-      })
-      //设置监听会话列表更新
-      this.$parent.getIMHandler().setOnReceiveMessageListener({
-          listener: (msg) => {                      
-            var isNew = true;
-            for(let index in this.conversations){
-              const item = this.conversations[index];
-              if(item.sender_id == msg.friendId){
+    events = {
+      'chatList':($event)=>{
+        this.$broadcast('showDot', false);
+        //获取会话列表
+        http.get(api.MessageList,{
+            user_id:wx.getStorageSync('userInfoInServer').id,
+          },true).then(res=>{
+            this.conversations = res;
+            this.init = true;
+            this.$apply();
+        })     
+      },
+      //socket更新
+      'socketConversation':(msg,$event)=>{
+          let isNew = true;
+          for(let index in this.conversations){
+            const item = this.conversations[index];
+            if(item.sender_id == msg.friendId){
                 console.log('更新会话', msg);
                 item['timeStr'] = msg.timeStr;
                 item['content'] = msg.content;
@@ -75,26 +71,23 @@
                 isNew = false;
                 this.conversations.splice(index,1);
                 this.conversations.unshift(item);
-                this.$apply();
                 return;
-              }
             }
-
-            if(isNew){
-              console.log('插入新会话', msg);
-              var chatItem = {
-                sender_id: msg.friendId,
-                sender_name: msg.friendName,
-                content: msg.content,
-                timeStr: msg.timeStr,
-                avatar: msg.headUrl,
-                unReadNum:msg.unReadNum
-              }             
-              this.conversations.unshift(chatItem);
-              this.$apply();
-            }                                   
           }
-      })
+          if(isNew){
+            console.log('插入新会话', msg);
+            const item = {
+              sender_id: msg.friendId,
+              sender_name: msg.friendName,
+              content: msg.content,
+              timeStr: msg.timeStr,
+              avatar: msg.headUrl,
+              unReadNum:msg.unReadNum
+            }             
+            this.conversations.unshift(chatItem);
+            this.$apply();
+          }
+      },
     }  
 
     /**
@@ -107,11 +100,11 @@
     methods={
       //前往聊天页
       goChat(chat){
-        console.log(chat)
+
         //不需要content字段
         delete chat.content;
         wx.navigateTo({
-            url: `./IM/chat?friend=${JSON.stringify(chat)}`
+            url: `../subPack/pages/IM/chat?friend=${JSON.stringify(chat)}`
         });
       },
       //删除聊天
@@ -412,6 +405,7 @@
   display: flex;
   align-items: center;
   position: relative;
+  background-color: #fff;
   padding:10rpx 20rpx; 
   height: 9vh;
   .avatar{
@@ -455,22 +449,24 @@
 }
 
 .unread-dot {
-float: right;
+vertical-align: top;
+line-height: 15rpx;
+color: #ffffff;
+font-size: 20px;
 background-color: red;
-border-radius: 40%;
-margin-top: -35px;
-font-size: 12px;
-color: #fff;
+border-radius: 50%;
 position: absolute;
-top: 40px;
-right: 10px;
-padding: 0 2px;
-min-height: 16px;
-min-width: 27px;
+bottom: 86rpx;
+right: 30rpx;
 text-align: center;
+height: 28rpx;
+padding: 2px;
+min-width: 18px;
 
 }
-
+.unread-dot-text{
+  color:#ffffff;font-size:20rpx;display:inline-block;text-align:center
+}
 
 /*隐藏滚动条*/
 ::-webkit-scrollbar {

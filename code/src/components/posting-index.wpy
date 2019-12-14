@@ -1,0 +1,408 @@
+<template>
+    <view wx:if="{{init}}" >
+        <swiper style="height:200px;background-color:#fff;" 
+            indicator-dots="true" 
+            autoplay="true" 
+            interval="3000"  
+            circular="true"  
+            indicator-active-color='#108ee9'
+            >
+            <block wx:for="{{swiperImg}}" wx:key="key">
+                <swiper-item>
+                    <image src="{{item.pic_url}}" style="width:100%;" mode="widthFix"  />
+                </swiper-item>
+            </block>
+        </swiper>
+        <scroll-view scroll-y="true" class="scroll-box" style="height: {{enableViewH}}rpx;">
+            <view  class="flex-box" >
+                <block wx:for="{{enableViewList}}">
+                    <view class="{{enableViewId==item.id?'item-active':'item'}}"
+                        bindtap="changeId({{item.id}})">{{item.value}}</view>
+                </block>             
+            </view>      
+        </scroll-view>
+
+        <view class="icon-box" bindtap="changeHight">
+            <image wx:if="{{enableViewH==240}}" class="icon-up" src="{{toRightIcon}}"/>
+            <image wx:else class="icon-down" src="{{toRightIcon}}"/>
+        </view>
+
+        <view class="posting-box"  wx:if="{{postingList.length!=0}}">
+            <block wx:for="{{postingList}}">
+                <view class="posting" bindtap="goDetail({{item}})" >
+                    <image class="zhi-ding" wx:if="{{item.sort_order==0}}" src="{{ossUrl+'zhiding.png'}}"/>
+                    <view class="userInfo" catchtap="goUserInfo({{item.userInfo.user_id}})">
+                        <image src="{{item.userInfo.avatar}}"/>
+                        <view class="name-time">
+                            <view class="name">{{item.userInfo.name}}</view>
+                            <view class="time">{{item.postTime}}</view>
+                        </view>
+                    </view>
+                    <view class="content">
+                        <view class="cnt-text">{{item.content.text}}</view>
+                        <block wx:if="{{item.content.imgList.length!=0}}">
+                            <view wx:if="{{item.content.imgList.length==1}}" class="singleImg">
+                                <image  wx:for="{{item.content.imgList}}" 
+                                    wx:for-item='imgItem' lazy-load='true' 
+                                    catchtap="previewImage({{item.content.imgList}},{{imgItem}})"
+                                    mode='widthFix' src="{{imgItem}}"/>
+                            </view>
+                            <view wx:else class="imageList">
+                                <image  wx:for="{{item.content.imgList}}" 
+                                    wx:for-item='imgItem' lazy-load='true' 
+                                    catchtap="previewImage({{item.content.imgList}},{{imgItem}})"
+                                    mode='aspectFit' src="{{imgItem}}"/>
+                            </view>
+                        </block>         
+                    </view>
+                    <view class="tabs">
+                        <view class="item">
+                            <image src="{{ossUrl+'comment.png'}}" style="margin-right:10rpx;"/>
+                            <view wx:if="{{item.commentNum==0}}" class="num">评论</view>
+                            <view wx:else class="num">{{item.commentNum}}</view>
+                        </view>
+                        <view class="item" catchtap="changeLike({{item}},{{index}})">                           
+                            <view wx:if="{{item.likeNum==0}}" class="num">抢首赞</view>
+                            <view wx:else class="num">{{item.likeNum}}</view>
+                            <image wx:if="{{item.iLike}}" src="{{ossUrl+'like-on.png'}}"/>
+                            <image wx:else src="{{ossUrl+'like-off.png'}}"/>
+                        </view>
+                    </view>
+                </view>
+            </block>
+        </view>
+        <view class='no-posting' wx:else>
+            <image src='https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/noPosting.png' mode='aspectFit'/>
+        </view>
+        <view class="{{showMenu?'show-menu':'hide-menu'}}">
+            <menu></menu>
+        </view>       
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import http from '../utils/Base';
+import api from '../utils/API';
+import menu from './popupMenu';
+
+export default class PostingIndex extends wepy.component {
+    config = {
+        "navigationBarTitleText": "社区中心",
+        "enablePullDownRefresh": true,
+    }
+    components = {
+        menu:menu,
+    }
+
+    data = {
+        init:false,
+        showMenu:true,
+        scrollTop:0,//页面滚动距离
+        ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
+        imageUrl: "https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/",
+        toRightIcon:'http://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/xiangyou.png',
+        imgHeight:0,//帖子详情图片高度
+        enableViewH:150,//可见标签高度
+        enableViewId:0,//当前可见标签id
+        enableViewList:[],//可见区域列表
+        postingList:[],//帖子列表
+        swiperImg:[],//发现轮播
+    }
+    events = {
+        'postingIndex':($evnet)=>{
+             //获取可见标签组
+            http.get(api.ArticleTab,{
+                user_id:wx.getStorageSync('userInfoInServer')?
+                wx.getStorageSync('userInfoInServer').id:'',
+            }).then(res=>{
+                this.enableViewList = res.enableViewList;
+                this.init = true;
+                this.$apply();
+            })
+            //获取轮播 article-carousel
+            http.get('https://college.mingrui-gz.com/api/article-carousel',{},true).then(res=>{
+                this.swiperImg = res;
+                this.init = true;
+                this.$apply();
+            })
+            //获取帖子
+            http.get(api.ArticleList,{
+                tabs_id:this.enableViewId,
+                user_id:wx.getStorageSync('userInfoInServer')?
+                wx.getStorageSync('userInfoInServer').id:'',
+            }).then(res=>{
+                this.postingList = res;
+                this.init = true;
+                this.$apply();
+            })
+        },
+        //触底加载帖子
+        'onReachBottom':($event)=>{
+            //获取帖子
+            http.get(api.ArticleList,{tabs_id:this.enableViewId},true).then(res=>{
+                console.log(res)
+                if(res.length==this.postingList.length){
+                    wx.showToast({title:'没有更多啦～',icon:'none'})
+                    setTimeout(()=>{
+                        return;
+                    },500)           
+                }else{
+                    this.postingList = res;
+                    this.$apply();
+                }
+            })
+        },
+        //监听页面滚动
+        'onPostingScroll':(scrollTop,$event)=>{
+            this.scrollTop = scrollTop;
+            this.$apply();
+        }
+    }
+
+    methods = {
+        //前往查看用户信息
+        goUserInfo(user_id){
+            if(user_id==wx.getStorageSync('userInfoInServer').id){
+                return;
+            }
+            wx.navigateTo({
+                url: `/pages/myInfo?user_id=${user_id}&visit=true`,
+            })
+        },
+        //前往详情页
+        goDetail(posting){
+            wx.navigateTo({
+                url: `../subPack/pages/Posting/posting-detail?posting_id=${posting.articleId}`,
+            })
+        },
+        //改变可见便签高度
+        changeHight(){
+            this.enableViewH = this.enableViewH==150?240:150;
+            this.$apply();
+        },
+        //改变可见标签id
+        changeId(id){
+            this.enableViewId = id;
+            http.get(api.ArticleList,{tabs_id:id},true).then(res=>{
+                if(res.length==0){
+                    wx.showToast({icon:'none',title:'暂无相关帖子信息'})
+                }
+                this.postingList = res; 
+                this.$apply()          
+            })
+        },
+        //预览图片
+        previewImage (imgList,curImg) {
+            wx.previewImage({
+                current: curImg, // 当前显示图片的http链接  
+                urls: imgList// 需要预览的图片http链接列表  
+            })
+        },
+        //改变点赞
+        changeLike(posting,index){
+            http.post(api.ArticleLike,{
+                user_id:wx.getStorageSync("userInfoInServer").id,
+                article_id:this.postingList[index].articleId,
+            },false,false).then(res=>{
+                console.log(res)
+                this.postingList[index].likeNum = res.state?
+                this.postingList[index].likeNum+1: this.postingList[index].likeNum-1;
+                this.postingList[index].iLike = res.state?1:0;
+                this.$apply();
+            })
+        },
+
+    }
+    
+    watch = {
+        scrollTop(_new,old){
+            if(_new - old > 20){
+                this.showMenu = false;
+                this.$apply();
+            }else if(_new - old < -20){
+                this.showMenu = true;
+                this.$apply();
+            }
+        }
+    }
+    computed = {
+
+    }
+    
+}
+
+</script>
+<style lang="less">
+page{
+    background-color: #eee;
+}
+
+.show-menu{
+    opacity: 1;
+}
+
+.hide-menu{
+    opacity: 0;
+    transform: scale(0.2);
+    transition: all .8s;
+}
+.scroll-box{  
+    padding: 10rpx;
+    background-color: #fff;
+    overflow: hidden;
+    position: relative;
+    .flex-box{
+        display: flex;
+        flex-wrap: wrap;
+        overflow: hidden;
+        .item{
+            padding:10rpx;
+            margin: 10rpx;
+            width:fit-content;
+            font-size:26rpx;
+            color:#666;
+            border:1rpx solid #bfbfbf;
+            border-radius:26rpx;
+        }
+        .item-active{
+            padding:10rpx;
+            margin: 10rpx;
+            width:fit-content;
+            font-size:26rpx;
+            color:#108ee9; 
+            border:1rpx solid #108ee9;
+            background-color: #fefefe;
+            border-radius:26rpx;
+        }
+    }      
+}
+
+.icon-box{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+
+    .icon-down{
+        width: 40rpx;
+        height: 40rpx;
+        transform: rotate(90deg);
+    }
+    .icon-up{
+        width: 40rpx;
+        height: 40rpx;
+        transform: rotate(-90deg);
+    }
+}
+
+.posting{
+    margin: 10rpx 0rpx;
+    border-radius: 10rpx;
+    background-color: #fff;
+    padding:20rpx;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    .zhi-ding{
+        position: absolute;
+        height: 45px;
+        width: 45px;
+        top: -10rpx;
+        left: -10rpx;
+    }
+    .userInfo{
+        display: flex;
+        image{
+            width: 70rpx;
+            height: 70rpx;
+            border-radius: 50%;
+            margin-right:20rpx;
+        }
+        .name-time{
+            display: flex;
+            flex-direction: column;
+            .name{
+                font-size:28rpx;
+            }
+            .time{
+                font-size:25rpx;
+                color:#888;
+            }
+        }
+    }
+    .content{
+        margin:28rpx 0;
+        .cnt-text{
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 5;
+            text-align: justify;
+            overflow: hidden;
+            color:#333;
+            font-size: 28rpx;
+            line-height: 50rpx;
+            margin-bottom:20rpx;
+        }
+        .imageList{
+            display: flex;
+            flex-direction: row;  // 横向布局
+            flex-wrap: wrap; // 超出自动换行
+            image{
+                width: 31%;
+                height: 32vw;
+                margin: 5rpx;
+                border-radius: 10rpx;
+                border: 1rpx solid #ededed;
+            }
+        }    
+    }
+    .tabs{
+        display: flex;
+        padding:0 20%;
+        align-items: center;
+        justify-content: space-between;
+        .item{
+                display: flex;
+                align-items: center;
+            image{
+                width: 40rpx;
+                height: 40rpx;      
+            }
+            .num{
+                color:#888;
+                font-size: 24rpx;
+                margin-right:10rpx;
+            }
+        }
+    }
+}
+.posting-box{
+    display: block;
+}
+.posting-box:first-child{
+    margin: 0rpx;
+    border-radius: 10rpx;
+    background-color: #fff;
+    padding:20rpx;
+    display: flex;
+    flex-direction: column;
+}
+
+.no-posting{
+    margin-top: 10rpx;
+    font-size: 26rpx;
+    color: #999;
+    background-color: #fff;
+    padding-top: 10rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  color: transparent;
+}
+
+</style>

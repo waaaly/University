@@ -1,6 +1,6 @@
 <template>
     <block>
-        <view wx:if="{{init}}" style="margin-bottom: 50px;">
+        <view wx:if="{{init}}" >
             <view wx:if="{{replyList.length==0}}" class="no-data">暂时还没有人评论/回复您哟～</view>
 
             <view class="reply-record" wx:for="{{replyList}}" wx:for-item="reply" wx:for-index="replyIndex"  
@@ -29,23 +29,16 @@
                 <view catchtap="sendReply" class="{{replyText.length==0?'send-off':'send-on'}}" >回复</view>
             </view> 
         </view>
-        <TabBar :selected.sync='tabSelected'></TabBar>  
     </block>
 </template>
 
 <script>
   import wepy from 'wepy';
-  import http from '../../utils/Base';
-  import api from '../../utils/API';
-  import TabBar from '../../components/tab-bar';
-  export default class news extends wepy.page {
-    config = {
-      navigationBarTitleText: '消息中心',
-      navigationBarBackgroundColor:'#108ee9'
-    }
-    components = {
-        TabBar:TabBar
-    }
+  import http from '../utils/Base';
+  import api from '../utils/API';
+  export default class PostingNews extends wepy.component {
+ 
+
     data = {
       ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
       tabSelected:1,
@@ -59,35 +52,27 @@
       bottomTabShow:true,//底部tab
     }
 
-
-    onLoad(option) {    
-       //获取回复列表
-      http.get(api.ReplyList,{
-          user_id:wx.getStorageSync('userInfoInServer').id,
-        },true).then(res=>{
-          for(let item of res){
-            this.replyList.push(item.replyList);
-          }
-          this.init = true;
-          this.$apply();
-      })     
+    events = {
+        'postingNews':($evnet)=>{
+           //获取回复列表
+          http.get(api.ReplyList,{
+              user_id:wx.getStorageSync('userInfoInServer').id,
+            },true).then(res=>{
+              this.replyList = res;
+              this.init = true;
+              this.$apply();
+          }) 
+        }
     }
 
-    onShow(){
-        wx.hideHomeButton();
-        //设置监听socket
-        this.$parent.getIMHandler().setOnReceiveMessageListener({
-            listener: (msg) => { 
-                   this.$broadcast('showDot', true);                         
-            }
-        })
-    }  
+
+  
       
     methods={
       //帖子详情页
       goDetail(articleId){
           wx.navigateTo({
-              url: `./postingDetail?posting_id=${articleId}`,
+              url: `../subPack/pages/Posting/posting-detail?posting_id=${articleId}`,
           })
       },
       //历史屏滚动
@@ -168,9 +153,12 @@
 
 .reply-record{
   position: relative;
-  padding:20rpx;
+  margin:20rpx;
+  padding: 20rpx;
   display: flex;
   flex-direction: column;
+  background-color: #fff;
+  border-radius: 20rpx;
   .user-info{
     display: flex;
     align-items: center;
@@ -282,24 +270,4 @@
         
   }
 
-
-
-.unread-dot {
-  float: right;
-  width: 16px;
-  height: 16px;
-  background-color: red;
-  border-radius: 50%;
-  margin-top: -35px;
-  font-size:10rpx;
-  color:#fff;
-}
-
-
-/*隐藏滚动条*/
-// ::-webkit-scrollbar {
-//   width: 0;
-//   height: 0;
-//   color: transparent;
-// }
 </style>

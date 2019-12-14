@@ -29,10 +29,10 @@
 </template>
 
 <script>
-  import wepy from 'wepy';
-  import http from '../../utils/Base';
-	import api from '../../utils/API';
-	const uploadFile = require("../../utils/Upload.js");
+import wepy from 'wepy';
+import http from '../../../utils/Base';
+import api from '../../../utils/API';
+const uploadFile = require("../../../utils/Upload.js");
   export default class postingEdit extends wepy.page {
     config = {
       navigationBarTitleText: '发布新帖',
@@ -182,8 +182,8 @@
 .text{
   height: 290rpx;
   font-size: 30rpx;
-  padding-top: 30rpx;
-  margin: 0 auto;
+  padding: 10rpx;
+  border:1px solid #eee;
   overflow: hidden;   
   position: relative; 
 }
