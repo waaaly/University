@@ -121,7 +121,7 @@ export default class PostingIndex extends wepy.component {
                 this.$apply();
             })
             //获取轮播 article-carousel
-            http.get('https://college.mingrui-gz.com/api/article-carousel',{},true).then(res=>{
+            http.get(api.ArticleCarousel,{},true).then(res=>{
                 this.swiperImg = res;
                 this.init = true;
                 this.$apply();

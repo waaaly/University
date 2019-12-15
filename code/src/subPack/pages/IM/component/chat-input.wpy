@@ -21,8 +21,10 @@
             <input wx:elif="{{inputStatus==='text'}}"
                 class="chat-input-style" style="margin-left:{{showVoicePart?0:16}}rpx;"
                 maxlength="500" confirm-type="send" type="text" value="{{textMessage}}" focus ="true"
-                bindconfirm="_chatInput_send_text_message" confirm-hold = "true"
-                bindfocus="_chatInput_bind_focus_event" bindblur="_chatInput_bind_blur_event" 
+                bindconfirm="_chatInput_send_text_message" confirm-hold = "true" 
+                bindkeyboardheightchange = "_keyboard_height_change"
+                bindfocus="_chatInput_bind_focus_event" 
+                bindblur="_chatInput_bind_blur_event" 
                 bindinput="_chatInput_getValue_event"/>
             <view hover-class="press-style-opacity">
                 <view wx:if="{{inputFoucs}}" class="chat-input-send-button-style" 
@@ -58,7 +60,8 @@ EVENT = {
     EXTRA_CLICK: 'extraClickEvent',
     EXTRA_ITEM_CLICK: 'extraItemClickEvent',
     VOICE_RECORD: 'voiceRecordEvent',
-    SEND_MESSAGE: 'sendMessageEvent'
+    SEND_MESSAGE: 'sendMessageEvent',
+    KEYBOARD_HEIGHT:'keyboardHeightEvent'
 };
 import wepy from 'wepy'
 export default class ChatInput extends wepy.component{
@@ -252,7 +255,10 @@ export default class ChatInput extends wepy.component{
             case EVENT.SEND_MESSAGE :
                 this.$emit(EVENT.SEND_MESSAGE, param);
                 break;
-            
+            //键盘高度变化
+            case EVENT.KEYBOARD_HEIGHT :
+                this.$emit(EVENT.KEYBOARD_HEIGHT, param);
+                break;
             default:break;
         }
     }
@@ -404,9 +410,16 @@ export default class ChatInput extends wepy.component{
         /**
          * input组件取得焦点
          */
-        _chatInput_bind_focus_event() {
+        _chatInput_bind_focus_event(e) {
             this.inputFoucs = true;
+            this.triggerEvent(EVENT.KEYBOARD_HEIGHT,  e.detail.height );
             this.$apply();
+        },
+        /** 
+         * 键盘高度变化
+        */
+        _keyboard_height_change(e){
+            this.triggerEvent(EVENT.KEYBOARD_HEIGHT,  e.detail.height );
         },
         /**
          * input键盘发送按钮事件
@@ -426,6 +439,7 @@ export default class ChatInput extends wepy.component{
                     this.inputValueEventTemp = '';
                     this.inputFoucs = false;
                 }
+                this.triggerEvent(EVENT.KEYBOARD_HEIGHT,  0 );
                 this.extraObj['chatInputShowExtra'] = false;
                 this.$apply();
             });

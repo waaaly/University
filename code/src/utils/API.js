@@ -81,16 +81,20 @@ module.exports = {
     ShopAreaTabs: ApiRootUrl + "shop-area-by-tabs", //根据用户选择的标签，获取代理点
 
     /**大学若邻发现功能接口 **/
-    ArticleList: ApiRootUrl + "article-list", //帖子列表
+    ArticleCarousel: ApiRootUrl + "article-carousel", //发现轮播
+    ArticleList: ApiRootUrl + "article-list", //帖子列表 
     ArticleDetail: ApiRootUrl + "article-details", //帖子详情
     ArticleAdd: ApiRootUrl + "article-add", //发布帖子
     ArticleDelete: ApiRootUrl + "article-delete", //删除帖子
     ArticleComment: ApiRootUrl + "article-comment", //评论帖子
+    ArticleCommentDelete: ApiRootUrl + "article-comment-delete", //删除评论
+    ReplyNotice: ApiRootUrl + "reply-notice", //帖子回复提醒
     ArticleLike: ApiRootUrl + "article-like", //点赞帖子
     ArticleTab: ApiRootUrl + "article-tabs", //可见标签  
-    ArticleHis: ApiRootUrl + "article-history", //历史贴reply-list
+    ArticleHis: ApiRootUrl + "article-history", //历史贴
     ReplyList: ApiRootUrl + "reply-list", //历史贴
-    MessageList: ApiRootUrl + "message-list", //获取会话列表
+    MessageList: ApiRootUrl + "message-list", //获取会话列表 
+    MessageListDelete: ApiRootUrl + "message-list-delete", //删除好友会话记录
     MessageDetail: ApiRootUrl + "message-detail", //获取与好友聊天记录
     MessageSend: ApiRootUrl + "message-send", //保存聊天消息
     SocketBind: ApiRootUrl + "socket-bind", //绑定socket 客户端id

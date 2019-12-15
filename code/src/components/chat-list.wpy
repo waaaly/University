@@ -3,7 +3,7 @@
         <view wx:if="{{init}}" >
             <view wx:if="{{conversations.length==0}}" class="no-data">这里什么都没有快去找个TA丢纸条吧～</view>
 
-            <view class="chat-record" wx:for="{{conversations}}" wx:for-item="chat" bindtap="goChat({{chat}})" bindlongpress="delete" >
+            <view class="chat-record" wx:for="{{conversations}}" wx:for-item="chat" bindtap="goChat({{chat}})" bindlongpress="delete({{index}})" >
                   <block wx:if="{{chat.unReadNum!=0}}">
                     <view class="unread-dot" wx:if="{{chat.unReadNum<99}}">
                       <text class="unread-dot-text">{{chat.unReadNum}}</text>
@@ -47,7 +47,6 @@
 
     events = {
       'chatList':($event)=>{
-        this.$broadcast('showDot', false);
         //获取会话列表
         http.get(api.MessageList,{
             user_id:wx.getStorageSync('userInfoInServer').id,
@@ -84,7 +83,7 @@
               avatar: msg.headUrl,
               unReadNum:msg.unReadNum
             }             
-            this.conversations.unshift(chatItem);
+            this.conversations.unshift(item);
             this.$apply();
           }
       },
@@ -108,25 +107,23 @@
         });
       },
       //删除聊天
-      delete: function(e){
-        var that = this;
-        var chatlist = that.data.conversations
-        var index = e.currentTarget.dataset.index;
+      delete(index){
         wx.showModal({
           title: '提示', //提示的标题,
-          content: '确定删除此聊天', //提示的内容,
-          success: function(res){
-            if(res.confirm){
-              chatlist.splice(index,1);
-            }else if(res){
-              return false;
-            }
-            that.conversations = chatlist;
-          }
-        });
-        
+          content: '删除后，将清空该聊天记录', //提示的内容,
+          success: (res=>{
+               if(res.confirm){
+                  http.post(api.MessageListDelete,{
+                    user_id:wx.getStorageSync('userInfoInServer').id,
+                    friend_id:this.conversations[index].sender_id},true,false).then(res=>{
+                        this.conversations.splice(index,1);
+                        this.$apply();
+                        wx.showToast({title:'删除成功！'})
+                    })   
+                }               
+            })
+        });   
       },
-
     }
        
 }

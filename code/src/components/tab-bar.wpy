@@ -10,7 +10,7 @@
                 <block wx:else>
                         <cover-image class="cover-icon" src="{{selected === index ? item.selectedIconPath : item.iconPath}}"></cover-image>
                         <cover-view style="color: {{selected === index ? selectedColor : color}}">{{item.text}}</cover-view>
-                        <view class="red-dot" wx:if="{{index == 4 && showDot}}"></view>
+                        <view class="red-dot" wx:if="{{index==tabDot}}" style=""></view>
                 </block>        
         </cover-view>
         </cover-view>
@@ -29,7 +29,7 @@ export default class star extends wepy.component{
               }  
         }
      data = {
-        showDot:false,
+        tabDot:null,
         color: "#a9b7b7",
         selectedColor: "#108ee9",
         list: [{
@@ -64,6 +64,7 @@ export default class star extends wepy.component{
         },
         ]
      } 
+
      methods = {
         switchTab(index) {
                 const data = this.list[index];
@@ -84,8 +85,8 @@ export default class star extends wepy.component{
               'tabInit':(tab,$event)=>{
                       this.selected = tab;
               },
-              'showDot':(isShow,$event)=>{
-                      this.showDot = isShow;
+              'showDot':(tab,$event)=>{
+                        this.tabDot = tab;
                         this.$apply();
               },
               'swiperChange':(tab,$event)=>{

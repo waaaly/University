@@ -47,17 +47,26 @@
                         <image wx:else src="{{ossUrl+'like-off.png'}}"/>
                     </view>
                 </view>
-                <view class="comment-cnt" catchtap="changeHoldText({{commentIndex}},{{comment.commenter.name}},{{null}})">{{comment.commentText}}</view>
+                <view class="comment-cnt" catchtap="changeHoldText({{commentIndex}},{{comment.commenter.name}},{{null}})">
+                    <text class="comment-text" bindlongtap="deleteReply('true',{{comment.commenter.user_id}},{{comment.commentId}},{{commentIndex}},'undefine')">
+                        {{comment.commentText}}</text>
+                    <!-- <view class="reply-btn" catchtap="changeCurReplyInput({{commentIndex}})" >
+                        <text class="btn">点击回复</text>
+                    </view> -->
+                </view>
                 <view class="reply-list" wx:if="{{comment.replyList.length!=0}}">
-                    <view class="reply-item" wx:for="{{comment.replyList}}" wx:for-item="reply" >
+                    <view class="reply-item" wx:for="{{comment.replyList}}" wx:for-item="reply" wx:for-index="replyIndex">
                         <view class="replyer" >{{reply.replyer.name}}</view>
                         <view wx:if="{{reply.beReplyer}}" class="split">回复</view>
                         <view wx:if="{{reply.beReplyer}}" class="be-replyer" >{{reply.beReplyer.name}}</view>
                         <view class="split">:</view>
-                        <view class="reply-cnt" catchtap="changeHoldText({{commentIndex}},{{reply.replyer.name}},{{reply.replyer.user_id}})">{{reply.replyText}}</view>
+                        <view class="reply-cnt" bindlongtap="deleteReply({{reply.replyer.user_id}},{{reply.commentId}},{{commentIndex}},{{replyIndex}})" 
+                        catchtap="changeHoldText({{commentIndex}},{{reply.replyer.name}},{{reply.replyer.user_id}})">
+                            {{reply.replyText}}</view>
                     </view>
                 </view>
-                <view class="reply-input" catchtap="changeCurReplyInput({{commentIndex}})">
+                <view class="reply-input" style="{{curReplyInput==commentIndex?'display:flex;':'display:none;'}}" 
+                catchtap="changeCurReplyInput({{commentIndex}})">
                     <input class="input" cursor-spacing='10' maxlength='-1' placeholder="回复{{replyInputList[commentIndex].beReplyerName}}" 
                     placeholder-style="color:#bbb;" bindinput="replyInputEvent"  value="{{replyInputList[commentIndex].inputText}}"
                     bindfocus="replyInputFocus"/>
@@ -87,7 +96,7 @@
         init:false,
         ossUrl:'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/',
         article_id:null,//帖子id
-        curReplyInput:0,//当前输入框
+        curReplyInput:null,//当前输入框
         replyInputList:[],//回复输入框，提示字及内容缓存,长度与commentList一致
         commentText:"",//评论内容
         tipsShow:false,
@@ -150,6 +159,40 @@
                 urls: imgList// 需要预览的图片http链接列表  
             })
         },
+        //长按删除评论/回复
+        deleteReply(user_id,comment_id,comment_index,reply_index){
+            if(!wx.getStorageSync('userInfoInServer')){
+                return;
+            }
+            if(user_id != wx.getStorageSync('userInfoInServer').id){
+                return;
+            }
+            wx.showModal({
+                title:'删除提示',
+                content:'确定删除？',
+                success:(res=>{
+                    if(res.confirm){
+                         http.post(api.ArticleCommentDelete,{
+                            comment_id:comment_id,
+                        },false,false).then(res=>{
+                            console.log(res)
+                            if(res.code==200){
+                                wx.showToast({title:res.msg});
+                                if(reply_index=='undefine'){
+                                    this.commentList.splice(comment_index,1)
+                                    this.$apply();
+                                }else{
+                                    this.commentList[comment_index].replyList.splice(reply_index,1)                               
+                                    this.$apply();
+                                }
+                            }else{
+                                wx.showToast({title:res.msg});
+                            }
+                        })
+                    }
+                })
+            })
+        },
         //改变帖子点赞
         changePostLike(){
             http.post(api.ArticleLike,{
@@ -177,6 +220,7 @@
         },
         //改变当前输入框holdtext
         changeHoldText(index,beReplyerName,bereplyerId){  
+            this.curReplyInput = index;
             //回复楼主不需要显示
             if(bereplyerId==null){
                 this.replyInputList[index].beReplyerName = '';
@@ -237,6 +281,7 @@
             },true,false).then(res=>{
                 console.log(res)
                 if(res.code==200){
+                    reply['commentId'] = res.commentId;
                     this.commentList[index].replyList.push(reply);
                     this.replyInputList[index].inputText="";
                     this.$apply();
@@ -281,6 +326,7 @@
                 content:                comment.commentText,//评论内容
             },true,false).then(res=>{
                 if(res.code==200){
+                    comment['commentId'] = res.commentId;
                     this.commentList.push(comment);
                     let relpyInput = new Object();
                     relpyInput['beReplyerName'] = "";
@@ -394,6 +440,8 @@
         padding: 20rpx;
         display: flex;
         flex-direction: column;
+        margin: 0rpx 10rpx;
+        border-bottom: 1rpx solid #ddd;
         .commenter-info{
             display: flex;
             align-items: center;
@@ -441,10 +489,28 @@
         }
         .comment-cnt{
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             padding:10rpx;
             margin-left: 80rpx;
             margin-top: 10rpx;
+            .comment-text{
+                flex:1;
+                margin-top: -15px;
+            }
+            .reply-btn{
+                display: flex;
+                position: absolute;
+                right: 10rpx;
+                .btn{
+                    float: right;
+                    background-color: #dedede;
+                    color:#999;
+                    padding:10rpx;
+                    border-radius: 10rpx;
+                    font-size: 22rpx;
+                    width:fit-content;
+                }
+            }
         }
         .reply-list{
             background-color:#eaeaea;
@@ -474,7 +540,6 @@
             }                   
         }
         .reply-input{
-            display: flex;
             align-items: center;
             justify-content: space-between;
             padding:10rpx;

@@ -30,7 +30,7 @@
               bindchange="swiperChange">
         <block wx:for="{{imgUrls}}" wx:key="key">
       <swiper-item>
-        <image src="{{imageUrl+item.pic_url}}" style="width:100%;" mode="widthFix"  />
+        <image src="{{item.pic_url}}" style="width:100%;" mode="widthFix"  />
       </swiper-item>
         </block>
       </swiper>

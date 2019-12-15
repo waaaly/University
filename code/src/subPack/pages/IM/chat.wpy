@@ -1,11 +1,9 @@
 <template>
   <view>
-    <!-- <view style="background-color: {{chatStatue==='open'?'#40c9ff':'#888888'}};" class="chat-page-status-style">
-        {{chatStatusContent}}
-    </view> -->
     <scroll-view
           enable-flex="{{true}}"
-          style="height:{{scrollHeight}}px;width: 100%;flex-direction: column;"
+          class="scroll-box"
+          style="height:{{scrollHeight-keyboardHeight}}px;"
           scroll-y="true"
           scroll-top="{{scrollTopVal}}"
           bindtap="resetInputStatus">
@@ -47,6 +45,7 @@
       scrollHeight:0,//滚动屏高度
       extraViewHeight:110,//更多功能高度
       textInputHeight:50,//输入框高度
+      keyboardHeight:0,//手机键盘高度
       isShowExtra:false,//
       scrollTopVal:0,
       chatItems:[],
@@ -179,6 +178,13 @@
     }
     events = {
       /**
+       * 键盘高度发生变化
+       */
+      'keyboardHeightEvent':(height,$event)=>{
+        console.log(height)
+        this.keyboardHeight = height;
+      },
+      /**
        * 打开更多功能
        */
       'extraClickEvent':(param,$event)=>{
@@ -249,6 +255,12 @@
 <style lang="scss">
 page{
   background-color: #efefef;
+}
+.scroll-box{
+  position: fixed;
+  bottom: 50px;
+  width: 100%;
+  flex-direction: column;
 }
 .chat-page-status-style{
     width: 100%;

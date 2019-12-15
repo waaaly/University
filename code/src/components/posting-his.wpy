@@ -85,7 +85,7 @@
               this.init = true;
               this.$apply();
           }) 
-        }
+        },
     }
 
 
@@ -149,13 +149,7 @@
         this.curPostIndex = null;
         this.$apply();
       },
-      //历史屏滚动
-      hisScroll(){
-        this.replyInputShow = false;  
-        this.curReplyIndex = null; 
-        this.replyTo = "";
-        this.$apply();
-      }
+    
     }
        
 }

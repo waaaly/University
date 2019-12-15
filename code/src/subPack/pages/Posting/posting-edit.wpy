@@ -164,8 +164,14 @@ const uploadFile = require("../../../utils/Upload.js");
 					setTimeout(()=>{
 						wx.navigateBack({})
 					},1000)
+				}else{
+					wx.showModal({
+						title:'发布失败',
+						content:'由于某些问题造成了您无法发帖呢～，给您带来的困扰，实在抱歉！后续我们努力修复的！',
+						showCancel:false,
+					})
 				}
-					console.log(res)
+				console.log(res)
 			})
 		}
 		

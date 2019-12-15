@@ -3,28 +3,33 @@
         <view wx:if="{{init}}" >
             <view wx:if="{{replyList.length==0}}" class="no-data">暂时还没有人评论/回复您哟～</view>
 
-            <view class="reply-record" wx:for="{{replyList}}" wx:for-item="reply" wx:for-index="replyIndex"  
+            <view class="reply-record"  wx:for-item="reply" wx:for-index="replyIndex" wx:for="{{replyList}}" 
+                 style="{{reply.isReply==0?'background: linear-gradient(to bottom right, #108ee9, #66b2e9);':''}}"  
                 bindtap="goDetail({{reply.articleId}})">
-                <view  catchtap="goUserInfo({{reply.userInfo.user_id}})" class="user-info">
-                    <image class="avatar" src="{{reply.userInfo.avatar}}"/>
-                    <view class="name-time">
-                      <view class="name">{{reply.userInfo.name}}</view>
-                      <view class="time">{{reply.replyTime}}</view>
+                <view class="reply-tips">
+                  <text class="tips-text" wx:if="{{reply.isReply==0}}" style="border-color: #fff;color: #fff;">未回复</text>
+                  <text class="tips-text" wx:else style="border-color: #999;color: #999;">已回复</text>
+                </view>
+                <view   class="user-info">
+                    <image catchtap="goUserInfo({{reply.userInfo.user_id}})" class="avatar" src="{{reply.userInfo.avatar}}"/>
+                    <view  class="name-time">
+                      <view catchtap="goUserInfo({{reply.userInfo.user_id}})" class="name" style="{{reply.isReply==0?'color: #fff;':''}}">{{reply.userInfo.name}}</view>
+                      <view class="time" style="{{reply.isReply==0?'color: #fff;':''}}">{{reply.replyTime}}</view>
                     </view>
                 </view>
                 <view class="reply-box">
-                  <view class="reply-cnt">
-                    <text class="cnt">回复到：{{reply.replyCnt}}</text>
+                  <view class="reply-cnt" style="{{reply.isReply==0?'background-color: #fff;border-radius: 4rpx;':''}}">
+                    <text class="cnt">回复我：{{reply.replyCnt}}</text>
                   </view>
-                  <view class="reply-btn" catchtap="isShowInput({{true}},{{replyIndex}})" >
-                    <text class="btn">点击回复</text>
+                  <view class="reply-btn" catchtap="isShowInput(true,{{replyIndex}})" >
+                    <text class="btn" style="{{reply.isReply==0?'color:#66b2e9':'color:#999;'}}">点击回复</text>
                   </view>
                 </view>
                 <view class="i-say">我：{{reply.iSay}}</view> 
             </view>
 
-            <view wx:if="{{replyInputShow}}" wx:for-index="replyIndex" class="reply-bottom" style="bottom:{{inputBottomH}}px">
-                <input class="input"  placeholder="回复{{replyTo}}"  bindinput="replyInput" value="{{replyText}}"
+            <view wx:if="{{replyInputShow}}"  class="reply-bottom" >
+                <input class="input"  placeholder="回复{{replyTo}}"  bindinput="replyInput" value="{{replyText}}" 
                   focus="true" maxlength='-1' cursor-spacing='10'  bindfocus="replyInputFocus" bindblur="replyInputBlur"/> 
                 <view catchtap="sendReply" class="{{replyText.length==0?'send-off':'send-on'}}" >回复</view>
             </view> 
@@ -49,7 +54,6 @@
       curReplyIndex:null,//当前操作的回复
       replyText:'',//回复内容
       inputBottomH:0,//输入框底部偏移量
-      bottomTabShow:true,//底部tab
     }
 
     events = {
@@ -62,7 +66,14 @@
               this.init = true;
               this.$apply();
           }) 
-        }
+        },
+        //回复我滚动
+        onHisScroll(){
+          this.replyInputShow = false;  
+          this.curReplyIndex = null; 
+          this.replyTo = "";
+          this.$apply();
+        },
     }
 
 
@@ -75,15 +86,10 @@
               url: `../subPack/pages/Posting/posting-detail?posting_id=${articleId}`,
           })
       },
-      //历史屏滚动
-      hisScroll(){
-        this.replyInputShow = false;  
-        this.curReplyIndex = null; 
-        this.replyTo = "";
-        this.$apply();
-      },
+      
       //回复框显示/隐藏
       isShowInput(status,index){
+        console.log(status)
         this.replyInputShow = status;  
         this.curReplyIndex = index; 
         index?this.replyTo = this.replyList[index].userInfo.name:this.replyTo = "";
@@ -91,14 +97,13 @@
       },
       //回复框取得焦点
       replyInputFocus(e){
-        this.bottomTabShow = false;
+        this.$emit('keyboardHiehgtChange', e.detail.height);
         this.$apply();
       },
       //回复框失去焦点
       replyInputBlur(e){
         this.replyInputShow = false; 
-        this.inputBottomH = this.tabH + 5;
-        this.bottomTabShow = true;
+        this.$emit('keyboardHiehgtChange', 0);
         this.$apply();  
       },
       //回复框输入事件
@@ -120,9 +125,10 @@
             reply_to:               this.replyList[this.curReplyIndex].userInfo.name,//是否显示回复者的名字 
             content:                this.replyText,
         },true,false).then(res=>{
-            console.log(res)
             if(res.code==200){
                 wx.showToast({title:'回复成功！'});
+                this.replyList[this.curReplyIndex].isReply = 1;
+                this.$apply();
             }else{
                 wx.showToast({title:res.msg});
             }
@@ -159,6 +165,18 @@
   flex-direction: column;
   background-color: #fff;
   border-radius: 20rpx;
+  .reply-tips{
+    position: absolute;
+    left:0rpx;
+    top: 50%;
+    .tips-text{
+      font-size:24rpx;
+      border-top: 1rpx solid;  
+      border-right: 1rpx solid; 
+      border-bottom: 1rpx solid;  
+      border-radius: 0 8rpx 8rpx 0;
+    }
+  }
   .user-info{
     display: flex;
     align-items: center;
@@ -175,7 +193,7 @@
       .name{
         flex:1;
         font-size: 28rpx;
-        color:#108ee9;
+        color:#666;
       }
       .time{
         font-size: 23rpx;
@@ -203,7 +221,6 @@
       .btn{
         float: right;
         background-color: #dedede;
-        color:#999;
         padding:10rpx;
         border-radius: 10rpx;
         font-size: 22rpx;
@@ -221,22 +238,15 @@
 
   }
 }
-.reply-record::after{
-    content: '';
-  right: 0rpx;
-  bottom: 0rpx;
-  border-bottom: 1rpx solid #eee;
-  position: absolute;
-  left: 130rpx;
-}
   
-
 .reply-bottom{
     position: fixed;
     display: flex;
     z-index:10;
     left: 0rpx;
     right:0rpx;
+    bottom:0rpx;
+    height:50px;
     align-items: center;
     justify-content: space-between;
     padding:10rpx;

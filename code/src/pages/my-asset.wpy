@@ -257,6 +257,8 @@ export default class myAsset extends wepy.page{
       case 0:
           http.get(api.UserPoints,{user_id:wx.getStorageSync('userInfoInServer').id},true).then(res =>{      
             this.integral = res;
+            this.newSignBtn = res.is_sign?true:false;
+            this.isNewSignedArr[this.myToday].isSigned = true;
             console.log(res)
             this.$apply();
           })
@@ -264,7 +266,7 @@ export default class myAsset extends wepy.page{
       case 1:
         //获取可领取的优惠劵
         http.get(api.CouponCenter,{},true).then(res =>{
-          this.cardList = res;
+          this.cardList = res; 
           this.$apply();
         })
         break;
@@ -389,16 +391,16 @@ export default class myAsset extends wepy.page{
       //签到  
       signNewFn (e) {
         http.post(api.SignIn,{user_id:wx.getStorageSync('userInfoInServer').id},true).then(res=>{
-          console.log(res)
+          wx.showToast({title:res});
         })
-        var signTime = this.integral.sign_time;
-        wx.setStorageSync('signtime',signTime)
-        const arr = [],
-        newSignArr = [...arr,...this.data.isNewSignedArr];
-        newSignArr[this.data.myToday].isSigned = true;
-        this.newSignBtn = true;
-        this.$apply();
-        this.signAddFen();
+          var signTime = this.integral.sign_time;
+          wx.setStorageSync('signtime',signTime)
+          const arr = [],
+          newSignArr = [...arr,...this.data.isNewSignedArr];
+          newSignArr[this.data.myToday].isSigned = true;
+          this.newSignBtn = true;
+          this.$apply();
+          this.signAddFen();
         },
         
   }

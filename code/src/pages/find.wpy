@@ -14,14 +14,15 @@
 
              <!--回复我-->
             <swiper-item>
-                <scroll-view scroll-y style="background-color:#f8f8f8;height:{{scrollHeight}}px">
+                <scroll-view scroll-y 
+                style="background-color:#f8f8f8;height:{{scrollHeight-keyboardHeight}}px;position: fixed;bottom:{{scrollBtom}}px;">
                     <PostingNews></PostingNews>
                 </scroll-view>
             </swiper-item> 
 
             <!--历史帖-->
             <swiper-item>
-                <scroll-view scroll-y style="background-color:#f8f8f8;height:{{scrollHeight}}px">
+                <scroll-view scroll-y bindscroll="hisScroll" style="background-color:#f8f8f8;height:{{scrollHeight}}px">
                     <PostingHis></PostingHis>
                 </scroll-view>
             </swiper-item>
@@ -62,6 +63,8 @@ export default class find extends wepy.page {
     data = {
         tabSelected:0,
         scrollHeight:0,//swiper高度
+        keyboardHeight:0,//键盘高度
+        scrollBtom:0,
     }
 
     onLoad() {
@@ -76,9 +79,23 @@ export default class find extends wepy.page {
         //设置监听socket
         this.$parent.getIMHandler().setOnReceiveMessageListener({
             listener: (msg) => { 
-                   this.$broadcast('socketConversation', msg);                         
+                this.$broadcast('showDot', 4);
+                this.$broadcast('socketConversation', msg);                         
             }
         })
+        //帖子回复提醒
+        http.get(api.ReplyNotice,{
+                user_id:wx.getStorageSync('userInfoInServer')?
+                wx.getStorageSync('userInfoInServer').id:'',
+            },true,false).then(res=>{              
+                if(res!=0){
+                    wx.playBackgroundAudio({
+                        dataUrl: 'https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/voice/msg.mp3',
+                    });
+                    this.$broadcast('showDot', 1);
+                    wx.vibrateLong();
+                }      
+            })
     }
     updateTab(tab){
         switch(tab){
@@ -93,6 +110,7 @@ export default class find extends wepy.page {
                 wx.setNavigationBarTitle({title: '帖子消息'});
                 this.$broadcast('postingNews');
                 this.$broadcast('swiperChange', 1);
+                this.$broadcast('showDot', null);
                 break;
             //帖子管理
             case 2:
@@ -105,6 +123,7 @@ export default class find extends wepy.page {
                 wx.setNavigationBarTitle({title: '纸条列表'});
                 this.$broadcast('chatList');
                 this.$broadcast('swiperChange', 4);
+                this.$broadcast('showDot', null);
                 break;
             default:
                 break;   
@@ -114,6 +133,12 @@ export default class find extends wepy.page {
         //接收点击子组件切换siwper
         'tabChange':(tab,$event)=>{
             this.tabSelected = tab;
+            this.$apply();
+        },
+        //回复我键盘高度变化
+        'keyboardHiehgtChange':(height,$event)=>{
+            this.keyboardHeight = height;
+            height==0?this.scrollBtom=0:this.scrollBtom=50;
             this.$apply();
         }
     }
@@ -127,9 +152,13 @@ export default class find extends wepy.page {
         loadMorePosting(){
             this.$broadcast('onReachBottom');
         },
-        //监听滚动
+        //监听滚动帖子首页
         postingScroll(e){
             this.$broadcast('onPostingScroll',e.detail.scrollTop);
+        },
+        //回复我
+        hisScroll(e){
+            this.$broadcast('onHisScroll',e.detail.scrollTop);
         }
     }
     
