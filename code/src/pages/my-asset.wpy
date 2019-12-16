@@ -42,8 +42,8 @@
         <view class='new-week' >
           <view class='we-mod'>
             <view class='mo-fen'>
-              <label class='f f1' wx:if='{{continuityDays7}}'>+7积分</label>
-              <label class='f f2' wx:if='{{continuityDays3}}'>+3积分</label>
+              <label class='f f2' wx:if='{{continuityDays7}}'>+7积分</label>
+              <label class='f f1' wx:if='{{continuityDays3}}'>+3积分</label>
             </view>
             <view class='mo-line'>
               <block wx:for="{{isNewSignedArr}}"  wx:for-item="v" wx:key="k">
@@ -202,13 +202,13 @@ export default class myAsset extends wepy.page{
     couponList: [], //我的卡卷
 
     isNewSignedArr: [
-      {"day": "日","isSigned": false},
-      {"day": "一","isSigned": false},
-      {"day": "二","isSigned": false},
-      {"day": "三","isSigned": false},
-      {"day": "四","isSigned": false},
-      {"day": "五","isSigned": false},
-      {"day": "六","isSigned": false},
+      {"day": "1","isSigned": false},
+      {"day": "2","isSigned": false},
+      {"day": "3","isSigned": false},
+      {"day": "4","isSigned": false},
+      {"day": "5","isSigned": false},
+      {"day": "6","isSigned": false},
+      {"day": "7","isSigned": false},
     ],
   }
   
@@ -258,7 +258,11 @@ export default class myAsset extends wepy.page{
           http.get(api.UserPoints,{user_id:wx.getStorageSync('userInfoInServer').id},true).then(res =>{      
             this.integral = res;
             this.newSignBtn = res.is_sign?true:false;
-            this.isNewSignedArr[this.myToday].isSigned = true;
+            res.sign_num>=3? this.continuityDays3=true:'';
+            res.sign_num==7? this.continuityDays7=true:'';
+            for(let i=0;i<res.sign_num;i++){
+              this.isNewSignedArr[i]['isSigned'] = true;
+            }
             console.log(res)
             this.$apply();
           })
@@ -813,10 +817,10 @@ page{
   text-align: center;  
 }
 .mo-fen .f.f1{ 
-  margin-left: 0;
+  margin-left: 26%;
 }
 .mo-fen .f.f2{ 
-  margin-left:41%;
+  margin-left:84%;
   }
 .mo-line{ 
   height: 26rpx; 

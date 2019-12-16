@@ -67,6 +67,22 @@ export default class star extends wepy.component{
 
      methods = {
         switchTab(index) {
+                if(!wx.getStorageSync('userInfoInServer')&&(index==1||index==3||index==4)){
+                        wx.showModal({
+                            title: '提示',
+                            content: '您当前尚未登陆无法进行相关操作呢~',
+                            confirmColor: '#ff6b5d',
+                            confirmText: '前往登陆',
+                            success: (res => {
+                                if (res.confirm) {
+                                    wx.navigateTo({
+                                        url: '/pages/authorize',
+                                    })
+                                }
+                            }),
+                        })
+                        return;
+                }
                 const data = this.list[index];
                 const url = data.pagePath;
                 this.selected = index; 
