@@ -64,7 +64,7 @@ export default class http {
         return new Promise((resolve, reject) => {
             wepy.request(param).then(res => {
                 if (debug) {
-                    console.log(res.data);
+                    console.log(res);
                 }
                 if (this.isSuccess(res)) {
                     if (res.data.data == undefined) {

@@ -170,7 +170,7 @@ export default class myFunc extends wepy.page {
     },
     delAddress:function(e){
       var currentAddress = e.currentTarget.dataset.item;
-
+      var that =this;
       wx.showModal({
         title: '提示',
         content: "确定删除该地址吗？",
@@ -183,7 +183,7 @@ export default class myFunc extends wepy.page {
           } else {
             http.post(api.AddressDelete,{id:currentAddress.id,user_id: wx.getStorageSync("userInfoInServer").id}).then(res=>{
                 console.log(res)
-                this.onShow();
+                that.onShow();
                 wx.showToast({
                   title: '删除成功！',
                   duration: 500

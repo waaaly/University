@@ -133,7 +133,7 @@ export default class orderCheck extends wepy.page{
             if(this.coupon_id==0){
               this.integral = parseInt(res.cartListInfo.TotalPrice);
             }else{
-              this.integral = parseInt(res.cartListInfo.TotalPrice + this.coupon);
+              this.integral = parseInt(res.cartListInfo.TotalPrice) - parseInt(this.coupon*-1);
             }         
             this.init = true;  
             this.$apply();        

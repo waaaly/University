@@ -41,9 +41,9 @@
         <view class="sign-in-title">每日签到</view>
         <view class='new-week' >
           <view class='we-mod'>
-            <view class='mo-fen'>
-              <label class='f f2' wx:if='{{continuityDays7}}'>+7积分</label>
-              <label class='f f1' wx:if='{{continuityDays3}}'>+3积分</label>
+            <view class='mo-fen'>        
+              <!-- <label class='f f1' wx:if='{{continuityDays3}}'>+3积分</label> -->
+              <label class='f f2' wx:if='{{continuityDays7}}'>+3积分</label>
             </view>
             <view class='mo-line'>
               <block wx:for="{{isNewSignedArr}}"  wx:for-item="v" wx:key="k">
@@ -58,7 +58,7 @@
           </view>
         </view>
         <view class="sign-in-bottom">
-          <view class="sign-time">已连续签到{{integral.sign_num}}天</view>
+          <text class="sign-time">已连续签到{{newSignNum}}天\n(坚持每天签到有意外惊喜哟~)</text>
           
           <view wx:if="{{!newSignBtn}}" class="sign-qiu sign-qiu-no" bindtap='signNewFn' data-num="{{newSignNum}}">
             <image class="sign-in-img" src="{{ossUrl+'sign-in-on.png'}}" />
@@ -257,8 +257,8 @@ export default class myAsset extends wepy.page{
       case 0:
           http.get(api.UserPoints,{user_id:wx.getStorageSync('userInfoInServer').id},true).then(res =>{      
             this.integral = res;
+            this.newSignNum = res.sign_num;
             this.newSignBtn = res.is_sign?true:false;
-            res.sign_num>=3? this.continuityDays3=true:'';
             res.sign_num==7? this.continuityDays7=true:'';
             for(let i=0;i<res.sign_num;i++){
               this.isNewSignedArr[i]['isSigned'] = true;
@@ -293,24 +293,7 @@ export default class myAsset extends wepy.page{
       default:break;
     }
   }
-  //签到函数
-  signAddFen(e) {
-      var  oneIsSigned = this.data.isNewSignedArr[1].isSigned,
-          twoIsSigned = this.data.isNewSignedArr[2].isSigned,
-          threeIsSigned = this.data.isNewSignedArr[3].isSigned,
-          fourIsSigned = this.data.isNewSignedArr[4].isSigned,
-          fiveIsSigned = this.data.isNewSignedArr[5].isSigned,
-          sixIsSigned = this.data.isNewSignedArr[6].isSigned,
-          sevenIsSigned = this.data.isNewSignedArr[0].isSigne;
-    // 另外加分 周三+3 , 周日+7 黄色小框显示
-    if (oneIsSigned && twoIsSigned && this.data.myToday == 3) {
-      this.continuityDays3 = true;
-      this.$apply()
-    } else if (oneIsSigned && twoIsSigned && threeIsSigned && fourIsSigned && fiveIsSigned && sixIsSigned && this.data.myToday == 0) {
-      this.continuityDays7 = true;
-      this.$apply()
-    }
-  }
+
   methods = {
       // 滑动切换tab
       changeTab: function(e){
@@ -395,16 +378,32 @@ export default class myAsset extends wepy.page{
       //签到  
       signNewFn (e) {
         http.post(api.SignIn,{user_id:wx.getStorageSync('userInfoInServer').id},true).then(res=>{
-          wx.showToast({title:res});
-        })
-          var signTime = this.integral.sign_time;
-          wx.setStorageSync('signtime',signTime)
-          const arr = [],
-          newSignArr = [...arr,...this.data.isNewSignedArr];
-          newSignArr[this.data.myToday].isSigned = true;
-          this.newSignBtn = true;
-          this.$apply();
-          this.signAddFen();
+            console.log(res)
+            wx.showToast({title:res.msg});
+            if(res.msg=="您已签到"){return;};
+            const signStorage = wx.getStorageSync('signStorage');
+            signStorage['signTime'] = res.sign_time;
+            signStorage['signTips'] = false;
+            wx.setStorageSync('signStorage',signStorage);
+
+            this.integral.user_points = this.integral.user_points + res.inc_point;
+            this.integral.user_pay_points = parseInt(this.integral.user_pay_points) + parseInt(res.inc_point);
+            if(res.sign_num_res==1){
+                this.isNewSignedArr[0]['isSigned'] = true;
+                for(let i=1;i<7;i++){
+                  this.isNewSignedArr[i]['isSigned'] = false;
+                }
+            }else{
+                this.isNewSignedArr[res.sign_num_res-1]['isSigned'] = true;
+            }
+            
+            this.newSignNum = res.sign_num_res;
+            res.sign_num_res==7? this.continuityDays7=true:'';
+
+            this.newSignBtn = true;
+            this.$apply();
+          
+          })
         },
         
   }
@@ -892,19 +891,18 @@ page{
 .sign-in-bottom{
   display: flex;
   align-items: center;
-  justify-content: space-around;
 }
 .sign-time{
   font-size: 14px;
   color: #999;
   margin-top: 30rpx;
-  margin-left: 15rpx;
+  flex: 1;
+  margin-left: 35rpx;
 }
 .sign-in-img{
   width: 150rpx;
   height: 50rpx;
   margin-top: 30rpx;
-  margin-left: 300rpx;
 }
 </style>
 

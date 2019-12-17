@@ -202,6 +202,9 @@ export default class extends wepy.app {
      //连上socket      
       this.appIMDelegate.creatSockt();
   }
+  onError(err){
+    console.log('app error:',err);
+  }
   /**
    * 获取全局im代理器
    */

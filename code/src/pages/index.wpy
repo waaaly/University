@@ -128,9 +128,7 @@ export default class Index extends wepy.page{
     userDefaultAddress:null,//用户保存的默认地址
   }
 
-  onLoad(e){
-    
-    
+  onLoad(e){   
     //显示转发按钮
     wx.showShareMenu({
       withShareTicket: true
@@ -142,30 +140,32 @@ export default class Index extends wepy.page{
         this.imgUrls = res;
       })
     })  
+    //没有缓存
+    if(!wx.getStorageSync('signStorage')){
+        this.showSign = true;
+        this.$apply();
+        const signStorage = {
+          signTime:undefined,
+          signTips:true,
+        }
+        wx.setStorageSync('signStorage',signStorage);
+        return;
+    }
+    const timeNow = new Date().toLocaleDateString().replace(/\//g, "-");
+    const signTime = wx.getStorageSync('signStorage').signTime;
+    console.log(timeNow);
+    //有缓存但是新一天没提醒过
+    if(!wx.getStorageSync('signStorage').signTips&&timeNow!=signTime){
+        this.showSign = true;
+        const signStorage = wx.getStorageSync('signStorage');
+        signStorage['signTips'] = true;
+        wx.setStorageSync('signStorage',signStorage);
+        this.$apply();
+        return;
+    }
 
   }  
-  onShow(){
-    var myDate = {
-      today: new Date().getDate().toString(),
-      singtime: wx.getStorage('singTime')
-    }
-    console.log(myDate)
-
-    wx.getStorage({
-      key: 'myDate',
-      success:(res=>{
-        if(res.data.today != myDate.today || res.data.singtime != myDate.singtime){
-          this.showSign = true;
-          this.$apply();
-        }
-      }),
-      fail:(err=>{
-         this.showSign = true;
-         this.$apply();
-      })
-    })
-    
-
+  onShow(){   
     wx.showTabBar();
     wx.hideTabBarRedDot({title:2});
     //先读默认地址
@@ -301,9 +301,9 @@ export default class Index extends wepy.page{
     //前往签到
     goSign(){
       this.showSign = false;
-       wx.navigateTo({
-            url: ` /pages/my-asset?id=0`,
-        })
+      wx.navigateTo({
+            url: `/pages/my-asset?id=0`,
+      })
     },
     //前往商品
     goHotGood(e){
