@@ -52,7 +52,7 @@
   
     <block  wx:for="{{menuItems}}" wx:for-index="index">
         <view class="wrapperItem" >
-            <view bindtap="naviTo(index)"  class="weui-cell weui-cell_access" >
+            <view bindtap="naviTo({{index}})"  class="weui-cell weui-cell_access" >
                 <view class="itemtext">
                     <image src="{{item.icon}}" class="image"/>
                     {{item.text}}

@@ -195,7 +195,7 @@ export default class myFunc extends wepy.page {
     },
     setDefaultAddress:function(e){
       var currentAddress = e.currentTarget.dataset.item;
-
+      var that = this;
       wx.showModal({
         title: '提示',
         content: "确定将当前地址设为默认地址？",
@@ -223,7 +223,7 @@ export default class myFunc extends wepy.page {
                   })
                   currentAddress.is_default = 1;
                   wx.setStorageSync('userDefaultAddress', currentAddress);
-                  this.onShow();
+                  that.onShow();
               })
             }
           }

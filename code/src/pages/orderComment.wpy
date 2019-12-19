@@ -28,7 +28,7 @@ export default class orderComment extends wepy.page{
     
     wjxScore:5,
     textarea:"",//评论内容
-   // currentWordNumber:0,//当前字数
+   currentWordNumber:0,//当前字数
     min: 5,//最少字数
     max: 150, //最多字数 (根据自己需求改变) 
     pics:[],
@@ -50,7 +50,6 @@ export default class orderComment extends wepy.page{
     
   }
   onReady(e){
-    this.drawProgressbg(); 
     
   }
   methods = {

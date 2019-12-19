@@ -169,7 +169,8 @@ color: transparent;
 
 }
 .content-text{
-  color:black;margin-left:5px;font-size:14px;
+  color:black;margin-left:5px;font-size:14px;word-wrap: break-word;
+
 }
 
 .foot-pic{
