@@ -6,7 +6,7 @@
             </view>
             <view class='item-right' bindtap="previewAvatar({{userInfo.avatar}})">
                 <image src='{{userInfo.avatar}}' style='width:100rpx;height:100rpx;border-radius:50%;' mode='aspectFit'/>
-                <image src="{{ossUrl+'right.png'}}" class='icon-right' mode='aspectFit'/>
+                <image  class='icon-right Myright' mode='aspectFit'/>
             </view>
         </view>
         
@@ -16,7 +16,7 @@
             </view>
             <view class='item-right' bindtap="showInput('修改昵称','10')">
                 <text class='text'>{{user_name}}</text>
-                <image src="{{ossUrl+'right.png'}}" class='icon-right' mode='aspectFit'/>
+                <image  class='icon-right Myright' mode='aspectFit'/>
             </view>
         </view>
         
@@ -28,7 +28,7 @@
                 <picker bindchange="sexChange" disabled="{{visit}}"  range="{{sexList}}">
                     <text class='text'>{{user_sex}}</text>
                 </picker>
-                <image src="{{ossUrl+'right.png'}}" class='icon-right' mode='aspectFit'/>
+                <image  class='icon-right Myright' mode='aspectFit'/>
             </view>
         </view>
 
@@ -39,14 +39,14 @@
             </view>
             <view class='item-right' bindtap="showInput('修改签名','30')">
                 <text class='text'>{{user_desc}}</text>
-                <image src="{{ossUrl+'right.png'}}" class='icon-right' mode='aspectFit'/>
+                <image  class='icon-right Myright' mode='aspectFit'/>
             </view>
         </view>
 
 
         <block wx:if="{{!visit}}">
             <view class="tips">
-                <image src="{{ossUrl+'tanhao.png'}}"/>
+                <image class="tanhao"/>
                 <text>为了保护您的隐私，以下信息对他人不可见</text>        
             </view>
             <!--用户身份-->
@@ -58,7 +58,7 @@
                     <text class='text' wx:if="{{userInfo.role==0}}">平台用户</text>
                     <text class='text' wx:if="{{userInfo.role==1}}">智趣商家</text>
                     <text class='text' wx:if="{{userInfo.role==2}}">智趣团长</text>
-                <image src="{{ossUrl+'right.png'}}" class='icon-right' mode='aspectFit'/>
+                <image  class='icon-right Myright' mode='aspectFit'/>
                 </view>
             </view>
 
@@ -70,7 +70,7 @@
                 <view class='item-right'>
                     <text wx:if="{{!userInfo.phone}}" class='text' bindtap="goBindPhone">暂未绑定手机</text>
                     <text wx:else class='text'>{{userInfo.phone}}</text>
-                    <image src="{{ossUrl+'right.png'}}" class='icon-right' mode='aspectFit'/>
+                    <image  class='icon-right Myright' mode='aspectFit'/>
                 </view>
             </view>
             <!--还没提交过申请-->
@@ -83,7 +83,7 @@
                         </view>
                         <view class='item-right'>
                         <text class='text'>前往申请</text>
-                        <image src="{{ossUrl+'right.png'}}" class='icon-right' mode='aspectFit'/>
+                        <image  class='icon-right Myright' mode='aspectFit'/>
                         </view>
                     </view>
                     <view bindtap="toSubmitInfo(团长)" class='flex-wrp-row item'>
@@ -92,7 +92,7 @@
                         </view>
                         <view class='item-right'>
                         <text class='text'>前往申请</text>
-                        <image src="{{ossUrl+'right.png'}}" class='icon-right' mode='aspectFit'/>
+                        <image  class='icon-right Myright' mode='aspectFit'/>
                         </view>
                     </view>
                 </block>
@@ -108,7 +108,7 @@
                         <text  wx:if="{{reviewStatus==0}}" class='text'>审核中</text>
                         <text  wx:if="{{reviewStatus==2}}"  bindtap="toSubmitInfo({{reviewType==1?'商家':'团长'}})"
                         class='text'>驳回</text>
-                        <image src="{{ossUrl+'right.png'}}" class='icon-right' mode='aspectFit'/>
+                        <image  class='icon-right Myright' mode='aspectFit'/>
                     </view>
                 </view>
             </block>
@@ -121,7 +121,7 @@
                         </view>
                         <view class='item-right'>
                             <text class='text'>{{shopName}}</text>
-                            <image src="{{ossUrl+'right.png'}}" class='icon-right' mode='aspectFit'/>
+                            <image  class='icon-right Myright' mode='aspectFit'/>
                         </view>
                     </view>
                 </block>
@@ -298,6 +298,8 @@ export default class myInfo extends wepy.page {
 </script>
 
 <style lang='scss'>
+
+
 page{ 
     background-color: #efefef;
 }

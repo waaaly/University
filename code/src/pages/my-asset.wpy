@@ -9,7 +9,7 @@
     <swiper-item>
       <view class="rulebtn" bindtap="showRule">
         <text class="rule-text">积分规则</text>
-        <image class="rule-img" src="{{ossUrl+'rule.png'}}" />
+        <image class="rule-img rule"  />
       </view>
       <view class="rule" bindtap="closeRule" hidden="{{!hasRule}}">
         <view class="rule-box">
@@ -61,7 +61,7 @@
           <text class="sign-time">已连续签到{{newSignNum}}天\n(坚持每天签到有意外惊喜哟~)</text>
           
           <view wx:if="{{!newSignBtn}}" class="sign-qiu sign-qiu-no" bindtap='signNewFn' data-num="{{newSignNum}}">
-            <image class="sign-in-img" src="{{ossUrl+'sign-in-on.png'}}" />
+            <image class="sign-in-img sign-in-on" />
           </view>
           <view wx:if="{{newSignBtn}}" class="sign-qiu sign-qiu-yes">
             <image class="sign-in-img" src="{{ossUrl+'sign-in-off.png'}}" />
@@ -256,11 +256,11 @@ export default class myAsset extends wepy.page{
         //获取积分
       case 0:
           http.get(api.UserPoints,{user_id:wx.getStorageSync('userInfoInServer').id},true).then(res =>{      
-            this.integral = res;
+            this.integral = res;      //在访问接口的时，控制按钮的变化
             this.newSignNum = res.sign_num;
             this.newSignBtn = res.is_sign?true:false;
             res.sign_num==7? this.continuityDays7=true:'';
-            for(let i=0;i<res.sign_num;i++){
+            for(let i=0;i<res.sign_num;i++){                
               this.isNewSignedArr[i]['isSigned'] = true;
             }
             console.log(res)
@@ -381,25 +381,23 @@ export default class myAsset extends wepy.page{
             console.log(res)
             wx.showToast({title:res.msg});
             if(res.msg=="您已签到"){return;};
-            const signStorage = wx.getStorageSync('signStorage');
+            const signStorage = wx.getStorageSync('signStorage'); //重新设置签到时间，改变提醒签到标识的值
             signStorage['signTime'] = res.sign_time;
             signStorage['signTips'] = false;
             wx.setStorageSync('signStorage',signStorage);
 
-            this.integral.user_points = this.integral.user_points + res.inc_point;
-            this.integral.user_pay_points = parseInt(this.integral.user_pay_points) + parseInt(res.inc_point);
-            if(res.sign_num_res==1){
+            this.integral.user_points = this.integral.user_points + res.inc_point;  //累计积分相加
+            this.integral.user_pay_points = parseInt(this.integral.user_pay_points) + parseInt(res.inc_point); //解析积分返回数字，并令这个数字重新赋值给累计积分
+            if(res.sign_num_res==1){   //根据后台返回的状态改变签到按钮
                 this.isNewSignedArr[0]['isSigned'] = true;
-                for(let i=1;i<7;i++){
+                for(let i=1;i<7;i++){  //循环每天签到显示，当签到的天数达到7天重新渲染按钮
                   this.isNewSignedArr[i]['isSigned'] = false;
                 }
-            }else{
+            }else{  //如果
                 this.isNewSignedArr[res.sign_num_res-1]['isSigned'] = true;
             }
-            
             this.newSignNum = res.sign_num_res;
             res.sign_num_res==7? this.continuityDays7=true:'';
-
             this.newSignBtn = true;
             this.$apply();
           
@@ -414,6 +412,7 @@ export default class myAsset extends wepy.page{
 </script>
 
 <style lang='scss'>
+
 page{
   background-color: #fafafa;
 }

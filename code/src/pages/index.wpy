@@ -10,7 +10,7 @@
   </view>
   <view class="index-top">
     <view class="news">
-      <image src="{{ossUrl+'laba.png'}}"/>
+      <image class="laba" />
       <swiper class="swiper" indicator-dots="{{false}}" vertical="{{true}}" autoplay="{{true}}" circular="{{true}}" interval="3000" >
           <swiper-item class="swiper-item"  wx:for="{{imgUrls}}" wx:key="{{index}}" >
             <view class="swiper-text">{{item.title}}</view>
@@ -18,9 +18,9 @@
       </swiper>
     </view>
     <view class="address" bindtap="goChooseAddress">
-        <image  src="{{ossUrl+'dingwei.png'}}"/>
+        <image  class="dingwei"/>
         <text >{{area.area_name}}</text>
-        <image  src="{{ossUrl+'toRight.png'}}"/>
+        <image class="toRight" />
     </view>
   </view>
 
@@ -163,7 +163,7 @@ export default class Index extends wepy.page{
         this.$apply();
         return;
     }
-
+    
   }  
   onShow(){   
     wx.showTabBar();
@@ -321,6 +321,7 @@ export default class Index extends wepy.page{
 }
 </script>
 <style lang="scss">
+
 
 .guide{
 position: fixed;
