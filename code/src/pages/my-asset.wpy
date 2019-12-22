@@ -383,7 +383,6 @@ export default class myAsset extends wepy.page{
             if(res.msg=="您已签到"){return;};
             const signStorage = wx.getStorageSync('signStorage'); //重新设置签到时间，改变提醒签到标识的值
             signStorage['signTime'] = res.sign_time;
-            signStorage['signTips'] = false;
             wx.setStorageSync('signStorage',signStorage);
 
             this.integral.user_points = this.integral.user_points + res.inc_point;  //累计积分相加

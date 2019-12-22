@@ -41,6 +41,7 @@
                 <view style="margin-left:5%;width:70%;">
                     <view class="itemName">{{item.goods_name}}
                         <view  class="shoucang" catchtap="delInCollect({{item}})">
+                            <image style="width:25px;height:25px;" src="{{StaticImgUrl+'delInCar.jpg'}} " mode='widthFix'/>
                         </view>
                     </view>
                     <view class="goodText">
