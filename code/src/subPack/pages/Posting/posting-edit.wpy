@@ -187,6 +187,7 @@ const uploadFile = require("../../../utils/Upload.js");
  
 .text{
   height: 290rpx;
+  width: 324px;
   font-size: 30rpx;
   padding: 10rpx;
   border:1px solid #eee;

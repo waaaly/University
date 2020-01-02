@@ -6,9 +6,12 @@
         <swiper current="{{tabSelected}}" class="swiper-box" duration="300" style="height:{{scrollHeight}}px"  bindchange="changeTab">
             <!--帖子首页-->
             <swiper-item>
-                <scroll-view bindscrolltolower="loadMorePosting" 
+                <scroll-view bindscrolltolower="loadMorePosting" scroll-anchoring = "{{true}}"
                 bindscroll="postingScroll" scroll-y style="background-color:#f8f8f8;height:{{scrollHeight}}px">
                     <PostingIndex></PostingIndex>
+                    <view class="{{showMenu?'show-menu':'hide-menu'}}">
+                        <menu></menu>
+                    </view>  
                 </scroll-view>
             </swiper-item>
 
@@ -47,6 +50,7 @@ import PostingIndex from '../components/posting-index';
 import PostingHis from '../components/posting-his';
 import PostingNews from '../components/posting-news';
 import ChatList from '../components/chat-list';
+import menu from '../components/popupMenu';
 export default class find extends wepy.page {
     config = {
         "navigationBarTitleText": "社区中心",
@@ -57,7 +61,8 @@ export default class find extends wepy.page {
         PostingHis:PostingHis,
         PostingNews:PostingNews,
         ChatList,ChatList,
-        TabBar:TabBar
+        TabBar:TabBar,
+        menu:menu,
     }
 
     data = {
@@ -65,6 +70,8 @@ export default class find extends wepy.page {
         scrollHeight:0,//swiper高度
         keyboardHeight:0,//键盘高度
         scrollBtom:0,
+        showMenu:true,
+        postingScrollTop:0,//帖子页面滚动距离
     }
 
     onLoad() {
@@ -154,26 +161,55 @@ export default class find extends wepy.page {
         },
         //监听滚动帖子首页
         postingScroll(e){
-            this.$broadcast('onPostingScroll',e.detail.scrollTop);
+            // this.$broadcast('onPostingScroll',e.detail.scrollTop);
+            this.postingScrollTop = e.detail.scrollTop;
         },
         //回复我
         hisScroll(e){
             this.$broadcast('onHisScroll',e.detail.scrollTop);
         }
     }
-    
+    watch = {
+        postingScrollTop(_new,old){
+            // if(this.systemOS=='ios'){
+            //     return;
+            // }
+            if(_new - old > 20){
+                this.showMenu = false;
+                this.$apply();
+            }else if(_new - old < -20){
+                if(this.showMenu){
+                    return;
+                }
+                this.showMenu = true;
+                this.$apply();
+            }
+        }
+    }
 }
 
 </script>
 <style lang="less">
 .show-menu{
-    opacity: 1;
+    z-index:100;
+    position:fixed;
+    right:-10px;
+    bottom:-15px;
+    transition: all .8s;
+    -moz-transition: all .8s; /* Firefox 4 */
+    -webkit-transition: all .8s; /* Safari 和 Chrome */
+    -o-transition: all .8s; /* Opera */
 }
 
 .hide-menu{
-    opacity: 0;
-    transform: scale(0.2);
+    z-index:100;
+    position:fixed;
+    right:-90px;
+    bottom:-90px;
     transition: all .8s;
+    -moz-transition: all .8s; /* Firefox 4 */
+    -webkit-transition: all .8s; /* Safari 和 Chrome */
+    -o-transition: all .8s; /* Opera */
 }
 .scroll-box{  
     padding: 10rpx;

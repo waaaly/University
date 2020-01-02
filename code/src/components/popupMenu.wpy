@@ -1,8 +1,9 @@
 <template>
-    <view style="position:fixed;right:-10px;bottom:-15px;">
-        <image src="{{ossUrl+'xietie.png'}}" class="img-style" animation="{{animTranspond}}" bindtap="idea"/>
+    <view >
+        <!-- <image src="{{ossUrl+'xietie.png'}}" class="img-style" animation="{{animTranspond}}" bindtap="idea"/>
         <image src="{{ossUrl+'xiaoxi.png'}}" class="img-style" animation="{{animInput}}" bindtap="answer"/>
-        <image src="{{ossUrl+'menu.png'}}" class="img-plus-style" animation="{{animPlus}}" bindtap="plus"/>
+        <image src="{{ossUrl+'menu.png'}}" class="img-plus-style" animation="{{animPlus}}" bindtap="plus"/> -->
+        <image src="../images/subTab/menu.png" class="img-plus-style" animation="{{animPlus}}" bindtap="plus"/>
     </view>
 </template>
 

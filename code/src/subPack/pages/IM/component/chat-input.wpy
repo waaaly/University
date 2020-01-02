@@ -20,7 +20,7 @@
             </block>
             <input wx:elif="{{inputStatus==='text'}}"
                 class="chat-input-style" style="margin-left:{{showVoicePart?0:16}}rpx;"
-                maxlength="500" confirm-type="send" type="text" value="{{textMessage}}" focus ="true"
+                maxlength="500" confirm-type="send" type="text" value="{{textMessage}}" 
                 bindconfirm="_chatInput_send_text_message" confirm-hold = "true" 
                 bindkeyboardheightchange = "_keyboard_height_change"
                 bindfocus="_chatInput_bind_focus_event" 

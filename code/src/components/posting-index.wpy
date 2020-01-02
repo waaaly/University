@@ -74,9 +74,9 @@
         <view class='no-posting' wx:else>
             <image src='https://mingrui-static.oss-cn-shenzhen.aliyuncs.com/zq/noPosting.png' mode='aspectFit'/>
         </view>
-        <view class="{{showMenu?'show-menu':'hide-menu'}}">
+        <!-- <view class="{{showMenu?'show-menu':'hide-menu'}}">
             <menu></menu>
-        </view>       
+        </view>        -->
     </view>
 </template>
 
@@ -221,6 +221,9 @@ export default class PostingIndex extends wepy.component {
                 this.showMenu = false;
                 this.$apply();
             }else if(_new - old < -20){
+                if(this.showMenu){
+                    return;
+                }
                 this.showMenu = true;
                 this.$apply();
             }
@@ -238,15 +241,7 @@ page{
     background-color: #eee;
 }
 
-.show-menu{
-    opacity: 1;
-}
 
-.hide-menu{
-    opacity: 0;
-    transform: scale(0.2);
-    transition: all .8s;
-}
 .scroll-box{  
     padding: 10rpx;
     background-color: #fff;
