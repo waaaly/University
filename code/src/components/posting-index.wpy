@@ -89,7 +89,6 @@ import menu from './popupMenu';
 export default class PostingIndex extends wepy.component {
     config = {
         "navigationBarTitleText": "社区中心",
-        "enablePullDownRefresh": true,
     }
     components = {
         menu:menu,
@@ -115,13 +114,13 @@ export default class PostingIndex extends wepy.component {
             http.get(api.ArticleTab,{
                 user_id:wx.getStorageSync('userInfoInServer')?
                 wx.getStorageSync('userInfoInServer').id:'',
-            }).then(res=>{
+            },false,false).then(res=>{
                 this.enableViewList = res.enableViewList;
                 this.init = true;
                 this.$apply();
             })
             //获取轮播 article-carousel
-            http.get(api.ArticleCarousel,{},true).then(res=>{
+            http.get(api.ArticleCarousel,{},false,true).then(res=>{
                 this.swiperImg = res;
                 this.init = true;
                 this.$apply();
@@ -131,7 +130,7 @@ export default class PostingIndex extends wepy.component {
                 tabs_id:this.enableViewId,
                 user_id:wx.getStorageSync('userInfoInServer')?
                 wx.getStorageSync('userInfoInServer').id:'',
-            }).then(res=>{
+            },false,false).then(res=>{
                 this.postingList = res;
                 this.init = true;
                 this.$apply();
@@ -140,7 +139,7 @@ export default class PostingIndex extends wepy.component {
         //触底加载帖子
         'onReachBottom':($event)=>{
             //获取帖子
-            http.get(api.ArticleList,{tabs_id:this.enableViewId},true).then(res=>{
+            http.get(api.ArticleList,{tabs_id:this.enableViewId},true,false).then(res=>{
                 console.log(res)
                 if(res.length==this.postingList.length){
                     wx.showToast({title:'没有更多啦～',icon:'none'})

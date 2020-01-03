@@ -164,7 +164,11 @@ const uploadFile = require("../../../utils/Upload.js");
 					setTimeout(()=>{
 						wx.navigateBack({})
 					},1000)
-				}else{
+				}else if(res.code==402){
+                    wx.showModal({title:'回复失败',content:"您所发布的内容存在敏感词汇，请您确认后重新输入！",
+                    showCancel: false})
+                }else{
+					console.log(res);
 					wx.showModal({
 						title:'发布失败',
 						content:'由于某些问题造成了您无法发帖呢～，给您带来的困扰，实在抱歉！后续我们努力修复的！',

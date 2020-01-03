@@ -1,5 +1,5 @@
 <template>
-    <view class="page" bindtap="hideTips" wx:if="{{init}}" id='page'>
+    <view class="page"  wx:if="{{init}}" id='page'>
         <view class="posting">
             <view class="user-info">
                 <image  catchtap="goUserInfo({{posting.userInfo.user_id}})" src="{{posting.userInfo.avatar}}"/>
@@ -47,20 +47,18 @@
                         <image wx:else src="{{ossUrl+'like-off.png'}}"/>
                     </view>
                 </view>
-                <view class="comment-cnt" catchtap="changeHoldText({{commentIndex}},{{comment.commenter.name}},{{null}})">
-                    <text class="comment-text" bindlongtap="deleteReply('true',{{comment.commenter.user_id}},{{comment.commentId}},{{commentIndex}},'undefine')">
-                        {{comment.commentText}}</text>
-                    <!-- <view class="reply-btn" catchtap="changeCurReplyInput({{commentIndex}})" >
-                        <text class="btn">点击回复</text>
-                    </view> -->
+                <view class="comment-cnt" bindlongpress="deleteReply({{comment.commenter.user_id}},{{comment.commentId}},{{commentIndex}},'undefine')" >
+                    <view class="comment-text" catchtap="changeHoldText({{commentIndex}},{{comment.commenter.name}},{{null}})">
+                        {{comment.commentText}}</view>
                 </view>
                 <view class="reply-list" wx:if="{{comment.replyList.length!=0}}">
-                    <view class="reply-item" wx:for="{{comment.replyList}}" wx:for-item="reply" wx:for-index="replyIndex">
+                    <view class="reply-item" wx:for="{{comment.replyList}}" wx:for-item="reply" wx:for-index="replyIndex"
+                     bindlongtap="deleteReply({{reply.replyer.user_id}},{{reply.commentId}},{{commentIndex}},{{replyIndex}})">
                         <view class="replyer" >{{reply.replyer.name}}</view>
                         <view wx:if="{{reply.beReplyer}}" class="split">回复</view>
                         <view wx:if="{{reply.beReplyer}}" class="be-replyer" >{{reply.beReplyer.name}}</view>
                         <view class="split">:</view>
-                        <view class="reply-cnt" bindlongtap="deleteReply({{reply.replyer.user_id}},{{reply.commentId}},{{commentIndex}},{{replyIndex}})" 
+                        <view class="reply-cnt"  
                         catchtap="changeHoldText({{commentIndex}},{{reply.replyer.name}},{{reply.replyer.user_id}})">
                             {{reply.replyText}}</view>
                     </view>
@@ -286,7 +284,11 @@
                     this.replyInputList[index].inputText="";
                     this.$apply();
                     wx.showToast({title:'回复成功！'});
+                }else if(res.code==402){
+                    wx.showModal({title:'回复失败',content:"您所回复的内容存在敏感词汇，请您确认后重新回复！",
+                    showCancel: false})
                 }else{
+                    console.log(res);
                     wx.showToast({title:res.msg});
                 }
             }) 
@@ -342,7 +344,11 @@
                             scrollTop: rect.bottom
                         })
                     }).exec();
+                }else if(res.code==402){
+                    wx.showModal({title:'评论失败',content:"您所评论的内容存在敏感词汇，请您确认后重新评论！",
+                    showCancel: false})
                 }else{
+                    console.log(res);
                     wx.showToast({title:res.msg});
                 }
             })
@@ -351,8 +357,8 @@
         goChat(){
             wx.navigateTo({
                     url: `./IM/chat?friend=${JSON.stringify(this.friend)}`
-                });
-            }
+            });
+        }
     }
     computed = {}
     
@@ -379,7 +385,7 @@
             flex-direction: column;
             flex:1;
             .name{
-                font-size:28rpx;
+                font-size:25rpx;
             }
             .time{
                 font-size:25rpx;
@@ -427,7 +433,6 @@
 
 }
 .comment-list{
-    margin-bottom: 80rpx;
     .no-comment{
         height:50vh;
         display: flex;
@@ -494,8 +499,7 @@
             margin-left: 80rpx;
             margin-top: 10rpx;
             .comment-text{
-                flex:1;
-                margin-top: -15px;
+
             }
             .reply-btn{
                 display: flex;
@@ -570,10 +574,13 @@
             }
         }
     }
+    .comment:last-child{
+    padding-bottom: 100rpx;
+}
 }
 
 .reply-bottom{
-    position:fixed;
+    position: fixed;
     z-index:10;
     left: 0rpx;
     bottom: 0rpx;

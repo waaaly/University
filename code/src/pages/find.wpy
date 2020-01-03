@@ -193,6 +193,8 @@ export default class find extends wepy.page {
 .show-menu{
     z-index:100;
     position:fixed;
+    transform: translateZ(0);
+    -webkit-overflow-scrolling: touch; 
     right:-10px;
     bottom:-15px;
     transition: all .8s;
@@ -204,6 +206,8 @@ export default class find extends wepy.page {
 .hide-menu{
     z-index:100;
     position:fixed;
+    transform: translateZ(0);
+    -webkit-overflow-scrolling: touch; 
     right:-90px;
     bottom:-90px;
     transition: all .8s;
