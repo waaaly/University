@@ -165,9 +165,9 @@ const uploadFile = require("../../../utils/Upload.js");
 						wx.navigateBack({})
 					},1000)
 				}else if(res.code==402){
-                    wx.showModal({title:'回复失败',content:"您所发布的内容存在敏感词汇，请您确认后重新输入！",
-                    showCancel: false})
-                }else{
+					wx.showModal({title:'发布失败',content:"您所发布的内容存在敏感词汇或违规图片，请您确认后重新输入！",
+					showCancel: false})
+				}else{
 					console.log(res);
 					wx.showModal({
 						title:'发布失败',
